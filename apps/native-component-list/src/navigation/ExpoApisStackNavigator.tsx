@@ -127,6 +127,12 @@ export const ScreensList: ScreenConfig[] = [
   },
   {
     getComponent() {
+      return optionalRequire(() => require('../screens/BlobScreen'));
+    },
+    name: 'Blob',
+  },
+  {
+    getComponent() {
       return optionalRequire(() => require('../screens/BrightnessScreen'));
     },
     name: 'Brightness',
