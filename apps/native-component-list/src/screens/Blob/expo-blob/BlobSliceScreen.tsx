@@ -1,6 +1,6 @@
 import { ExpoBlob as Blob } from 'expo-blob';
 import { useState } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 
 import HeadingText from '../../../components/HeadingText';
 import MonoText from '../../../components/MonoText';
@@ -132,29 +132,34 @@ export default function BlobSliceScreen() {
 
   return (
     <Page>
-      <View style={styles.container}>
-        <HeadingText>Slice Method</HeadingText>
-        <MonoText>slice(start?: number, end?: number, contentType?: string)</MonoText>
-      </View>
-      <View style={styles.container}>
-        <HeadingText>Examples:</HeadingText>
-        <View style={styles.exmaplesContainer}>
-          {sliceExamples.map((example) => (
-            <SliceExampleItem
-              key={example.key}
-              example={example}
-              result={results[example.key]}
-              onEvaluate={evaluateSlice}
-            />
-          ))}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <HeadingText>Slice Method</HeadingText>
+          <MonoText>slice(start?: number, end?: number, contentType?: string)</MonoText>
         </View>
-      </View>
+        <View style={styles.container}>
+          <HeadingText>Examples:</HeadingText>
+          <View style={styles.exmaplesContainer}>
+            {sliceExamples.map((example) => (
+              <SliceExampleItem
+                key={example.key}
+                example={example}
+                result={results[example.key]}
+                onEvaluate={evaluateSlice}
+              />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
   container: {},
+  scrollContainer: {
+    paddingBottom: 20,
+  },
   exmaplesContainer: {
     marginTop: 10,
     gap: 10,

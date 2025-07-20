@@ -1,6 +1,6 @@
 import { ExpoBlob as Blob } from 'expo-blob';
 import { useState } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 
 import HeadingText from '../../../components/HeadingText';
 import MonoText from '../../../components/MonoText';
@@ -138,29 +138,34 @@ export default function BlobStreamScreen() {
 
   return (
     <Page>
-      <View style={styles.container}>
-        <HeadingText>Stream Method</HeadingText>
-        <MonoText>stream()</MonoText>
-      </View>
-      <View style={styles.container}>
-        <HeadingText>Examples:</HeadingText>
-        <View style={styles.exmaplesContainer}>
-          {streamExamples.map((example) => (
-            <StreamExampleItem
-              key={example.key}
-              example={example}
-              result={results[example.key]}
-              onEvaluate={evaluateStream}
-            />
-          ))}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <HeadingText>Stream Method</HeadingText>
+          <MonoText>stream()</MonoText>
         </View>
-      </View>
+        <View style={styles.container}>
+          <HeadingText>Examples:</HeadingText>
+          <View style={styles.exmaplesContainer}>
+            {streamExamples.map((example) => (
+              <StreamExampleItem
+                key={example.key}
+                example={example}
+                result={results[example.key]}
+                onEvaluate={evaluateStream}
+              />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
   container: {},
+  scrollContainer: {
+    paddingBottom: 20,
+  },
   exmaplesContainer: {
     marginTop: 10,
     gap: 10,
@@ -170,7 +175,7 @@ const styles = StyleSheet.create({
   },
   resultContainer: {
     borderColor: '#229D2AFF',
-    padding: 10,
+    padding: 20,
     borderRadius: 5,
   },
 });

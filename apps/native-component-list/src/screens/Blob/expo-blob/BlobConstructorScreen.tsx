@@ -1,6 +1,6 @@
 import { ExpoBlob as Blob } from 'expo-blob';
 import { useState } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 
 import HeadingText from '../../../components/HeadingText';
 import MonoText from '../../../components/MonoText';
@@ -98,29 +98,36 @@ export default function BlobConstructorScreen() {
 
   return (
     <Page>
-      <View style={styles.container}>
-        <HeadingText>Blob Constructor</HeadingText>
-        <MonoText>new ExpoBlob(blobParts?: BlobPart[], {'\n  '}options?: BlobPropertyBag)</MonoText>
-      </View>
-      <View style={styles.container}>
-        <HeadingText>Examples:</HeadingText>
-        <View style={styles.exmaplesContainer}>
-          {examples.map((example) => (
-            <ExampleItem
-              key={example.key}
-              example={example}
-              result={results[example.key]}
-              onEvaluate={handleEvaluate}
-            />
-          ))}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <HeadingText>Blob Constructor</HeadingText>
+          <MonoText>
+            new ExpoBlob(blobParts?: BlobPart[], {'\n  '}options?: BlobPropertyBag)
+          </MonoText>
         </View>
-      </View>
+        <View style={styles.container}>
+          <HeadingText>Examples:</HeadingText>
+          <View style={styles.exmaplesContainer}>
+            {examples.map((example) => (
+              <ExampleItem
+                key={example.key}
+                example={example}
+                result={results[example.key]}
+                onEvaluate={handleEvaluate}
+              />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
   container: {},
+  scrollContainer: {
+    paddingBottom: 20,
+  },
   exmaplesContainer: {
     marginTop: 10,
     gap: 10,
