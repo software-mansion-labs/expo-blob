@@ -100,7 +100,7 @@ export default function BlobConstructorScreen() {
     <Page>
       <View style={styles.container}>
         <HeadingText>Blob Constructor</HeadingText>
-        <MonoText>new ExpoBlob(blobParts?: any[], {'\n  '}options?: BlobPropertyBag)</MonoText>
+        <MonoText>new ExpoBlob(blobParts?: BlobPart[], {'\n  '}options?: BlobPropertyBag)</MonoText>
       </View>
       <View style={styles.container}>
         <HeadingText>Examples:</HeadingText>
