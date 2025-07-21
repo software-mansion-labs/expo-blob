@@ -72,11 +72,6 @@ public class Blob: SharedObject {
         case .data(let data):
           let subData = data.subdata(in: partStart..<partStart+length)
           dataSlice.append(.data(subData))
-          
-        case .typedArray(let typedArray):
-          let data = Data(bytes: typedArray.rawPointer, count: typedArray.byteLength)
-          let subData = data.subdata(in: partStart..<partStart+length)
-          dataSlice.append(.data(subData))
         
         case .blob(let blob):
           let subBlob = blob.slice(start: partStart, end: partStart + length)

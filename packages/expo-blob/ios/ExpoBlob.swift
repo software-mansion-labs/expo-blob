@@ -13,7 +13,8 @@ public class ExpoBlob: Module {
           } else if let part: Blob = part.get() {
             return .blob(part)
           } else if let part: TypedArray = part.get() {
-            return .typedArray(part)
+            let copiedData = Data(bytes: part.rawPointer, count: part.byteLength)
+            return .data(copiedData)
           }
           return .string("")
         }
