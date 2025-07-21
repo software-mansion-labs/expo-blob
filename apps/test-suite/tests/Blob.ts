@@ -3,6 +3,11 @@ import { Platform } from 'expo-modules-core';
 
 export const name = 'Blob';
 
+var test_error = {
+    name: "test",
+    message: "test error",
+};
+
 export async function test({ describe, it, expect, jasmine }) {
     const test_blob = (fn, expectations) => {
         var expected = expectations.expected,
@@ -336,10 +341,6 @@ export async function test({ describe, it, expect, jasmine }) {
                 desc: "A Uint8Array object should be treated as a sequence for the blobParts argument."
             });
             
-            var test_error = {
-                name: "test",
-                message: "test error",
-            };
             it("The length getter should be invoked and any exceptions should be propagated.", () => {
                 expect(() => {
                     var obj = {
@@ -700,6 +701,52 @@ export async function test({ describe, it, expect, jasmine }) {
             })
         })
 
+        describe('constructor dom windows', async () => {
+            it("Passing platform objects for blobParts should throw a TypeError.", () => {
+                const document = new Document()
+                var args = [
+                    document.createElement("div"),
+                    window,
+                ];
+                args.forEach((arg) => {
+                    expect(() => new Blob(arg)).toThrow();
+                });
+            });
+
+            it("A platform object that supports indexed properties should be treated as a sequence for the blobParts argument (overwritten 'length'.)", () => {
+                var element = document.createElement("div");
+                element.appendChild(document.createElement("div"));
+                element.appendChild(document.createElement("p"));
+                var list = element.children;
+                Object.defineProperty(list, "length", {
+                    get: function() { throw test_error; }
+                });
+                expect(() => {new Blob(list);}).toThrow(test_error);
+            });
+
+            test_blob(function() {
+                const document = new Document()
+                var select = document.createElement("select");
+                select.appendChild(document.createElement("option"));
+                return new Blob(select);
+            }, {
+                expected: "[object HTMLOptionElement]",
+                type: "",
+                desc: "Passing a platform object that supports indexed properties as the blobParts array should work (select)."
+            });
+
+            test_blob(function() {
+                const document = new Document()
+                var elm = document.createElement("div");
+                elm.setAttribute("foo", "bar");
+                return new Blob(elm.attributes);
+            }, {
+                expected: "[object Attr]",
+                type: "",
+                desc: "Passing an platform object that supports indexed properties as the blobParts array should work (attributes)."
+            });
+        })
+
         describe('Text', async () => {
             it('simple', async () => {
                 const blob = new Blob(["PASS"]);
@@ -1030,6 +1077,34 @@ export async function test({ describe, it, expect, jasmine }) {
                         desc: "Valid contentType (" + JSON.stringify(type) + ")"
                     });
                 });
+            })
+        })
+
+        describe('stream', async () => {
+            it('stream byob crash', async () => {
+                let a = new Blob(['', '', undefined], { })
+                let b = a.stream()
+                let c = new ReadableStreamBYOBReader(b)
+                let d = new Int16Array(8)
+                await c.read(d)
+                c.releaseLock()
+                await a.text()
+                await b.cancel()
+            })
+
+            it('stream xhr crash', async () => {
+                // TODO this constructor doesn't work need to fix it
+                // const blob = new Blob([1, 2]);
+                const blob = new Blob([Int32Array.from([1, 2])]);
+                const readable = blob.stream()
+                const writable = new WritableStream({}, {
+                    size() {
+                        let xhr = new XMLHttpRequest()
+                        xhr.open("POST", "1", false)
+                        xhr.send()
+                    }
+                })
+                readable.pipeThrough({ readable, writable })
             })
         })
     });
