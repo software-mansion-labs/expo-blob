@@ -32,6 +32,18 @@ class Blob() : SharedObject() {
         return str
     }
 
+    fun bytes(): ByteArray {
+          var arr = ByteArray(size)
+          var i = 0
+          for (bp in blobParts) {
+              for (b in bp.bytes()){
+                  arr[i] = b
+                  i += 1
+              }
+          }
+          return arr
+    }
+
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
         var s: Int = start - offset
         var e: Int = end - offset
@@ -157,6 +169,14 @@ sealed class InternalBlobPart() {
             is StringPart -> string
             is BlobPart -> blob.text()
             is BufferPart -> buffer.decodeToString()
+        }
+    }
+
+    fun bytes(): ByteArray {
+        return when (this) {
+            is StringPart -> string.toByteArray()
+            is BlobPart -> blob.bytes()
+            is BufferPart -> buffer
         }
     }
 }
