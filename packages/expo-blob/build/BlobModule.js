@@ -47,7 +47,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         });
     }
     async arrayBuffer() {
-        return super.bytes().then((bytes) => bytes.buffer);
+        return super.bytes().then((bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     }
 }
 //# sourceMappingURL=BlobModule.js.map
