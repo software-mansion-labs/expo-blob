@@ -89,7 +89,7 @@ private fun TypedArray.bytes(): ByteArray {
     var ba = ByteArray(this.byteLength)
 
     for (i in 0..<this.byteLength) {
-        ba[i] = this.readByte(i + this.byteOffset)
+        ba[i] = this.readByte(i)
     }
 
     return ba

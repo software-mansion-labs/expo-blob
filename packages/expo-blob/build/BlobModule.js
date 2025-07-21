@@ -6,18 +6,25 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         if (options) {
             options.type = normalizedContentType(options.type);
         }
+        const inputMapping = (v) => {
+            if (v instanceof ArrayBuffer) {
+                // TODO maybe do this natively not in typescript?
+                return new Uint8Array(v);
+            }
+            return v;
+        };
         if (!blobParts) {
             super([], options);
         }
         else if (blobParts instanceof Array) {
-            super(blobParts.flat(Infinity), options);
+            super(blobParts.flat(Infinity).map(inputMapping), options);
         }
         else {
-            super(Array.from(blobParts).flat(Infinity), options);
+            super(Array.from(blobParts).flat(Infinity).map(inputMapping), options);
         }
     }
     slice(start, end, contentType) {
-        const normalizedType = contentType ? normalizedContentType(contentType) : "";
+        const normalizedType = normalizedContentType(contentType);
         const slicedBlob = super.slice(start, end, normalizedType);
         Object.setPrototypeOf(slicedBlob, ExpoBlob.prototype);
         return slicedBlob;
