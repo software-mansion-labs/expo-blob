@@ -1,6 +1,12 @@
 import { requireNativeModule } from "expo";
 import { normalizedContentType } from "./utils";
 const NativeBlobModule = requireNativeModule("ExpoBlob");
+const isIterable = (obj) => {
+    if (obj == null) {
+        return false;
+    }
+    return typeof obj[Symbol.iterator] === 'function';
+};
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         if (options) {
@@ -11,16 +17,26 @@ export class ExpoBlob extends NativeBlobModule.Blob {
                 // TODO maybe do this natively not in typescript?
                 return new Uint8Array(v);
             }
+            if (typeof v === 'number') {
+                // Manual type coercion?
+                return String(v);
+            }
             return v;
         };
-        if (!blobParts) {
+        if (blobParts === undefined) {
             super([], options);
+        }
+        else if (!(blobParts instanceof Object)) {
+            throw TypeError;
         }
         else if (blobParts instanceof Array) {
             super(blobParts.flat(Infinity).map(inputMapping), options);
         }
-        else {
+        else if (isIterable(blobParts)) {
             super(Array.from(blobParts).flat(Infinity).map(inputMapping), options);
+        }
+        else {
+            throw TypeError;
         }
     }
     slice(start, end, contentType) {

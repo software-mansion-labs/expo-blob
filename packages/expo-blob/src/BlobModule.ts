@@ -17,6 +17,13 @@ declare class ExpoBlobModule extends NativeModule {
 
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>("ExpoBlob");
 
+
+const isIterable = (obj : any) => {
+  if (obj == null) {
+    return false;
+  }
+  return typeof obj[Symbol.iterator] === 'function';
+}
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 	constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
 		if (options) {
@@ -28,15 +35,23 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 				// TODO maybe do this natively not in typescript?
 				return new Uint8Array(v)
 			}
+			if (typeof v === 'number') {
+				// Manual type coercion?
+				return String(v)
+			}
 			return v
 		}
 
-		if (!blobParts) {
+		if (blobParts === undefined) {
 			super([], options);
+		} else if (!(blobParts instanceof Object)) {
+			throw TypeError;
 		} else if (blobParts instanceof Array) {
 			super(blobParts.flat(Infinity).map(inputMapping), options);
-		} else {
+		} else if( isIterable(blobParts)){
 			super(Array.from(blobParts).flat(Infinity).map(inputMapping), options);
+		} else {
+			throw TypeError
 		}
 	}
 

@@ -42,7 +42,7 @@ export async function test({ describe, it, expect, jasmine }) {
 
             const ab = await blob.arrayBuffer();
             expect(ab instanceof ArrayBuffer).toBeTruthy();
-            expect(new Uint8Array(ab)).toEqual(expected);
+            expect(new Uint8Array(ab)).toEqual(new Uint8Array(expected));
         })
     }
 
