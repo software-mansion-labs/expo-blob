@@ -702,9 +702,6 @@ Package-specific changes not released in any SDK will be added here just before 
 
 ### 🎉 New features
 
-- **`expo-blob`**
-  - Added a new module: expo-blob
-  - Added interactive example screens for all major Blob methods (constructor, slice, text, stream, bytes, arrayBuffer) in the Native Component List app, following the established pattern for API demonstration screens. These screens allow developers to test and explore the Blob API directly in the app.
 - **`expo-web-browser`**
   - [iOS] `dismissBrowser` function updated to return a promise. ([#31210](https://github.com/expo/expo/pull/31210) by [@nishan](https://github.com/intergalacticspacehighway)) ([#31210](https://github.com/expo/expo/pull/31210) by [@intergalacticspacehighway](https://github.com/intergalacticspacehighway))
 - **`expo-sqlite`**
