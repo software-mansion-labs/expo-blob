@@ -8,10 +8,10 @@ class BlobModule : Module() {
         Name("ExpoBlob")
 
         Class(Blob::class) {
-            Constructor() { blobParts: List<BlobPart>, options: BlobOptionsBag? ->
+            Constructor() { blobParts: List<BlobPart>?, options: BlobOptionsBag? ->
                 val type = options?.type ?: DEFAULT_TYPE
                 val endings = options?.endings ?: EndingType.TRANSPARENT
-                Blob(blobParts.internal(endings == EndingType.NATIVE), type)
+                Blob((blobParts ?: listOf()).internal(endings == EndingType.NATIVE), type)
             }
 
             Property("size") { blob: Blob ->

@@ -18,8 +18,14 @@ declare class ExpoBlobModule extends NativeModule {
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>("ExpoBlob");
 
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
-	constructor(blobParts?: any[], options?: BlobPropertyBag) {
-		super(blobParts?.flat(Infinity), options);
+	constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
+		if (!blobParts) {
+			super([], options);
+		} else if (blobParts instanceof Array) {
+			super(blobParts.flat(Infinity), options);
+		} else {
+			super(Array.from(blobParts).flat(Infinity), options);
+		}
 	}
 
 	slice(start?: number, end?: number, contentType?: string): ExpoBlob {
