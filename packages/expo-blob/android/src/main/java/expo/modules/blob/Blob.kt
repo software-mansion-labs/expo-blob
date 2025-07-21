@@ -51,6 +51,9 @@ class Blob() : SharedObject() {
     }
 
     fun slice(start: Int, end: Int, contentType: String): Blob {
+        if (start >= end) {
+          return Blob(listOf(), contentType)
+        }
         var i: Int = 0
         val bps: MutableList<InternalBlobPart> = mutableListOf()
 

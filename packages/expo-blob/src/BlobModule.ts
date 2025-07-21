@@ -19,6 +19,9 @@ const NativeBlobModule = requireNativeModule<ExpoBlobModule>("ExpoBlob");
 
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 	constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
+		if (options) {
+			options.type = normalizedContentType(options.type)
+		}
 		if (!blobParts) {
 			super([], options);
 		} else if (blobParts instanceof Array) {
@@ -29,7 +32,7 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 	}
 
 	slice(start?: number, end?: number, contentType?: string): ExpoBlob {
-		const normalizedType = contentType ?? normalizedContentType(contentType);
+		const normalizedType = contentType ? normalizedContentType(contentType) : "";
 		const slicedBlob = super.slice(start, end, normalizedType);
 		Object.setPrototypeOf(slicedBlob, ExpoBlob.prototype);
 		return slicedBlob;

@@ -3,6 +3,9 @@ import { normalizedContentType } from "./utils";
 const NativeBlobModule = requireNativeModule("ExpoBlob");
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
+        if (options) {
+            options.type = normalizedContentType(options.type);
+        }
         if (!blobParts) {
             super([], options);
         }
@@ -14,7 +17,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         }
     }
     slice(start, end, contentType) {
-        const normalizedType = contentType ?? normalizedContentType(contentType);
+        const normalizedType = contentType ? normalizedContentType(contentType) : "";
         const slicedBlob = super.slice(start, end, normalizedType);
         Object.setPrototypeOf(slicedBlob, ExpoBlob.prototype);
         return slicedBlob;
