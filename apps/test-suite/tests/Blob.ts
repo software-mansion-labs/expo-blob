@@ -42,8 +42,42 @@ export async function test({ describe, it, expect, jasmine }) {
             expect(ab instanceof ArrayBuffer).toBeTruthy();
             expect(new Uint8Array(ab)).toEqual(expected);
         })
-        
     }
+
+    // Helper function that triggers garbage collection while reading a chunk
+    // if perform_gc is true.
+    const read_and_gc = async (reader, perform_gc) => {
+        // Passing Uint8Array for byte streams; non-byte streams will simply ignore it
+        const read_promise = reader.read(new Uint8Array(64));
+        if (perform_gc) {
+            // TODO Actually perform garbage collection in here
+            // await garbageCollect();
+        }
+        return read_promise;
+    }
+
+    // Takes in a ReadableStream and reads from it until it is done, returning
+    // an array that contains the results of each read operation. If perform_gc
+    // is true, garbage collection is triggered while reading every chunk.
+    const  read_all_chunks = async (stream, { perform_gc = false, mode } = {}) => {
+        expect(stream instanceof ReadableStream).toBeTruthy();
+        expect('getReader' in stream).toBeTruthy();
+        const reader = stream.getReader({ mode });
+
+        expect('read' in reader).toBeTruthy()
+        let read_value = await read_and_gc(reader, perform_gc);
+
+        let out = [];
+        let i = 0;
+        while (!read_value.done) {
+            for (let val of read_value.value) {
+            out[i++] = val;
+            }
+            read_value = await read_and_gc(reader, perform_gc);
+        }
+        return out;
+    }
+
     describe('Blob', async () => {
         describe('Blob creation', () => {
             it('Empty blob', () => {
@@ -1105,6 +1139,65 @@ export async function test({ describe, it, expect, jasmine }) {
                     }
                 })
                 readable.pipeThrough({ readable, writable })
+            })
+
+            it("Blob.stream()", async () => {
+                const blob = new Blob(["PASS"]);
+                const stream = blob.stream();
+                const chunks = await read_all_chunks(stream);
+                for (let [index, value] of chunks.entries()) {
+                    expect(value).toEqual("PASS".charCodeAt(index));
+                }
+            })
+
+            it("Blob.stream() empty Blob", async () => {
+                const blob = new Blob();
+                const stream = blob.stream();
+                const chunks = await read_all_chunks(stream);
+                expect(chunks).toEqual([]);
+            })
+
+            it("Blob.stream() non-unicode input", async () => {
+                const input_arr = [8, 241, 48, 123, 151];
+                const typed_arr = new Uint8Array(input_arr);
+                const blob = new Blob([typed_arr]);
+                const stream = blob.stream();
+                const chunks = await read_all_chunks(stream);
+                expect(chunks).toEqual(input_arr);
+            })
+
+            it("Blob.stream() garbage collection of blob shouldn't break stream " +
+                "consumption", async() => {
+                const input_arr = [8, 241, 48, 123, 151];
+                const typed_arr = new Uint8Array(input_arr);
+                let blob = new Blob([typed_arr]);
+                const stream = blob.stream();
+                blob = null;
+                // TODO Actually call garbageCollect()
+                // await garbageCollect();
+                const chunks = await read_all_chunks(stream, { perform_gc: true });
+                expect(chunks).toEqual(input_arr);
+            })
+
+            it("Blob.stream() garbage collection of stream shouldn't break stream " +
+                "consumption", async() => {
+                const input_arr = [8, 241, 48, 123, 151];
+                const typed_arr = new Uint8Array(input_arr);
+                let blob = new Blob([typed_arr]);
+                const chunksPromise = read_all_chunks(blob.stream());
+                // It somehow matters to do GC here instead of doing `perform_gc: true`
+                // TODO Actually call garbageCollect()
+                // await garbageCollect();
+                expect(await chunksPromise).toEqual(input_arr);
+            })
+
+            it("Reading Blob.stream() with BYOB reader", async () => {
+                const input_arr = [8, 241, 48, 123, 151];
+                const typed_arr = new Uint8Array(input_arr);
+                let blob = new Blob([typed_arr]);
+                const stream = blob.stream();
+                const chunks = await read_all_chunks(stream, { mode: "byob" });
+                expect(chunks).toEqual(input_arr);
             })
         })
     });
