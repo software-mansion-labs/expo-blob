@@ -1,3 +1,5 @@
+// Based on tests in https://github.com/web-platform-tests/wpt/tree/master/FileAPI/blob
+
 import {ExpoBlob as Blob} from "expo-blob"
 import { Platform } from 'expo-modules-core';
 
