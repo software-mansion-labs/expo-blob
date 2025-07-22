@@ -226,7 +226,7 @@ export async function test({ describe, it, expect, jasmine }) {
             it('Exception propagation from options', () => {
                 const test_error = {name: 'test string'};
                 // @ts-expect-error
-                expect(() => new Blob([], { get endings() { throw test_error; }})).toThrow('test string')
+                expect(() => new Blob([], { get endings() { throw test_error; }})).toThrow(test_error)
             })
             // TODO weird test, as it could maybe be used lazily and not in the constructor
             it('The \'endings\' options property is used', () => {
@@ -441,6 +441,14 @@ export async function test({ describe, it, expect, jasmine }) {
                     }
                 };
                 expect(() => new Blob(obj)).toThrow(test_error);
+
+                console.log()
+                console.log('received: ' + received)
+                console.log()
+                console.log('expected: ' + expect)
+                console.log()
+
+
                 // Somehow we don't call 0 toString but I don't know why not or why would we
                 expect(received).toEqual([
                     "Symbol.iterator",
@@ -639,11 +647,15 @@ export async function test({ describe, it, expect, jasmine }) {
                 const stringified = [];
 
                 new Blob([], {
+                    // @ts-ignore
                     get type() { accessed.push('type'); },
+                    // @ts-ignore
                     get endings() { accessed.push('endings'); }
                 });
                 new Blob([], {
+                    // @ts-ignore
                     type: { toString: () => { stringified.push('type'); return ''; } },
+                    // @ts-ignore
                     endings: { toString: () => { stringified.push('endings'); return 'transparent'; } }
                 });
                 expect(accessed).toEqual(['endings', 'type']);
@@ -655,7 +667,8 @@ export async function test({ describe, it, expect, jasmine }) {
                     () => new Blob(
                     [{ toString: function() { throw test_error } }],
                     {
-                        get type() { assert_unreached("type getter should not be called."); }
+                        //@ts-ignore
+                        get type() { expect(0).toBe(1); }
                     })
                 ).toThrow(test_error);
             })

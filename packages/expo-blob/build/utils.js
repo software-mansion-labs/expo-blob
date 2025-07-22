@@ -14,13 +14,14 @@
  * @returns The normalized (lowercased) content type, or an empty string if invalid.
  */
 export function normalizedContentType(type) {
-    if (type === null)
-        return "null";
-    if (!type || type.length === 0)
+    if (type === undefined)
         return "";
+    const str = "" + type;
+    // if (type === null) return "null"
+    // if (!type || type.length === 0) return "";
     const asciiPrintable = /^[\x20-\x7E]+$/;
-    if (!asciiPrintable.test(type))
+    if (!asciiPrintable.test(str))
         return "";
-    return type.toLowerCase();
+    return str.toLowerCase();
 }
 //# sourceMappingURL=utils.js.map

@@ -10,6 +10,9 @@ const isIterable = (obj) => {
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         if (options) {
+            // Have to access that in TypeScript as it may throw...
+            // Also have to access it before type, for some reason...
+            options.endings;
             options.type = normalizedContentType(options.type);
         }
         const inputMapping = (v) => {

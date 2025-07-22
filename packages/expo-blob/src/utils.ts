@@ -14,9 +14,11 @@
  * @returns The normalized (lowercased) content type, or an empty string if invalid.
  */
 export function normalizedContentType(type?: string): string {
-	if (type === null) return "null"
-	if (!type || type.length === 0) return "";
+	if (type === undefined) return ""
+	const str = "" + type
+	// if (type === null) return "null"
+	// if (!type || type.length === 0) return "";
 	const asciiPrintable = /^[\x20-\x7E]+$/;
-	if (!asciiPrintable.test(type)) return "";
-	return type.toLowerCase();
+	if (!asciiPrintable.test(str)) return "";
+	return str.toLowerCase();
 }
