@@ -7,9 +7,11 @@ public class ExpoBlob: Module {
 
     Class(Blob.self) {
       Constructor { (blobParts: [EitherOfThree<String, Blob, TypedArray>]?, options: BlobOptions?) in
+        let endings = options?.endings ?? .transparent
         let blobPartsProcessed: [BlobPart]? = blobParts?.map { part in
           if let part: String = part.get() {
-            return .string(part)
+            let str = (endings == .native) ? toNativeNewlines(part) : part
+            return .string(str)
           } else if let part: Blob = part.get() {
             return .blob(part)
           } else if let part: TypedArray = part.get() {
