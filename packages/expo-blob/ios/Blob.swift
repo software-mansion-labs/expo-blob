@@ -20,30 +20,28 @@ public class Blob: SharedObject {
   
   func slice(start: Int = 0, end: Int? = nil, contentType: String? = nil) -> Blob {
     let blobSize = self.size
-    var relativeStart = start
-  
-    if relativeStart < 0 {
-      relativeStart = max(blobSize + relativeStart, 0)
-    } else {
-      relativeStart = min(relativeStart, blobSize - 1)
-    }
-
-    var relativeEnd = (end ?? blobSize) - 1
-    if relativeEnd < 0 {
-      relativeEnd = max(blobSize + relativeEnd - 1, 0)
-    } else {
-      relativeEnd = min(relativeEnd, blobSize - 1)
-    }
-
+    let relativeStart = start < 0 ? max(blobSize + start, 0) : min(start, blobSize)
+    let relativeEnd = end == nil ? blobSize : (end! < 0 ? max(blobSize + end!, 0) : min(end!, blobSize))
     let span = max(relativeEnd - relativeStart, 0)
-    if span == 0 {
-      return Blob(blobParts: [], options: BlobOptions(type: type, endings: self.options.endings))
+    var typeString: String
+    
+    if let contentType = contentType {
+      if (contentType as AnyObject) is NSNull {
+        typeString = "null"
+      } else {
+        typeString = contentType.lowercased()
+      }
+    } else {
+      typeString = self.type
     }
-
+    
+    if span == 0 {
+      return Blob(blobParts: [], options: BlobOptions(type: typeString, endings: self.options.endings))
+    }
+    
     var dataSlice: [BlobPart] = []
     var currentPos = 0
-    var remaining = span + 1
-
+    var remaining = span
     for part in blobParts {
       let partSize = part.size()
       if currentPos + partSize <= relativeStart {
@@ -60,7 +58,6 @@ public class Blob: SharedObject {
         currentPos += partSize
         continue
       }
-
       switch part {
         case .string(let str):
           let utf8 = Array(str.utf8)
@@ -68,20 +65,17 @@ public class Blob: SharedObject {
           if let subStr = String(bytes: subUtf8, encoding: .utf8) {
             dataSlice.append(.string(subStr))
           }
-          
         case .data(let data):
           let subData = data.subdata(in: partStart..<partStart+length)
           dataSlice.append(.data(subData))
-        
         case .blob(let blob):
           let subBlob = blob.slice(start: partStart, end: partStart + length)
           dataSlice.append(.blob(subBlob))
       }
-        currentPos += partSize
-        remaining -= length
+      currentPos += partSize
+      remaining -= length
     }
-  
-    return Blob(blobParts: dataSlice, options: BlobOptions(type: type, endings: self.options.endings))
+    return Blob(blobParts: dataSlice, options: BlobOptions(type: typeString, endings: self.options.endings))
   }
   
   func text() -> String {
