@@ -598,16 +598,21 @@ export async function test({ describe, it, expect, jasmine }) {
                 desc: "Passing BigInt typed arrays as elements of the blobParts array should work."
             });
 
-            // TODO revisit this one as its implementation is weird in the wpt
-            it("Passing a FrozenArray as the blobParts array should work (FrozenArray<MessagePort>).", async () => {
-                var channel = new MessageChannel();
-                channel.port2.onmessage = this.step_func(function(e) {
-                    var b_ports = new Blob(e.ports);
-                    expect(b_ports.size).toEqual("[object MessagePort]".length)
-                    this.done();
-                });
-                var channel2 = new MessageChannel();
-                channel.port1.postMessage('', [channel2.port1]);
+            // Message channel doesn't exist in React Native
+            // it("Passing a FrozenArray as the blobParts array should work (FrozenArray<MessagePort>).", async () => {
+            //     var channel = new MessageChannel();
+            //     channel.port2.onmessage = this.step_func(function(e) {
+            //         var b_ports = new Blob(e.ports);
+            //         expect(b_ports.size).toEqual("[object MessagePort]".length)
+            //         this.done();
+            //     });
+            //     var channel2 = new MessageChannel();
+            //     channel.port1.postMessage('', [channel2.port1]);
+            // })
+            it("Passing a FrozenArray as the blobParts array should work", async () => {
+                let arr = ["PA", "SS"]
+                Object.freeze(arr)
+                expect(await new Blob(arr).text()).toBe("PASS")
             })
 
             test_blob(function() {
