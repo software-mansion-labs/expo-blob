@@ -30,7 +30,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         if (blobParts === undefined) {
             super([], opt);
         }
-        else if (blobParts === null) {
+        else if (blobParts === null || !(blobParts instanceof Object)) {
             throw TypeError();
         }
         else {
