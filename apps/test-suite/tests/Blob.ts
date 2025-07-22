@@ -143,8 +143,6 @@ export async function test({ describe, it, expect }) {
         // expect(new Uint8Array(array_buffer)).toEqual(typed_arr);
         expect(blob.size).toBe(5);
         expect(array_buffer.length).toBe(5);
-        console.log(array_buffer.byteOffset);
-        console.log(array_buffer, typed_arr);
         expect(array_buffer).toEqual(typed_arr);
       });
       it('concurrent reads', async () => {
@@ -473,16 +471,6 @@ export async function test({ describe, it, expect }) {
         };
         expect(() => new Blob(obj)).toThrow(test_error);
 
-        console.log();
-        console.log();
-        console.log();
-        console.log('received: ' + received);
-        console.log();
-        console.log('expected: ' + expect);
-        console.log();
-        console.log();
-        console.log();
-
         // Somehow we don't call 0 toString but I don't know why not or why would we
         expect(received).toEqual([
           'Symbol.iterator',
@@ -777,8 +765,6 @@ export async function test({ describe, it, expect }) {
           },
         });
 
-        console.log('GREPMEME');
-        console.log(accessed, stringified, 'GREPMEME');
         new Blob([], {
           // @ts-ignore
           type: {
@@ -795,9 +781,6 @@ export async function test({ describe, it, expect }) {
             },
           },
         });
-
-        console.log('GREPMEME');
-        console.log(accessed, stringified, 'GREPMEME');
 
         expect(accessed).toEqual(['endings', 'type']);
         expect(stringified).toEqual(['endings', 'type']);
