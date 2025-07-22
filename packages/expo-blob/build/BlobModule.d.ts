@@ -1,5 +1,5 @@
-import { NativeModule, SharedObject } from "expo";
-import { Blob, BlobPart } from "./BlobModule.types";
+import { NativeModule, SharedObject } from 'expo';
+import { Blob, BlobPart } from './BlobModule.types';
 declare class NativeBlob extends SharedObject {
     readonly size: number;
     readonly type: string;
