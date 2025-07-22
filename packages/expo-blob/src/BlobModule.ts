@@ -31,13 +31,7 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 			return v
 		}
 
-		if (!blobParts) {
-			super([], options);
-		} else if (blobParts instanceof Array) {
-			super(blobParts.flat(Infinity).map(inputMapping), options);
-		} else {
-			super(Array.from(blobParts).flat(Infinity).map(inputMapping), options);
-		}
+		super(Array.from(blobParts ?? []).flat(Infinity).map(inputMapping), options);
 	}
 
 	slice(start?: number, end?: number, contentType?: string): ExpoBlob {
