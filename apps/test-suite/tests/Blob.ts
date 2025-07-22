@@ -776,6 +776,9 @@ export async function test({ describe, it, expect }) {
             accessed.push('endings');
           },
         });
+
+        console.log('GREPMEME');
+        console.log(accessed, stringified, 'GREPMEME');
         new Blob([], {
           // @ts-ignore
           type: {
@@ -792,6 +795,10 @@ export async function test({ describe, it, expect }) {
             },
           },
         });
+
+        console.log('GREPMEME');
+        console.log(accessed, stringified, 'GREPMEME');
+
         expect(accessed).toEqual(['endings', 'type']);
         expect(stringified).toEqual(['endings', 'type']);
       });

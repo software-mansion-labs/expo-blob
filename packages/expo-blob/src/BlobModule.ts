@@ -33,21 +33,27 @@ const isTypedArray = (v: any): boolean => {
 };
 
 const getOptions = (options?: BlobPropertyBag) => {
-  let opt;
   if (options) {
     if (!(options instanceof Object)) {
       throw TypeError();
     }
 
-    opt = {
-      endings: options.endings,
-      type: options.type === undefined ? '' : normalizedContentType(options.type),
+    let e = options.endings;
+    let t = options.type;
+    if (e && typeof e === 'object') {
+      e = String(e);
+    }
+    if (t && typeof t === 'object') {
+      t = String(t);
+    }
+
+    return {
+      endings: e,
+      type: normalizedContentType(t),
     };
-  } else {
-    opt = options;
   }
 
-  return opt;
+  return options;
 };
 
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
