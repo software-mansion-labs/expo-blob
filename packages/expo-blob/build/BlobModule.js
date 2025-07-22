@@ -44,12 +44,11 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         return slicedBlob;
     }
     stream() {
-        const text = super.syncText();
-        const encoder = new TextEncoder();
-        const uint8 = encoder.encode(text);
+        const uint8promise = super.bytes();
         let offset = 0;
         return new ReadableStream({
-            pull(controller) {
+            async pull(controller) {
+                let uint8 = await uint8promise;
                 if (offset < uint8.length) {
                     controller.enqueue(uint8.subarray(offset));
                     offset = uint8.length;
