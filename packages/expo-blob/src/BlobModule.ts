@@ -17,19 +17,12 @@ declare class ExpoBlobModule extends NativeModule {
 
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>("ExpoBlob");
 
-
-const isIterable = (obj : any) => {
-  if (obj == null) {
-    return false;
-  }
-  return typeof obj[Symbol.iterator] === 'function';
-}
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 	constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
 		let opt
 		if (options) {
 			if (!(options instanceof Object)) {
-				throw TypeError
+				throw TypeError()
 			}
 
 			opt = {
@@ -54,14 +47,10 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 
 		if (blobParts === undefined) {
 			super([], opt);
-		} else if (!(blobParts instanceof Object)) {
-			throw TypeError;
-		} else if (blobParts instanceof Array) {
-			super(blobParts.flat(Infinity).map(inputMapping), opt);
-		} else if( isIterable(blobParts)){
-			super(Array.from(blobParts).flat(Infinity).map(inputMapping), opt);
+		} else if (blobParts === null) {
+			throw TypeError();
 		} else {
-			throw TypeError
+			super([...blobParts].flat(Infinity).map(inputMapping), opt);
 		}
 	}
 

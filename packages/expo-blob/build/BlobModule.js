@@ -1,18 +1,12 @@
 import { requireNativeModule } from "expo";
 import { normalizedContentType } from "./utils";
 const NativeBlobModule = requireNativeModule("ExpoBlob");
-const isIterable = (obj) => {
-    if (obj == null) {
-        return false;
-    }
-    return typeof obj[Symbol.iterator] === 'function';
-};
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         let opt;
         if (options) {
             if (!(options instanceof Object)) {
-                throw TypeError;
+                throw TypeError();
             }
             opt = {
                 endings: options.endings,
@@ -36,17 +30,11 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         if (blobParts === undefined) {
             super([], opt);
         }
-        else if (!(blobParts instanceof Object)) {
-            throw TypeError;
-        }
-        else if (blobParts instanceof Array) {
-            super(blobParts.flat(Infinity).map(inputMapping), opt);
-        }
-        else if (isIterable(blobParts)) {
-            super(Array.from(blobParts).flat(Infinity).map(inputMapping), opt);
+        else if (blobParts === null) {
+            throw TypeError();
         }
         else {
-            throw TypeError;
+            super([...blobParts].flat(Infinity).map(inputMapping), opt);
         }
     }
     slice(start, end, contentType) {

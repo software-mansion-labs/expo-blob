@@ -322,7 +322,7 @@ export async function test({ describe, it, expect, jasmine }) {
                 ];
                 args.forEach((arg) => {
                     // @ts-expect-error
-                    expect(() => new Blob(arg)).toThrow()
+                    expect(() => new Blob(arg)).toThrow(TypeError())
                 });
             })
             test_blob(function() {
@@ -443,9 +443,13 @@ export async function test({ describe, it, expect, jasmine }) {
                 expect(() => new Blob(obj)).toThrow(test_error);
 
                 console.log()
+                console.log()
+                console.log()
                 console.log('received: ' + received)
                 console.log()
                 console.log('expected: ' + expect)
+                console.log()
+                console.log()
                 console.log()
 
 
@@ -709,7 +713,7 @@ export async function test({ describe, it, expect, jasmine }) {
                     it('Passing ' + JSON.stringify(arg) + ' for options should throw', () => {
                         expect(() => {
                             new Blob([], arg)
-                        }).toThrow(TypeError)
+                        }).toThrow(TypeError())
                     })
                 });
             })
