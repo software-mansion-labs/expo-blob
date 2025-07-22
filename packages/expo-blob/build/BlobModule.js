@@ -68,5 +68,8 @@ export class ExpoBlob extends NativeBlobModule.Blob {
     async arrayBuffer() {
         return super.bytes().then((bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     }
+    toString() {
+        return "[object Blob]";
+    }
 }
 //# sourceMappingURL=BlobModule.js.map

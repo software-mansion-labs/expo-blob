@@ -86,4 +86,8 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 	async arrayBuffer(): Promise<ArrayBufferLike> {
 		return super.bytes().then((bytes: Uint8Array) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 	}
+
+	toString(): string {
+   	 	return "[object Blob]"
+  	}
 }
