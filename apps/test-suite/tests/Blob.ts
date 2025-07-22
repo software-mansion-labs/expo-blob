@@ -709,7 +709,7 @@ export async function test({ describe, it, expect, jasmine }) {
                     it('Passing ' + JSON.stringify(arg) + ' for options should throw', () => {
                         expect(() => {
                             new Blob([], arg)
-                        }).toThrow()
+                        }).toThrow(TypeError)
                     })
                 });
             })

@@ -9,11 +9,18 @@ const isIterable = (obj) => {
 };
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
+        let opt;
         if (options) {
-            // Have to access that in TypeScript as it may throw...
-            // Also have to access it before type, for some reason...
-            options.endings;
-            options.type = normalizedContentType(options.type);
+            if (!(options instanceof Object)) {
+                throw TypeError;
+            }
+            opt = {
+                endings: options.endings,
+                type: options.type === undefined ? "" : normalizedContentType(options.type)
+            };
+        }
+        else {
+            opt = options;
         }
         const inputMapping = (v) => {
             if (v instanceof ArrayBuffer) {
@@ -27,16 +34,16 @@ export class ExpoBlob extends NativeBlobModule.Blob {
             return v;
         };
         if (blobParts === undefined) {
-            super([], options);
+            super([], opt);
         }
         else if (!(blobParts instanceof Object)) {
             throw TypeError;
         }
         else if (blobParts instanceof Array) {
-            super(blobParts.flat(Infinity).map(inputMapping), options);
+            super(blobParts.flat(Infinity).map(inputMapping), opt);
         }
         else if (isIterable(blobParts)) {
-            super(Array.from(blobParts).flat(Infinity).map(inputMapping), options);
+            super(Array.from(blobParts).flat(Infinity).map(inputMapping), opt);
         }
         else {
             throw TypeError;
