@@ -1,19 +1,9 @@
-import { requireNativeModule } from "expo";
-import { normalizedContentType } from "./utils";
-const NativeBlobModule = requireNativeModule("ExpoBlob");
+import { requireNativeModule } from 'expo';
+import { normalizedContentType } from './utils';
+const NativeBlobModule = requireNativeModule('ExpoBlob');
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
-        if (options) {
-            options.type = normalizedContentType(options.type);
-        }
-        const inputMapping = (v) => {
-            if (v instanceof ArrayBuffer) {
-                // TODO maybe do this natively not in typescript?
-                return new Uint8Array(v);
-            }
-            return v;
-        };
-        super(Array.from(blobParts ?? []).flat(Infinity).map(inputMapping), options);
+        super(blobParts?.flat(Infinity) ?? [], options);
     }
     slice(start, end, contentType) {
         const normalizedType = normalizedContentType(contentType);
