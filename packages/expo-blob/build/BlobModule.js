@@ -68,20 +68,36 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         return slicedBlob;
     }
     stream() {
-        const uint8promise = super.bytes();
+        const self = this;
+        let offset = 0;
+        let bytesPromise = null;
         return new ReadableStream({
             type: 'bytes',
-            async start(controller) {
-                let bytes = await uint8promise;
-                if (bytes.length == 0) {
-                    controller.close();
-                }
-                else {
-                    controller.enqueue(bytes);
-                }
-            },
             async pull(controller) {
-                controller.close();
+                if (!bytesPromise) {
+                    bytesPromise = self.bytes();
+                }
+                const bytes = await bytesPromise;
+                if (offset >= bytes.length) {
+                    controller.close();
+                    return;
+                }
+                if (controller.byobRequest?.view) {
+                    const view = controller.byobRequest.view;
+                    const end = Math.min(offset + view.byteLength, bytes.length);
+                    const chunk = bytes.subarray(offset, end);
+                    view.set(chunk, 0);
+                    controller.byobRequest.respond(chunk.length);
+                    offset = end;
+                    if (offset >= bytes.length) {
+                        controller.close();
+                    }
+                    return;
+                }
+                const chunkSize = 65_536;
+                const end = Math.min(offset + chunkSize, bytes.length);
+                controller.enqueue(bytes.subarray(offset, end));
+                offset = end;
             },
         });
     }
