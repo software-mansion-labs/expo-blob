@@ -37,21 +37,28 @@ export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         const inputMapping = (v) => {
             if (v instanceof ArrayBuffer) {
+                console.log('AB');
                 return new Uint8Array(v);
             }
             if (v instanceof ExpoBlob || isTypedArray(v)) {
+                console.log('Blob | TypedArray');
                 return v;
             }
+            console.log('to String');
             return String(v);
         };
+        let bps = [];
         if (blobParts === undefined) {
             super([], getOptions(options));
         }
-        else if (blobParts === null || !(blobParts instanceof Object)) {
+        else if (blobParts === null || typeof blobParts !== 'object') {
             throw TypeError();
         }
         else {
-            super([...blobParts].map(inputMapping), getOptions(options));
+            for (let bp of blobParts) {
+                bps.push(inputMapping(bp));
+            }
+            super(bps, getOptions(options));
         }
     }
     slice(start, end, contentType) {

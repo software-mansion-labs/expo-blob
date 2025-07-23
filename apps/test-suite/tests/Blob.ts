@@ -435,6 +435,8 @@ export async function test({ describe, it, expect }) {
         }).toThrow(test_error);
       });
       it('Getters and value conversions should happen in order until an exception is thrown.', () => {
+        console.log('GREPME START');
+
         var received = [];
         var obj = {
           get [Symbol.iterator]() {
@@ -471,6 +473,8 @@ export async function test({ describe, it, expect }) {
         };
         expect(() => new Blob(obj)).toThrow(test_error);
 
+        console.log(received);
+        console.log('GREPME END');
         // Somehow we don't call 0 toString but I don't know why not or why would we
         expect(received).toEqual([
           'Symbol.iterator',
