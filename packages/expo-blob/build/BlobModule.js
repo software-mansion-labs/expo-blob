@@ -5,14 +5,11 @@ export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         const inputMapping = (v) => {
             if (v instanceof ArrayBuffer) {
-                console.log('AB');
                 return new Uint8Array(v);
             }
             if (v instanceof ExpoBlob || isTypedArray(v)) {
-                console.log('Blob | TypedArray');
                 return v;
             }
-            console.log('to String');
             return String(v);
         };
         let bps = [];
@@ -73,6 +70,9 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         return super
             .bytes()
             .then((bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+    }
+    toString() {
+        return '[object Blob]';
     }
 }
 Object.defineProperty(ExpoBlob, 'length', {

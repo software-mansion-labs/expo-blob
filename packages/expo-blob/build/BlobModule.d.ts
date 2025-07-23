@@ -7,7 +7,6 @@ declare class NativeBlob extends SharedObject {
     slice(start?: number, end?: number, contentType?: string): ExpoBlob;
     bytes(): Promise<Uint8Array>;
     text(): Promise<string>;
-    syncText(): string;
 }
 declare class ExpoBlobModule extends NativeModule {
     Blob: typeof NativeBlob;
@@ -18,6 +17,7 @@ export declare class ExpoBlob extends NativeBlobModule.Blob implements Blob {
     slice(start?: number, end?: number, contentType?: string): ExpoBlob;
     stream(): ReadableStream;
     arrayBuffer(): Promise<ArrayBufferLike>;
+    toString(): string;
 }
 export {};
 //# sourceMappingURL=BlobModule.d.ts.map

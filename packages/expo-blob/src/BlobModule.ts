@@ -2,6 +2,7 @@ import { NativeModule, requireNativeModule, SharedObject } from 'expo';
 
 import { Blob, BlobPart } from './BlobModule.types';
 import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
+
 declare class NativeBlob extends SharedObject {
   readonly size: number;
   readonly type: string;
@@ -9,7 +10,6 @@ declare class NativeBlob extends SharedObject {
   slice(start?: number, end?: number, contentType?: string): ExpoBlob;
   bytes(): Promise<Uint8Array>;
   text(): Promise<string>;
-  syncText(): string;
 }
 
 declare class ExpoBlobModule extends NativeModule {
@@ -22,14 +22,11 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
   constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
     const inputMapping = (v: any) => {
       if (v instanceof ArrayBuffer) {
-        console.log('AB');
         return new Uint8Array(v);
       }
       if (v instanceof ExpoBlob || isTypedArray(v)) {
-        console.log('Blob | TypedArray');
         return v;
       }
-      console.log('to String');
       return String(v);
     };
 
@@ -98,6 +95,10 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
       .then((bytes: Uint8Array) =>
         bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
       );
+  }
+
+  toString(): string {
+    return '[object Blob]';
   }
 }
 

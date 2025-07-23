@@ -10,7 +10,7 @@ var test_error = {
   message: 'test error',
 };
 
-export async function test({ describe, it, expect, jasmine }) {
+export async function test({ describe, it, expect }) {
   const test_blob = (fn, expectations) => {
     var expected = expectations.expected,
       type = expectations.type,
@@ -24,9 +24,7 @@ export async function test({ describe, it, expect, jasmine }) {
       expect(blob.size).toBe(expected.length);
 
       const text = await blob.text();
-      const text1 = blob.syncText();
       expect(text).toEqual(expected);
-      expect(text).toEqual(text1);
     });
   };
   const test_blob_binary = async (fn, expectations) => {
@@ -42,7 +40,7 @@ export async function test({ describe, it, expect, jasmine }) {
 
       const ab = await blob.arrayBuffer();
       expect(ab instanceof ArrayBuffer).toBeTruthy();
-      expect(new Uint8Array(ab)).toEqual(expected);
+      expect(new Uint8Array(ab)).toEqual(new Uint8Array(expected));
     });
   };
 
@@ -60,7 +58,10 @@ export async function test({ describe, it, expect, jasmine }) {
   // Takes in a ReadableStream and reads from it until it is done, returning
   // an array that contains the results of each read operation. If perform_gc
   // is true, garbage collection is triggered while reading every chunk.
-  const read_all_chunks = async (stream, { perform_gc = false, mode } = {}) => {
+  const read_all_chunks = async (
+    stream,
+    { perform_gc = false, mode }: { perform_gc?: boolean; mode?: string } = {}
+  ) => {
     expect(stream instanceof ReadableStream).toBeTruthy();
     expect('getReader' in stream).toBeTruthy();
     const reader = stream.getReader({ mode });
@@ -104,9 +105,9 @@ export async function test({ describe, it, expect, jasmine }) {
         const blob = new Blob([blob0, blob1, blob2]);
         expect(blob).toBeTruthy();
       });
-      it('Blob flatten', () => {
+      it("Blob don't flatten", async () => {
         const blob = new Blob(['aa', ['ab', 'cd'], 'ef']);
-        expect(blob).toBeTruthy();
+        expect(await blob.text()).toBe('aaab,cdef');
       });
     });
 
@@ -135,16 +136,9 @@ export async function test({ describe, it, expect, jasmine }) {
         const input_arr = [8, 241, 48, 123, 151];
         const typed_arr = new Uint8Array(input_arr);
         const blob = new Blob([typed_arr]);
-        // const array_buffer = await blob.arrayBuffer();
-        const array_buffer = await blob.bytes();
-        // expect(blob.syncText()).toEqual("\u0008\u00F1\u0030\u007B\u0097")
-        // expect(new Uint8Array(array_buffer) == typed_arr).toBeTruthy()
-        // expect(new Uint8Array(array_buffer)).toEqual(typed_arr);
+        const array_buffer = await blob.arrayBuffer();
         expect(blob.size).toBe(5);
-        expect(array_buffer.length).toBe(5);
-        console.log(array_buffer.byteOffset);
-        console.log(array_buffer, typed_arr);
-        expect(array_buffer).toEqual(typed_arr);
+        expect(new Uint8Array(array_buffer)).toEqual(new Uint8Array(input_arr));
       });
       it('concurrent reads', async () => {
         const input_arr = new TextEncoder().encode('PASS');
@@ -201,7 +195,7 @@ export async function test({ describe, it, expect, jasmine }) {
     });
 
     // Windows platforms use CRLF as the native line ending. All others use LF.
-    const crlf = Platform.OS == 'windows';
+    const crlf = Platform.OS === 'windows';
     const native_ending = crlf ? '\r\n' : '\n';
     describe('constructor-endings', async () => {
       it('valid endings value', () => {
@@ -210,7 +204,7 @@ export async function test({ describe, it, expect, jasmine }) {
         expect(blob0).toBeTruthy();
         expect(blob1).toBeTruthy();
       });
-      it('invalid endings value', () => {
+      it('Invalid endings value', () => {
         [null, '', 'invalidEnumValue', 'Transparent', 'NATIVE', 0, {}].forEach((ending) => {
           try {
             // @ts-expect-error
@@ -222,21 +216,21 @@ export async function test({ describe, it, expect, jasmine }) {
       });
       it('Exception propagation from options', () => {
         const test_error = { name: 'test string' };
-        // @ts-expect-error
         expect(
           () =>
             new Blob([], {
+              // @ts-expect-error
               get endings() {
                 throw test_error;
               },
             })
-        ).toThrow('test string');
+        ).toThrow(test_error);
       });
-      // TODO weird test, as it could maybe be used lazily and not in the constructor
+
       it("The 'endings' options property is used", () => {
         let got = false;
-        // @ts-expect-error
         new Blob([], {
+          // @ts-expect-error
           get endings() {
             got = true;
           },
@@ -259,28 +253,28 @@ export async function test({ describe, it, expect, jasmine }) {
         { name: 'CRLFCRLF', input: '\r\n\r\n', native: native_ending.repeat(2) },
         { name: 'LFCRLFCR', input: '\n\r\n\r', native: native_ending.repeat(3) },
       ];
-      it('Newlines should not change with endings unspecified', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should not change with endings unspecified', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input]);
-          expect(blob.syncText()).toBe(testCase.input);
+          expect(await blob.text()).toBe(testCase.input);
         });
       });
-      it('Newlines should not change with endings "transparent"', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should not change with endings "transparent"', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input], { endings: 'transparent' });
-          expect(blob.syncText()).toBe(testCase.input);
+          expect(await blob.text()).toBe(testCase.input);
         });
       });
-      it('Newlines should match the platform with endings "native"', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should match the platform with endings "native"', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input], { endings: 'native' });
-          expect(blob.syncText()).toBe(testCase.native);
+          expect(await blob.text()).toBe(testCase.native);
         });
       });
-      it('CR/LF in adjacent input strings', () => {
+      it('CR/LF in adjacent input strings', async () => {
         const blob = new Blob(['\r', '\n'], { endings: 'native' });
         const expected = native_ending.repeat(2);
-        expect(blob.syncText()).toBe(expected);
+        expect(await blob.text()).toBe(expected);
       });
     });
 
@@ -303,6 +297,7 @@ export async function test({ describe, it, expect, jasmine }) {
       });
       it("Blob constructor with no arguments, without 'new'", () => {
         expect(() => {
+          // @ts-ignore
           var blob = Blob();
         }).toThrow();
       });
@@ -319,9 +314,9 @@ export async function test({ describe, it, expect, jasmine }) {
         expect(blob.size).toBe(0);
         expect(blob.type).toBe('');
       });
-      // TODO Something wrong with null ? Why should Blob() work and Blob(null) not ???
+
       it('Passing non-objects, Dates and RegExps for blobParts should throw a TypeError.', () => {
-        var args = [
+        [
           null,
           true,
           false,
@@ -334,10 +329,14 @@ export async function test({ describe, it, expect, jasmine }) {
           new RegExp(),
           {},
           { 0: 'FAIL', length: 1 },
-        ];
-        args.forEach((arg) => {
-          // @ts-expect-error
-          expect(() => new Blob(arg)).toThrow();
+        ].forEach((arg) => {
+          try {
+            // @ts-expect-error
+            new Blob(arg);
+            expect(false).toBeTruthy();
+          } catch (err) {
+            expect(err instanceof TypeError).toBeTruthy();
+          }
         });
       });
       test_blob(
@@ -354,6 +353,7 @@ export async function test({ describe, it, expect, jasmine }) {
       );
       it('A plain object with custom @@iterator should be treated as a sequence for the blobParts argument.', () => {
         const blob = new Blob({
+          // @ts-ignore
           [Symbol.iterator]() {
             var i = 0;
             return {
@@ -364,20 +364,20 @@ export async function test({ describe, it, expect, jasmine }) {
         });
         expect(blob.size).toBe(5);
       });
-      it('A plain object with @@iterator and a length property should be treated as a sequence for the blobParts argument.', () => {
-        let blob = new Blob({
-          [Symbol.iterator]: Array.prototype[Symbol.iterator],
-          0: 'PASS',
-          length: 1,
-        });
-        expect(blob.syncText()).toEqual('PASS');
-        expect(blob.type).toBe('');
-      });
-      it('A String object should be treated as a sequence for the blobParts argument.', () => {
-        let blob = new Blob(new String('xyz'));
-        expect(blob.syncText()).toEqual('xyz');
-        expect(blob.type).toBe('');
-      });
+      test_blob(
+        function () {
+          return new Blob({
+            [Symbol.iterator]: Array.prototype[Symbol.iterator],
+            0: 'PASS',
+            length: 1,
+          });
+        },
+        {
+          expected: 'PASS',
+          type: '',
+          desc: 'A plain object with @@iterator and a length property should be treated as a sequence for the blobParts argument.',
+        }
+      );
       test_blob(
         function () {
           return new Blob(new String('xyz'));
@@ -471,7 +471,6 @@ export async function test({ describe, it, expect, jasmine }) {
           },
         };
         expect(() => new Blob(obj)).toThrow(test_error);
-        // Somehow we don't call 0 toString but I don't know why not or why would we
         expect(received).toEqual([
           'Symbol.iterator',
           'length getter',
@@ -513,13 +512,18 @@ export async function test({ describe, it, expect, jasmine }) {
                   throw test_error;
                 },
                 valueOf: function () {
-                  expect(false).toBe(true);
+                  expect('Should not call valueOf if toString is present.').toBe('');
                 },
               },
             ])
         ).toThrow(test_error);
-        // TODO add the proper TypeError type to toThrow
-        expect(() => new Blob([{ toString: null, valueOf: null }])).toThrow();
+
+        try {
+          new Blob([{ toString: null, valueOf: null }]);
+          expect('NOT REACHABLE').toBe('');
+        } catch (e) {
+          expect(e instanceof TypeError).toBeTruthy();
+        }
       });
       test_blob(
         function () {
@@ -530,7 +534,13 @@ export async function test({ describe, it, expect, jasmine }) {
                 return 'PASS';
               },
             },
-            { toString: function () {} },
+            {
+              toString: function () {
+                expect(
+                  'Should have removed the second element of the array rather than called toString() on it.'
+                ).toBe('');
+              },
+            },
           ];
           return new Blob(arr);
         },
@@ -549,8 +559,9 @@ export async function test({ describe, it, expect, jasmine }) {
                   return 'A';
                 }
                 arr.unshift({
+                  // @ts-ignore
                   toString: function () {
-                    expect(true).toBe(false);
+                    expect('Should only access index 0 once.').toBe('');
                   },
                 });
                 return 'P';
@@ -598,7 +609,7 @@ export async function test({ describe, it, expect, jasmine }) {
             },
             {
               valueOf: function () {
-                expect(false).toBe(true);
+                expect('Should not call valueOf if toString is present on the prototype.').toBe('');
               },
             },
           ]);
@@ -681,16 +692,21 @@ export async function test({ describe, it, expect, jasmine }) {
         }
       );
 
-      // TODO revisit this one as its implementation is weird in the wpt
-      it('Passing a FrozenArray as the blobParts array should work (FrozenArray<MessagePort>).', async () => {
-        var channel = new MessageChannel();
-        channel.port2.onmessage = this.step_func(function (e) {
-          var b_ports = new Blob(e.ports);
-          expect(b_ports.size).toEqual('[object MessagePort]'.length);
-          this.done();
-        });
-        var channel2 = new MessageChannel();
-        channel.port1.postMessage('', [channel2.port1]);
+      // Message channel doesn't exist in React Native
+      // it("Passing a FrozenArray as the blobParts array should work (FrozenArray<MessagePort>).", async () => {
+      //     var channel = new MessageChannel();
+      //     channel.port2.onmessage = this.step_func(function(e) {
+      //         var b_ports = new Blob(e.ports);
+      //         expect(b_ports.size).toEqual("[object MessagePort]".length)
+      //         this.done();
+      //     });
+      //     var channel2 = new MessageChannel();
+      //     channel.port1.postMessage('', [channel2.port1]);
+      // })
+      it('Passing a FrozenArray as the blobParts array should work', async () => {
+        let arr = ['PA', 'SS'];
+        Object.freeze(arr);
+        expect(await new Blob(arr).text()).toBe('PASS');
       });
 
       test_blob(
@@ -731,7 +747,6 @@ export async function test({ describe, it, expect, jasmine }) {
         }
       );
 
-      // TODO revisit this, why can we pass view but not the buffer?
       test_blob(
         function () {
           var view = new Uint8Array([0]);
@@ -750,20 +765,25 @@ export async function test({ describe, it, expect, jasmine }) {
         const stringified = [];
 
         new Blob([], {
+          // @ts-ignore
           get type() {
             accessed.push('type');
           },
+          // @ts-ignore
           get endings() {
             accessed.push('endings');
           },
         });
+
         new Blob([], {
+          // @ts-ignore
           type: {
             toString: () => {
               stringified.push('type');
               return '';
             },
           },
+          // @ts-ignore
           endings: {
             toString: () => {
               stringified.push('endings');
@@ -787,8 +807,9 @@ export async function test({ describe, it, expect, jasmine }) {
                 },
               ],
               {
+                //@ts-ignore
                 get type() {
-                  assert_unreached('type getter should not be called.');
+                  expect(0).toBe(1);
                 },
               }
             )
@@ -837,7 +858,7 @@ export async function test({ describe, it, expect, jasmine }) {
           it('Passing ' + JSON.stringify(arg) + ' for options should throw', () => {
             expect(() => {
               new Blob([], arg);
-            }).toThrow();
+            }).toThrow(TypeError());
           });
         });
       });
@@ -867,69 +888,56 @@ export async function test({ describe, it, expect, jasmine }) {
 
         type_tests.forEach(function (t: Array<any>) {
           it('Blob with type ' + JSON.stringify(t[1]), () => {
-            // TODO Why this construction? It does'nt work yet, but it's not what we test for...
-            // var arr = new Uint8Array([t[0]]).buffer;
-            // var b = new Blob([arr], {type:t[1]});
-
-            var b = new Blob(t[0], { type: t[1] });
+            var arr = new Uint8Array([t[0]]).buffer;
+            var b = new Blob([arr], { type: t[1] });
             expect(b.type).toEqual(t[2]);
           });
         });
       });
     });
 
-    describe('constructor dom windows', async () => {
-      it('Passing platform objects for blobParts should throw a TypeError.', () => {
-        const document = new Document();
-        var args = [document.createElement('div'), window];
-        args.forEach((arg) => {
-          expect(() => new Blob(arg)).toThrow();
-        });
-      });
+    // HTML ONLY, not applicable
+    // describe('constructor dom windows', async () => {
+    //     it("Passing platform objects for blobParts should throw a TypeError.", () => {
+    //         var args = [
+    //             document.createElement("div"),
+    //             window,
+    //         ];
+    //         args.forEach((arg) => {
+    //             expect(() => new Blob(arg)).toThrow();
+    //         });
+    //     });
+    //     it("A platform object that supports indexed properties should be treated as a sequence for the blobParts argument (overwritten 'length'.)", () => {
+    //         var element = document.createElement("div");
+    //         element.appendChild(document.createElement("div"));
+    //         element.appendChild(document.createElement("p"));
+    //         var list = element.children;
+    //         Object.defineProperty(list, "length", {
+    //             get: function() { throw test_error; }
+    //         });
+    //         expect(() => {new Blob(list);}).toThrow(test_error);
+    //     });
 
-      it("A platform object that supports indexed properties should be treated as a sequence for the blobParts argument (overwritten 'length'.)", () => {
-        var element = document.createElement('div');
-        element.appendChild(document.createElement('div'));
-        element.appendChild(document.createElement('p'));
-        var list = element.children;
-        Object.defineProperty(list, 'length', {
-          get: function () {
-            throw test_error;
-          },
-        });
-        expect(() => {
-          new Blob(list);
-        }).toThrow(test_error);
-      });
+    //     test_blob(function() {
+    //         var select = document.createElement("select");
+    //         select.appendChild(document.createElement("option"));
+    //         return new Blob(select);
+    //     }, {
+    //         expected: "[object HTMLOptionElement]",
+    //         type: "",
+    //         desc: "Passing a platform object that supports indexed properties as the blobParts array should work (select)."
+    //     });
 
-      test_blob(
-        function () {
-          const document = new Document();
-          var select = document.createElement('select');
-          select.appendChild(document.createElement('option'));
-          return new Blob(select);
-        },
-        {
-          expected: '[object HTMLOptionElement]',
-          type: '',
-          desc: 'Passing a platform object that supports indexed properties as the blobParts array should work (select).',
-        }
-      );
-
-      test_blob(
-        function () {
-          const document = new Document();
-          var elm = document.createElement('div');
-          elm.setAttribute('foo', 'bar');
-          return new Blob(elm.attributes);
-        },
-        {
-          expected: '[object Attr]',
-          type: '',
-          desc: 'Passing an platform object that supports indexed properties as the blobParts array should work (attributes).',
-        }
-      );
-    });
+    //     test_blob(function() {
+    //         var elm = document.createElement("div");
+    //         elm.setAttribute("foo", "bar");
+    //         return new Blob(elm.attributes);
+    //     }, {
+    //         expected: "[object Attr]",
+    //         type: "",
+    //         desc: "Passing an platform object that supports indexed properties as the blobParts array should work (attributes)."
+    //     });
+    // })
 
     describe('Text', async () => {
       it('simple', async () => {
@@ -959,11 +967,6 @@ export async function test({ describe, it, expect, jasmine }) {
         const text = await blob.text();
         expect(text).toBe('PASS');
       });
-      it('Sync Text', () => {
-        const blob = new Blob(['PA', 'SS']);
-        const text = blob.syncText();
-        expect(text).toBe('PASS');
-      });
       it('different charset param with non-ascii input', async () => {
         const non_unicode = '\u0061\u030A';
         const input_arr = new TextEncoder().encode(non_unicode);
@@ -981,7 +984,7 @@ export async function test({ describe, it, expect, jasmine }) {
           '\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd'
         );
       });
-      it('Promise.all multiple reads', async () => {
+      it('Blob.text() concurrent reads', async () => {
         const input_arr = new Uint8Array([
           192, 193, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
         ]);
@@ -1318,13 +1321,12 @@ export async function test({ describe, it, expect, jasmine }) {
       });
 
       it('stream xhr crash', async () => {
-        // TODO this constructor doesn't work need to fix it
-        // const blob = new Blob([1, 2]);
-        const blob = new Blob([Int32Array.from([1, 2])]);
+        const blob = new Blob([1, 2]);
         const readable = blob.stream();
         const writable = new WritableStream(
           {},
           {
+            // @ts-ignore
             size() {
               let xhr = new XMLHttpRequest();
               xhr.open('POST', '1', false);
