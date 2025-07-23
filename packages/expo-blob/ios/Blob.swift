@@ -19,12 +19,7 @@ public class Blob: SharedObject {
   }
   
   func slice(start: Int, end: Int, contentType: String) -> Blob {
-    let blobSize = self.size
-    
-    let relativeStart = start < 0 ? max(blobSize + start, 0) : min(start, blobSize)
-    let relativeEnd = end < 0 ? max(blobSize + end, 0) : min(end, blobSize)
-    
-    let span = max(relativeEnd - relativeStart, 0)
+    let span = max(end - start, 0)
     let typeString = contentType
     
     if span == 0 {
@@ -38,7 +33,7 @@ public class Blob: SharedObject {
     for part in blobParts {
       let partSize = part.size()
       
-      if currentPos + partSize <= relativeStart {
+      if currentPos + partSize <= start {
         currentPos += partSize
         continue
       }
@@ -47,7 +42,7 @@ public class Blob: SharedObject {
         break
       }
       
-      let partStart = max(0, relativeStart - currentPos)
+      let partStart = max(0, start - currentPos)
       let partEnd = min(partSize, partStart + remaining)
       let length = partEnd - partStart
       
@@ -70,9 +65,11 @@ public class Blob: SharedObject {
           let subBlob = blob.slice(start: partStart, end: partStart + length, contentType: blob.type)
           dataSlice.append(.blob(subBlob))
       }
+      
       currentPos += partSize
       remaining -= length
     }
+    
     return Blob(blobParts: dataSlice, options: BlobOptions(type: typeString, endings: self.options.endings))
   }
   
