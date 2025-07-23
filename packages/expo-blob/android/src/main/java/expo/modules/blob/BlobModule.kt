@@ -47,10 +47,6 @@ class BlobModule : Module() {
             AsyncFunction("text") { blob: Blob ->
                 blob.text()
             }
-
-            Function("syncText") { blob: Blob ->
-                blob.text()
-            }
         }
     }
 }

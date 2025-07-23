@@ -24,9 +24,7 @@ export async function test({ describe, it, expect }) {
       expect(blob.size).toBe(expected.length);
 
       const text = await blob.text();
-      const text1 = blob.syncText();
       expect(text).toEqual(expected);
-      expect(text).toEqual(text1);
     });
   };
   const test_blob_binary = async (fn, expectations) => {
@@ -138,14 +136,9 @@ export async function test({ describe, it, expect }) {
         const input_arr = [8, 241, 48, 123, 151];
         const typed_arr = new Uint8Array(input_arr);
         const blob = new Blob([typed_arr]);
-        // const array_buffer = await blob.arrayBuffer();
-        const array_buffer = await blob.bytes();
-        // expect(blob.syncText()).toEqual("\u0008\u00F1\u0030\u007B\u0097")
-        // expect(new Uint8Array(array_buffer) == typed_arr).toBeTruthy()
-        // expect(new Uint8Array(array_buffer)).toEqual(typed_arr);
+        const array_buffer = await blob.arrayBuffer();
         expect(blob.size).toBe(5);
-        expect(array_buffer.length).toBe(5);
-        expect(array_buffer).toEqual(typed_arr);
+        expect(new Uint8Array(array_buffer)).toEqual(new Uint8Array(input_arr));
       });
       it('concurrent reads', async () => {
         const input_arr = new TextEncoder().encode('PASS');
@@ -202,7 +195,7 @@ export async function test({ describe, it, expect }) {
     });
 
     // Windows platforms use CRLF as the native line ending. All others use LF.
-    const crlf = Platform.OS == 'windows';
+    const crlf = Platform.OS === 'windows';
     const native_ending = crlf ? '\r\n' : '\n';
     describe('constructor-endings', async () => {
       it('valid endings value', () => {
@@ -211,7 +204,7 @@ export async function test({ describe, it, expect }) {
         expect(blob0).toBeTruthy();
         expect(blob1).toBeTruthy();
       });
-      it('invalud endings value', () => {
+      it('Invalid endings value', () => {
         [null, '', 'invalidEnumValue', 'Transparent', 'NATIVE', 0, {}].forEach((ending) => {
           // @ts-expect-error
           expect(() => new Blob([], { endings: ending })).toThrow();
@@ -256,28 +249,28 @@ export async function test({ describe, it, expect }) {
         { name: 'CRLFCRLF', input: '\r\n\r\n', native: native_ending.repeat(2) },
         { name: 'LFCRLFCR', input: '\n\r\n\r', native: native_ending.repeat(3) },
       ];
-      it('Newlines should not change with endings unspecified', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should not change with endings unspecified', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input]);
-          expect(blob.syncText()).toBe(testCase.input);
+          expect(await blob.text()).toBe(testCase.input);
         });
       });
-      it('Newlines should not change with endings "transparent"', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should not change with endings "transparent"', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input], { endings: 'transparent' });
-          expect(blob.syncText()).toBe(testCase.input);
+          expect(await blob.text()).toBe(testCase.input);
         });
       });
-      it('Newlines should match the platform with endings "native"', () => {
-        sampleEndings.forEach((testCase) => {
+      it('Newlines should match the platform with endings "native"', async () => {
+        sampleEndings.forEach(async (testCase) => {
           const blob = new Blob([testCase.input], { endings: 'native' });
-          expect(blob.syncText()).toBe(testCase.native);
+          expect(await blob.text()).toBe(testCase.native);
         });
       });
-      it('CR/LF in adjacent input strings', () => {
+      it('CR/LF in adjacent input strings', async () => {
         const blob = new Blob(['\r', '\n'], { endings: 'native' });
         const expected = native_ending.repeat(2);
-        expect(blob.syncText()).toBe(expected);
+        expect(await blob.text()).toBe(expected);
       });
     });
 
@@ -367,20 +360,20 @@ export async function test({ describe, it, expect }) {
         });
         expect(blob.size).toBe(5);
       });
-      it('A plain object with @@iterator and a length property should be treated as a sequence for the blobParts argument.', () => {
-        let blob = new Blob({
-          [Symbol.iterator]: Array.prototype[Symbol.iterator],
-          0: 'PASS',
-          length: 1,
-        });
-        expect(blob.syncText()).toEqual('PASS');
-        expect(blob.type).toBe('');
-      });
-      it('A String object should be treated as a sequence for the blobParts argument.', () => {
-        let blob = new Blob(new String('xyz'));
-        expect(blob.syncText()).toEqual('xyz');
-        expect(blob.type).toBe('');
-      });
+      test_blob(
+        function () {
+          return new Blob({
+            [Symbol.iterator]: Array.prototype[Symbol.iterator],
+            0: 'PASS',
+            length: 1,
+          });
+        },
+        {
+          expected: 'PASS',
+          type: '',
+          desc: 'A plain object with @@iterator and a length property should be treated as a sequence for the blobParts argument.',
+        }
+      );
       test_blob(
         function () {
           return new Blob(new String('xyz'));
@@ -515,7 +508,7 @@ export async function test({ describe, it, expect }) {
                   throw test_error;
                 },
                 valueOf: function () {
-                  expect(false).toBe(true);
+                  expect('Should not call valueOf if toString is present.').toBe('');
                 },
               },
             ])
@@ -537,7 +530,13 @@ export async function test({ describe, it, expect }) {
                 return 'PASS';
               },
             },
-            { toString: function () {} },
+            {
+              toString: function () {
+                expect(
+                  'Should have removed the second element of the array rather than called toString() on it.'
+                ).toBe('');
+              },
+            },
           ];
           return new Blob(arr);
         },
@@ -558,7 +557,7 @@ export async function test({ describe, it, expect }) {
                 arr.unshift({
                   // @ts-ignore
                   toString: function () {
-                    expect(true).toBe(false);
+                    expect('Should only access index 0 once.').toBe('');
                   },
                 });
                 return 'P';
@@ -606,7 +605,7 @@ export async function test({ describe, it, expect }) {
             },
             {
               valueOf: function () {
-                expect(false).toBe(true);
+                expect('Should not call valueOf if toString is present on the prototype.').toBe('');
               },
             },
           ]);
@@ -964,11 +963,6 @@ export async function test({ describe, it, expect }) {
         const text = await blob.text();
         expect(text).toBe('PASS');
       });
-      it('Sync Text', () => {
-        const blob = new Blob(['PA', 'SS']);
-        const text = blob.syncText();
-        expect(text).toBe('PASS');
-      });
       it('different charset param with non-ascii input', async () => {
         const non_unicode = '\u0061\u030A';
         const input_arr = new TextEncoder().encode(non_unicode);
@@ -986,7 +980,7 @@ export async function test({ describe, it, expect }) {
           '\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd'
         );
       });
-      it('Promise.all multiple reads', async () => {
+      it('Blob.text() concurrent reads', async () => {
         const input_arr = new Uint8Array([
           192, 193, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
         ]);

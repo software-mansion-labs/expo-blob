@@ -7,7 +7,6 @@ declare class NativeBlob extends SharedObject {
     slice(start?: number, end?: number, contentType?: string): ExpoBlob;
     bytes(): Promise<Uint8Array>;
     text(): Promise<string>;
-    syncText(): string;
 }
 declare class ExpoBlobModule extends NativeModule {
     Blob: typeof NativeBlob;
