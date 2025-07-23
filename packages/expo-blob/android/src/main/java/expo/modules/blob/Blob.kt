@@ -158,7 +158,7 @@ sealed class InternalBlobPart() {
 
     fun size(): Int {
         return when (this) {
-            is StringPart -> string.length
+            is StringPart -> string.toByteArray().size
             is BlobPart -> blob.size
             is BufferPart -> buffer.size
         }
