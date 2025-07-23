@@ -121,6 +121,28 @@ export async function test({ describe, it, expect }) {
         );
         expect(await blob.size).toBe(17);
       });
+      describe('large slice start and end', async () => {
+        it('large positive start', async () => {
+          let blob = new Blob(['PASS']);
+          let str = await blob.slice(10000).text();
+          expect(str).toBe('');
+        });
+        it('large negative start', async () => {
+          let blob = new Blob(['PASS']);
+          let str = await blob.slice(-10000).text();
+          expect(str).toBe('PASS');
+        });
+        it('large positive end', async () => {
+          let blob = new Blob(['PASS']);
+          let str = await blob.slice(0, 10000).text();
+          expect(str).toBe('PASS');
+        });
+        it('large negative end', async () => {
+          let blob = new Blob(['PASS']);
+          let str = await blob.slice(0, -10000).text();
+          expect(str).toBe('');
+        });
+      });
     });
 
     describe('Array buffer', () => {
