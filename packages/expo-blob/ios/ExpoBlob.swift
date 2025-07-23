@@ -32,7 +32,22 @@ public class ExpoBlob: Module {
       }
       
       Function("slice") { (blob: Blob, start: Int?, end: Int?, contentType: String?) in
-        blob.slice(start: start ?? 0, end: end, contentType: contentType ?? "")
+        let blobSize = blob.size
+        let safeStart = start ?? 0
+        let safeEnd = end ?? blobSize
+        let safeContentType: String
+        
+        if let contentType = contentType {
+          if (contentType as AnyObject) is NSNull {
+            safeContentType = "null"
+          } else {
+            safeContentType = contentType.lowercased()
+          }
+        } else {
+          safeContentType = blob.type
+        }
+        
+        return blob.slice(start: safeStart, end: safeEnd, contentType: safeContentType)
       }
       
       Function("syncText") { (blob: Blob) in
