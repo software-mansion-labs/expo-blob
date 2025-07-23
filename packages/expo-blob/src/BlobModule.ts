@@ -60,14 +60,11 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
   constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
     const inputMapping = (v: any) => {
       if (v instanceof ArrayBuffer) {
-        console.log('AB');
         return new Uint8Array(v);
       }
       if (v instanceof ExpoBlob || isTypedArray(v)) {
-        console.log('Blob | TypedArray');
         return v;
       }
-      console.log('to String');
       return String(v);
     };
 

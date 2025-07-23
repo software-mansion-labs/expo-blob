@@ -60,7 +60,10 @@ export async function test({ describe, it, expect }) {
   // Takes in a ReadableStream and reads from it until it is done, returning
   // an array that contains the results of each read operation. If perform_gc
   // is true, garbage collection is triggered while reading every chunk.
-  const read_all_chunks = async (stream, { perform_gc = false, mode } = {}) => {
+  const read_all_chunks = async (
+    stream,
+    { perform_gc = false, mode }: { perform_gc?: boolean; mode?: string } = {}
+  ) => {
     expect(stream instanceof ReadableStream).toBeTruthy();
     expect('getReader' in stream).toBeTruthy();
     const reader = stream.getReader({ mode });
@@ -216,10 +219,10 @@ export async function test({ describe, it, expect }) {
       });
       it('Exception propagation from options', () => {
         const test_error = { name: 'test string' };
-        // @ts-expect-error
         expect(
           () =>
             new Blob([], {
+              // @ts-expect-error
               get endings() {
                 throw test_error;
               },
@@ -229,8 +232,8 @@ export async function test({ describe, it, expect }) {
 
       it("The 'endings' options property is used", () => {
         let got = false;
-        // @ts-expect-error
         new Blob([], {
+          // @ts-expect-error
           get endings() {
             got = true;
           },
@@ -297,6 +300,7 @@ export async function test({ describe, it, expect }) {
       });
       it("Blob constructor with no arguments, without 'new'", () => {
         expect(() => {
+          // @ts-ignore
           var blob = Blob();
         }).toThrow();
       });
@@ -352,6 +356,7 @@ export async function test({ describe, it, expect }) {
       );
       it('A plain object with custom @@iterator should be treated as a sequence for the blobParts argument.', () => {
         const blob = new Blob({
+          // @ts-ignore
           [Symbol.iterator]() {
             var i = 0;
             return {
@@ -551,6 +556,7 @@ export async function test({ describe, it, expect }) {
                   return 'A';
                 }
                 arr.unshift({
+                  // @ts-ignore
                   toString: function () {
                     expect(true).toBe(false);
                   },
@@ -1322,6 +1328,7 @@ export async function test({ describe, it, expect }) {
         const writable = new WritableStream(
           {},
           {
+            // @ts-ignore
             size() {
               let xhr = new XMLHttpRequest();
               xhr.open('POST', '1', false);
