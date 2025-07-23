@@ -1,3 +1,5 @@
+import { TypedArray } from 'expo-modules-core';
+
 export declare class Blob {
   constructor(blobParts?: any, options?: BlobPropertyBag);
 
@@ -7,4 +9,4 @@ export declare class Blob {
   arrayBuffer(): Promise<ArrayBufferLike>;
 }
 
-export type BlobPart = string | ArrayBuffer | ArrayBufferView | Blob;
+export type BlobPart = string | TypedArray | ArrayBuffer | ArrayBufferView | Blob;

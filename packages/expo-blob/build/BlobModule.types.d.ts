@@ -1,3 +1,4 @@
+import { TypedArray } from 'expo-modules-core';
 export declare class Blob {
     constructor(blobParts?: any, options?: BlobPropertyBag);
     slice(start?: number, end?: number, contentType?: string): Blob;
@@ -5,5 +6,5 @@ export declare class Blob {
     text(): Promise<string>;
     arrayBuffer(): Promise<ArrayBufferLike>;
 }
-export type BlobPart = string | ArrayBuffer | ArrayBufferView | Blob;
+export type BlobPart = string | TypedArray | ArrayBuffer | ArrayBufferView | Blob;
 //# sourceMappingURL=BlobModule.types.d.ts.map

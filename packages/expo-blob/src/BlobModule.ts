@@ -1,19 +1,7 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo';
 import { Blob, BlobPart } from './BlobModule.types';
 import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
-
-declare class NativeBlob extends SharedObject {
-  readonly size: number;
-  readonly type: string;
-  constructor(blobParts?: BlobPart[], options?: BlobPropertyBag);
-  slice(start?: number, end?: number, contentType?: string): ExpoBlob;
-  bytes(): Promise<Uint8Array>;
-  text(): Promise<string>;
-}
-
-declare class ExpoBlobModule extends NativeModule {
-  Blob: typeof NativeBlob;
-}
+import { ExpoBlobModule } from './types';
 
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>('ExpoBlob');
 
@@ -43,7 +31,7 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
     }
   }
 
-  slice(start?: number, end?: number, contentType?: string): ExpoBlob {
+  slice(start?: number, end?: number, contentType?: string): Blob {
     const normalizedType = normalizedContentType(contentType);
     const slicedBlob = super.slice(start, end, normalizedType);
     Object.setPrototypeOf(slicedBlob, ExpoBlob.prototype);
