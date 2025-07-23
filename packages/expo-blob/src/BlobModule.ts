@@ -1,6 +1,7 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo';
 import { Blob, BlobPart } from './BlobModule.types';
-import { normalizedContentType } from './utils';
+import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
+
 declare class NativeBlob extends SharedObject {
   readonly size: number;
   readonly type: string;
@@ -15,45 +16,6 @@ declare class ExpoBlobModule extends NativeModule {
 }
 
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>('ExpoBlob');
-
-const isTypedArray = (v: any): boolean => {
-  return (
-    v instanceof Int16Array ||
-    v instanceof Int32Array ||
-    v instanceof Int8Array ||
-    v instanceof BigInt64Array ||
-    v instanceof BigUint64Array ||
-    v instanceof Uint16Array ||
-    v instanceof Uint32Array ||
-    v instanceof Uint8Array ||
-    v instanceof Float32Array ||
-    v instanceof Float64Array
-  );
-};
-
-const getOptions = (options?: BlobPropertyBag) => {
-  if (options) {
-    if (!(options instanceof Object)) {
-      throw TypeError();
-    }
-
-    let e = options.endings;
-    let t = options.type;
-    if (e && typeof e === 'object') {
-      e = String(e);
-    }
-    if (t && typeof t === 'object') {
-      t = String(t);
-    }
-
-    return {
-      endings: e,
-      type: normalizedContentType(t),
-    };
-  }
-
-  return options;
-};
 
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
   constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
@@ -70,14 +32,14 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
     let bps: any[] = [];
 
     if (blobParts === undefined) {
-      super([], getOptions(options));
+      super([], preprocessOptions(options));
     } else if (blobParts === null || typeof blobParts !== 'object') {
       throw TypeError();
     } else {
       for (let bp of blobParts) {
         bps.push(inputMapping(bp));
       }
-      super(bps, getOptions(options));
+      super(bps, preprocessOptions(options));
     }
   }
 

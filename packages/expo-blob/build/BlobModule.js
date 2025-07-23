@@ -1,38 +1,6 @@
 import { requireNativeModule } from 'expo';
-import { normalizedContentType } from './utils';
+import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
 const NativeBlobModule = requireNativeModule('ExpoBlob');
-const isTypedArray = (v) => {
-    return (v instanceof Int16Array ||
-        v instanceof Int32Array ||
-        v instanceof Int8Array ||
-        v instanceof BigInt64Array ||
-        v instanceof BigUint64Array ||
-        v instanceof Uint16Array ||
-        v instanceof Uint32Array ||
-        v instanceof Uint8Array ||
-        v instanceof Float32Array ||
-        v instanceof Float64Array);
-};
-const getOptions = (options) => {
-    if (options) {
-        if (!(options instanceof Object)) {
-            throw TypeError();
-        }
-        let e = options.endings;
-        let t = options.type;
-        if (e && typeof e === 'object') {
-            e = String(e);
-        }
-        if (t && typeof t === 'object') {
-            t = String(t);
-        }
-        return {
-            endings: e,
-            type: normalizedContentType(t),
-        };
-    }
-    return options;
-};
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
         const inputMapping = (v) => {
@@ -46,7 +14,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         };
         let bps = [];
         if (blobParts === undefined) {
-            super([], getOptions(options));
+            super([], preprocessOptions(options));
         }
         else if (blobParts === null || typeof blobParts !== 'object') {
             throw TypeError();
@@ -55,7 +23,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
             for (let bp of blobParts) {
                 bps.push(inputMapping(bp));
             }
-            super(bps, getOptions(options));
+            super(bps, preprocessOptions(options));
         }
     }
     slice(start, end, contentType) {
