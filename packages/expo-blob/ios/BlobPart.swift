@@ -17,7 +17,7 @@ extension BlobPart {
         return blob.text()
     }
   }
-  
+
   func size() -> Int {
     switch self {
     case .string(let str):
@@ -28,7 +28,7 @@ extension BlobPart {
       return blob.size
     }
   }
-  
+
   func bytes() async -> [UInt8] {
     switch self {
       case .string(let str):
