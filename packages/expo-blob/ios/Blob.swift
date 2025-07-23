@@ -54,15 +54,15 @@ public class Blob: SharedObject {
       switch part {
         case .string(let str):
           let utf8 = Array(str.utf8)
-          let subUtf8 = Array(utf8[partStart..<partStart + length])
+          let subUtf8 = Array(utf8[partStart..<partEnd])
           if let subStr = String(bytes: subUtf8, encoding: .utf8) {
             dataSlice.append(.string(subStr))
           }
         case .data(let data):
-          let subData = data.subdata(in: partStart..<partStart + length)
+          let subData = data.subdata(in: partStart..<partEnd)
           dataSlice.append(.data(subData))
         case .blob(let blob):
-          let subBlob = blob.slice(start: partStart, end: partStart + length, contentType: blob.type)
+          let subBlob = blob.slice(start: partStart, end: partEnd, contentType: blob.type)
           dataSlice.append(.blob(subBlob))
       }
 
