@@ -50,7 +50,9 @@ export async function test({ describe, it, expect }) {
   // if perform_gc is true.
   const read_and_gc = async (reader, perform_gc) => {
     // Passing Uint8Array for byte streams; non-byte streams will simply ignore it
+    console.log('before reader read');
     const read_promise = reader.read(new Uint8Array(64));
+    console.log('after reader read');
     if (perform_gc) {
       // TODO Actually perform garbage collection in here
       // await garbageCollect();
@@ -72,10 +74,14 @@ export async function test({ describe, it, expect }) {
     let out = [];
     let i = 0;
     while (!read_value.done) {
+      console.log('while');
       for (let val of read_value.value) {
         out[i++] = val;
+        console.log('for');
       }
+      console.log('finished for');
       read_value = await read_and_gc(reader, perform_gc);
+      console.log('read_value after for');
     }
     return out;
   };
@@ -314,7 +320,7 @@ export async function test({ describe, it, expect }) {
         expect(blob.size).toBe(0);
         expect(blob.type).toBe('');
       });
-      // TODO Something wrong with null ? Why should Blob() work and Blob(null) not ???
+
       it('Passing non-objects, Dates and RegExps for blobParts should throw a TypeError.', () => {
         [
           null,
@@ -435,8 +441,6 @@ export async function test({ describe, it, expect }) {
         }).toThrow(test_error);
       });
       it('Getters and value conversions should happen in order until an exception is thrown.', () => {
-        console.log('GREPME START');
-
         var received = [];
         var obj = {
           get [Symbol.iterator]() {
@@ -473,9 +477,6 @@ export async function test({ describe, it, expect }) {
         };
         expect(() => new Blob(obj)).toThrow(test_error);
 
-        console.log(received);
-        console.log('GREPME END');
-        // Somehow we don't call 0 toString but I don't know why not or why would we
         expect(received).toEqual([
           'Symbol.iterator',
           'length getter',
@@ -522,8 +523,13 @@ export async function test({ describe, it, expect }) {
               },
             ])
         ).toThrow(test_error);
-        // TODO add the proper TypeError type to toThrow
-        expect(() => new Blob([{ toString: null, valueOf: null }])).toThrow();
+
+        try {
+          new Blob([{ toString: null, valueOf: null }]);
+          expect('NOT REACHABLE').toBe('');
+        } catch (e) {
+          expect(e instanceof TypeError).toBeTruthy();
+        }
       });
       test_blob(
         function () {
@@ -740,7 +746,6 @@ export async function test({ describe, it, expect }) {
         }
       );
 
-      // TODO revisit this, why can we pass view but not the buffer?
       test_blob(
         function () {
           var view = new Uint8Array([0]);
@@ -883,11 +888,8 @@ export async function test({ describe, it, expect }) {
 
         type_tests.forEach(function (t: Array<any>) {
           it('Blob with type ' + JSON.stringify(t[1]), () => {
-            // TODO Why this construction? It does'nt work yet, but it's not what we test for...
-            // var arr = new Uint8Array([t[0]]).buffer;
-            // var b = new Blob([arr], {type:t[1]});
-
-            var b = new Blob(t[0], { type: t[1] });
+            var arr = new Uint8Array([t[0]]).buffer;
+            var b = new Blob([arr], { type: t[1] });
             expect(b.type).toEqual(t[2]);
           });
         });
@@ -1324,9 +1326,7 @@ export async function test({ describe, it, expect }) {
       });
 
       it('stream xhr crash', async () => {
-        // TODO this constructor doesn't work need to fix it
-        // const blob = new Blob([1, 2]);
-        const blob = new Blob([Int32Array.from([1, 2])]);
+        const blob = new Blob([1, 2]);
         const readable = blob.stream();
         const writable = new WritableStream(
           {},

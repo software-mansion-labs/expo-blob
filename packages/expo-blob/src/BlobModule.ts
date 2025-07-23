@@ -94,16 +94,20 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
 
   stream(): ReadableStream {
     const uint8promise = super.bytes();
-    let offset = 0;
     return new ReadableStream<Uint8Array>({
-      async pull(controller) {
-        let uint8 = await uint8promise;
-        if (offset < uint8.length) {
-          controller.enqueue(uint8.subarray(offset));
-          offset = uint8.length;
-        } else {
+      type: 'bytes',
+
+      async start(controller) {
+        let bytes = await uint8promise;
+        if (bytes.length == 0) {
           controller.close();
+        } else {
+          controller.enqueue(bytes);
         }
+      },
+
+      async pull(controller) {
+        controller.close();
       },
     });
   }
