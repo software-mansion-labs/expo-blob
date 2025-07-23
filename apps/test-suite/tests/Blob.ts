@@ -50,9 +50,7 @@ export async function test({ describe, it, expect }) {
   // if perform_gc is true.
   const read_and_gc = async (reader, perform_gc) => {
     // Passing Uint8Array for byte streams; non-byte streams will simply ignore it
-    console.log('before reader read');
     const read_promise = reader.read(new Uint8Array(64));
-    console.log('after reader read');
     if (perform_gc) {
       // TODO Actually perform garbage collection in here
       // await garbageCollect();
@@ -74,14 +72,10 @@ export async function test({ describe, it, expect }) {
     let out = [];
     let i = 0;
     while (!read_value.done) {
-      console.log('while');
       for (let val of read_value.value) {
         out[i++] = val;
-        console.log('for');
       }
-      console.log('finished for');
       read_value = await read_and_gc(reader, perform_gc);
-      console.log('read_value after for');
     }
     return out;
   };
@@ -476,7 +470,6 @@ export async function test({ describe, it, expect }) {
           },
         };
         expect(() => new Blob(obj)).toThrow(test_error);
-
         expect(received).toEqual([
           'Symbol.iterator',
           'length getter',
@@ -790,7 +783,6 @@ export async function test({ describe, it, expect }) {
             },
           },
         });
-
         expect(accessed).toEqual(['endings', 'type']);
         expect(stringified).toEqual(['endings', 'type']);
       });

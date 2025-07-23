@@ -15,13 +15,11 @@
  */
 export function normalizedContentType(type) {
     if (type === undefined)
-        return "";
-    const str = "" + type;
-    // if (type === null) return "null"
-    // if (!type || type.length === 0) return "";
+        return '';
+    const str = '' + type;
     const asciiPrintable = /^[\x20-\x7E]+$/;
     if (!asciiPrintable.test(str))
-        return "";
+        return '';
     return str.toLowerCase();
 }
 //# sourceMappingURL=utils.js.map
