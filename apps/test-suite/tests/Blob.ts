@@ -52,8 +52,7 @@ export async function test({ describe, it, expect, jasmine }) {
     // Passing Uint8Array for byte streams; non-byte streams will simply ignore it
     const read_promise = reader.read(new Uint8Array(64));
     if (perform_gc) {
-      // TODO Actually perform garbage collection in here
-      // await garbageCollect();
+      gc();
     }
     return read_promise;
   };
@@ -1365,8 +1364,7 @@ export async function test({ describe, it, expect, jasmine }) {
           let blob = new Blob([typed_arr]);
           const stream = blob.stream();
           blob = null;
-          // TODO Actually call garbageCollect()
-          // await garbageCollect();
+          gc();
           const chunks = await read_all_chunks(stream, { perform_gc: true });
           expect(chunks).toEqual(input_arr);
         }
@@ -1379,9 +1377,7 @@ export async function test({ describe, it, expect, jasmine }) {
           const typed_arr = new Uint8Array(input_arr);
           let blob = new Blob([typed_arr]);
           const chunksPromise = read_all_chunks(blob.stream());
-          // It somehow matters to do GC here instead of doing `perform_gc: true`
-          // TODO Actually call garbageCollect()
-          // await garbageCollect();
+          gc();
           expect(await chunksPromise).toEqual(input_arr);
         }
       );
