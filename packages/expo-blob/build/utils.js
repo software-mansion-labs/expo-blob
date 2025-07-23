@@ -36,7 +36,10 @@ export function isTypedArray(obj) {
         obj instanceof Float64Array);
 }
 /**
- * Processes the options object and
+ * Processes the options object if defined and not null.
+ * The function coerces .type and .options to 'string' (if they are defined objects)
+ * TypeError is thrown when the options is not an object or .endings are invalid.
+ *
  * @param options
  * @returns BlobPropertyBag object
  */
