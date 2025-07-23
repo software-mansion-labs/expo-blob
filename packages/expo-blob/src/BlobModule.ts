@@ -124,3 +124,8 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
     return '[object Blob]';
   }
 }
+
+Object.defineProperty(ExpoBlob, 'length', {
+  value: 0,
+  writable: false,
+});

@@ -94,4 +94,8 @@ export class ExpoBlob extends NativeBlobModule.Blob {
         return '[object Blob]';
     }
 }
+Object.defineProperty(ExpoBlob, 'length', {
+    value: 0,
+    writable: false,
+});
 //# sourceMappingURL=BlobModule.js.map
