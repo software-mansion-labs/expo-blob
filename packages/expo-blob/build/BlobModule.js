@@ -1,5 +1,5 @@
 import { requireNativeModule } from 'expo';
-import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
+import { isTypedArray, normalizedContentType, preprocessOptions, DEFAULT_CHUNK_SIZE, } from './utils';
 const NativeBlobModule = requireNativeModule('ExpoBlob');
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
@@ -59,7 +59,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
                     }
                     return;
                 }
-                const chunkSize = 65_536;
+                const chunkSize = DEFAULT_CHUNK_SIZE;
                 const end = Math.min(offset + chunkSize, bytes.length);
                 controller.enqueue(bytes.subarray(offset, end));
                 offset = end;
