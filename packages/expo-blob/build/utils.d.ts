@@ -14,4 +14,15 @@
  * @returns The normalized (lowercased) content type, or an empty string if invalid.
  */
 export declare function normalizedContentType(type?: string): string;
+/**
+ * @param obj The object to check whether it's a Typed Array or not.
+ * @returns boolean indicating whether the obj is a Typed Array or not.
+ */
+export declare function isTypedArray(obj: any): boolean;
+/**
+ * Processes the options object and
+ * @param options
+ * @returns BlobPropertyBag object
+ */
+export declare const preprocessOptions: (options?: BlobPropertyBag) => BlobPropertyBag | undefined;
 //# sourceMappingURL=utils.d.ts.map

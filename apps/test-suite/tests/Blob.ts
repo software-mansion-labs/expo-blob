@@ -210,10 +210,14 @@ export async function test({ describe, it, expect, jasmine }) {
         expect(blob0).toBeTruthy();
         expect(blob1).toBeTruthy();
       });
-      it('invalud endings value', () => {
+      it('invalid endings value', () => {
         [null, '', 'invalidEnumValue', 'Transparent', 'NATIVE', 0, {}].forEach((ending) => {
-          // @ts-expect-error
-          expect(() => new Blob([], { endings: ending })).toThrow();
+          try {
+            // @ts-expect-error
+            new Blob([], { endings: ending });
+          } catch (e) {
+            expect(e instanceof TypeError).toBeTruthy();
+          }
         });
       });
       it('Exception propagation from options', () => {

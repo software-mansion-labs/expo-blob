@@ -1,9 +1,33 @@
 import { requireNativeModule } from 'expo';
-import { normalizedContentType } from './utils';
+import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
 const NativeBlobModule = requireNativeModule('ExpoBlob');
 export class ExpoBlob extends NativeBlobModule.Blob {
     constructor(blobParts, options) {
-        super(blobParts?.flat(Infinity) ?? [], options);
+        const inputMapping = (v) => {
+            if (v instanceof ArrayBuffer) {
+                console.log('AB');
+                return new Uint8Array(v);
+            }
+            if (v instanceof ExpoBlob || isTypedArray(v)) {
+                console.log('Blob | TypedArray');
+                return v;
+            }
+            console.log('to String');
+            return String(v);
+        };
+        let bps = [];
+        if (blobParts === undefined) {
+            super([], preprocessOptions(options));
+        }
+        else if (blobParts === null || typeof blobParts !== 'object') {
+            throw TypeError();
+        }
+        else {
+            for (let bp of blobParts) {
+                bps.push(inputMapping(bp));
+            }
+            super(bps, preprocessOptions(options));
+        }
     }
     slice(start, end, contentType) {
         const normalizedType = normalizedContentType(contentType);
@@ -51,4 +75,8 @@ export class ExpoBlob extends NativeBlobModule.Blob {
             .then((bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     }
 }
+Object.defineProperty(ExpoBlob, 'length', {
+    value: 0,
+    writable: false,
+});
 //# sourceMappingURL=BlobModule.js.map

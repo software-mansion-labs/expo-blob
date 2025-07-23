@@ -1,7 +1,7 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo';
 
 import { Blob, BlobPart } from './BlobModule.types';
-import { normalizedContentType } from './utils';
+import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
 declare class NativeBlob extends SharedObject {
   readonly size: number;
   readonly type: string;
@@ -19,8 +19,32 @@ declare class ExpoBlobModule extends NativeModule {
 const NativeBlobModule = requireNativeModule<ExpoBlobModule>('ExpoBlob');
 
 export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
-  constructor(blobParts?: any[], options?: BlobPropertyBag) {
-    super(blobParts?.flat(Infinity) ?? [], options);
+  constructor(blobParts?: any[] | Iterable<any>, options?: BlobPropertyBag) {
+    const inputMapping = (v: any) => {
+      if (v instanceof ArrayBuffer) {
+        console.log('AB');
+        return new Uint8Array(v);
+      }
+      if (v instanceof ExpoBlob || isTypedArray(v)) {
+        console.log('Blob | TypedArray');
+        return v;
+      }
+      console.log('to String');
+      return String(v);
+    };
+
+    let bps: any[] = [];
+
+    if (blobParts === undefined) {
+      super([], preprocessOptions(options));
+    } else if (blobParts === null || typeof blobParts !== 'object') {
+      throw TypeError();
+    } else {
+      for (let bp of blobParts) {
+        bps.push(inputMapping(bp));
+      }
+      super(bps, preprocessOptions(options));
+    }
   }
 
   slice(start?: number, end?: number, contentType?: string): ExpoBlob {
@@ -76,3 +100,8 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
       );
   }
 }
+
+Object.defineProperty(ExpoBlob, 'length', {
+  value: 0,
+  writable: false,
+});

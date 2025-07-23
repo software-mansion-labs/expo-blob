@@ -23,4 +23,48 @@ export function normalizedContentType(type) {
         return '';
     return type.toLowerCase();
 }
+/**
+ * @param obj The object to check whether it's a Typed Array or not.
+ * @returns boolean indicating whether the obj is a Typed Array or not.
+ */
+export function isTypedArray(obj) {
+    return (obj instanceof Int8Array ||
+        obj instanceof Int16Array ||
+        obj instanceof Int32Array ||
+        obj instanceof BigInt64Array ||
+        obj instanceof Uint8Array ||
+        obj instanceof Uint16Array ||
+        obj instanceof Uint32Array ||
+        obj instanceof BigUint64Array ||
+        obj instanceof Float32Array ||
+        obj instanceof Float64Array);
+}
+/**
+ * Processes the options object and
+ * @param options
+ * @returns BlobPropertyBag object
+ */
+export const preprocessOptions = (options) => {
+    if (options) {
+        if (!(options instanceof Object)) {
+            throw TypeError();
+        }
+        let e = options.endings;
+        let t = options.type;
+        if (e && typeof e === 'object') {
+            e = String(e);
+        }
+        if (t && typeof t === 'object') {
+            t = String(t);
+        }
+        if (e !== undefined && e !== 'native' && e !== 'transparent') {
+            throw TypeError();
+        }
+        return {
+            endings: e,
+            type: normalizedContentType(t),
+        };
+    }
+    return options;
+};
 //# sourceMappingURL=utils.js.map
