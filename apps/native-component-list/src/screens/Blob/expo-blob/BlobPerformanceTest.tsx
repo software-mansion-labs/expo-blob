@@ -28,6 +28,17 @@ const performanceTest: PerformanceTestData[] = [
     },
     title: 'Slice',
   },
+  {
+    key: '1MB arrayBuffer',
+    blobCreation: () => {
+      throw new Error('async'); // sygnalizuje, że to test asynchroniczny
+    },
+    expoBlobCreation: () => {
+      throw new Error('async');
+    },
+    blobOperation: () => {}, // nieużywane
+    title: 'arrayBuffer() on 1-MB-DOC',
+  },
 ];
 
 type ArrayBufferExampleItemProps = {
@@ -79,9 +90,46 @@ export default function BlobArrayBufferScreen() {
       expoBlobTime: number;
     } | null;
   }>({});
-  const iterations = 100;
+  const iterations = 3;
 
-  const evaluatePerformanceTest = (example: PerformanceTestData) => {
+  const evaluatePerformanceTest = async (example: PerformanceTestData) => {
+    if (example.key === '1MB arrayBuffer') {
+      try {
+        const url =
+          'https://github.com/software-mansion-labs/expo-blob/blob/performance-testing/apps/native-component-list/src/screens/Blob/expo-blob/1-MB-DOC.doc';
+        const response = await fetch(url);
+        const text = await response.text();
+
+        // ExpoBlob
+        const expoBlob = new ExpoBlob([text]);
+        const expoBlobT0 = performance.now();
+        expoBlob.slice(0, 179850);
+        const expoBlobT1 = performance.now();
+        const expoBlobTime = expoBlobT1 - expoBlobT0;
+
+        // Native Blob
+        const blob = new Blob([text]);
+        const blobT0 = performance.now();
+        blob.slice(0, 179850);
+        const blobT1 = performance.now();
+        const blobTime = blobT1 - blobT0;
+
+        setResults((prev) => ({
+          ...prev,
+          [example.key]: {
+            blobTime,
+            expoBlobTime,
+          },
+        }));
+      } catch (error) {
+        console.error('Error in 1MB arrayBuffer test', error);
+        setResults((prev) => ({
+          ...prev,
+          [example.key]: null,
+        }));
+      }
+      return;
+    }
     try {
       let expoBlobTotal = 0;
       let blobTotal = 0;
