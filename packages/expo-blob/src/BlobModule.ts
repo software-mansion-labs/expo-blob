@@ -104,10 +104,9 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
   toString(): string {
     return '[object Blob]';
   }
-}
 
-// Changed the length property to match that of the default js implementation
-Object.defineProperty(ExpoBlob, 'length', {
-  value: 0,
-  writable: false,
-});
+  // Changed the length property to match that of the default js implementation
+  static get length() {
+    return 0;
+  }
+}
