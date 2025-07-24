@@ -47,30 +47,27 @@ export function isTypedArray(obj: any): boolean {
  * @returns BlobPropertyBag object
  */
 export const preprocessOptions = (options?: BlobPropertyBag): BlobPropertyBag | undefined => {
-  if (options) {
-    if (!(options instanceof Object)) {
-      throw TypeError();
-    }
-
-    let e = options.endings;
-    let t = options.type;
-    if (e && typeof e === 'object') {
-      e = String(e);
-    }
-    if (t && typeof t === 'object') {
-      t = String(t);
-    }
-    if (e !== undefined && e !== 'native' && e !== 'transparent') {
-      throw TypeError();
-    }
-
-    return {
-      endings: e,
-      type: normalizedContentType(t),
-    };
+  if (!options) return options;
+  if (!(options instanceof Object)) {
+    throw TypeError();
   }
 
-  return options;
+  let e = options.endings;
+  let t = options.type;
+  if (e && typeof e === 'object') {
+    e = String(e);
+  }
+  if (t && typeof t === 'object') {
+    t = String(t);
+  }
+  if (e !== undefined && e !== 'native' && e !== 'transparent') {
+    throw TypeError();
+  }
+
+  return {
+    endings: e,
+    type: normalizedContentType(t),
+  };
 };
 
 /**

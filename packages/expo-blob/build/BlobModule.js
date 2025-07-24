@@ -12,7 +12,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
             }
             return String(v);
         };
-        let bps = [];
+        const bps = [];
         if (blobParts === undefined) {
             super([], preprocessOptions(options));
         }
@@ -20,7 +20,7 @@ export class ExpoBlob extends NativeBlobModule.Blob {
             throw TypeError();
         }
         else {
-            for (let bp of blobParts) {
+            for (const bp of blobParts) {
                 bps.push(inputMapping(bp));
             }
             super(bps, preprocessOptions(options));
