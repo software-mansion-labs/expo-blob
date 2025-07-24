@@ -21,7 +21,7 @@ export declare class Blob {
     slice(start?: number, end?: number, contentType?: string): Blob;
     /**
      * Returns a ReadableStream that allows streaming the Blob's data in chunks.
-     * Useful for processing large blobs without loading all data into memory at once.
+     * Note: The current implementation loads the entire Blob into memory before streaming.
      * @returns A ReadableStream of the Blob's data.
      */
     stream(): ReadableStream;
