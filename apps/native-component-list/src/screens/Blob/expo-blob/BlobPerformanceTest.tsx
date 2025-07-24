@@ -118,11 +118,7 @@ export default function BlobArrayBufferScreen() {
     <Page>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <HeadingText>ArrayBuffer Method</HeadingText>
-          <MonoText>arrayBuffer()</MonoText>
-        </View>
-        <View style={styles.container}>
-          <HeadingText>Examples:</HeadingText>
+          <HeadingText>Performance tests:</HeadingText>
           <View style={styles.exmaplesContainer}>
             {performanceTest.map((example) => (
               <ArrayBufferExampleItem
