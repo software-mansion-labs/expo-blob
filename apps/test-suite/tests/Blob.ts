@@ -82,6 +82,18 @@ export async function test({ describe, it, expect }) {
 
   describe('Blob', async () => {
     describe('Blob creation', () => {
+      it('Unicode emotes', async () => {
+        const blob = new Blob(['Hello 🌍 世界']);
+        console.log('Hello 🌍 世界'.length);
+        console.log(blob.size);
+        expect(await blob.text()).toBe('Hello 🌍 世界');
+        expect(await blob.bytes()).toEqual(
+          Uint8Array.from([
+            72, 101, 108, 108, 111, 32, 240, 159, 140, 141, 32, 228, 184, 150, 231, 149, 140,
+          ])
+        );
+        expect(await blob.size).toBe(17);
+      });
       it('Empty blob', () => {
         const blob = new Blob([]);
         expect(blob).toBeTruthy();
@@ -684,16 +696,19 @@ export async function test({ describe, it, expect }) {
           desc: 'Passing typed arrays as elements of the blobParts array should work.',
         }
       );
-      test_blob(
-        function () {
-          return new Blob([new Float16Array([2.65625, 58.59375])]);
-        },
-        {
-          expected: 'PASS',
-          type: '',
-          desc: 'Passing a Float16Array as element of the blobParts array should work.',
-        }
-      );
+      // The Float16Array is not supported
+      //  https://github.com/facebook/hermes/blob/5372b97d40d019de1e74f71c5237cdba3003b7d2/unsupported/juno/crates/juno/src/sema/known_globals.rs#L48
+      //  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array
+      // test_blob(
+      //   function () {
+      //     return new Blob([new Float16Array([2.65625, 58.59375])]);
+      //   },
+      //   {
+      //     expected: 'PASS',
+      //     type: '',
+      //     desc: 'Passing a Float16Array as element of the blobParts array should work.',
+      //   }
+      // );
       test_blob(
         function () {
           return new Blob([
@@ -1069,6 +1084,29 @@ export async function test({ describe, it, expect }) {
         var blob = new Blob([text]);
         var sliceBlob = blob.slice(blob.size - 2, blob.size + 999);
         expect(sliceBlob.size).toBe(2);
+      });
+    });
+
+    describe('large slice start and end', async () => {
+      it('large positive start', async () => {
+        let blob = new Blob(['PASS']);
+        let str = await blob.slice(10000).text();
+        expect(str).toBe('');
+      });
+      it('large negative start', async () => {
+        let blob = new Blob(['PASS']);
+        let str = await blob.slice(-10000).text();
+        expect(str).toBe('PASS');
+      });
+      it('large positive end', async () => {
+        let blob = new Blob(['PASS']);
+        let str = await blob.slice(0, 10000).text();
+        expect(str).toBe('PASS');
+      });
+      it('large negative end', async () => {
+        let blob = new Blob(['PASS']);
+        let str = await blob.slice(0, -10000).text();
+        expect(str).toBe('');
       });
     });
 

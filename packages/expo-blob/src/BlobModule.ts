@@ -1,6 +1,11 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo';
 import { Blob, BlobPart } from './BlobModule.types';
-import { isTypedArray, normalizedContentType, preprocessOptions } from './utils';
+import {
+  isTypedArray,
+  normalizedContentType,
+  preprocessOptions,
+  DEFAULT_CHUNK_SIZE,
+} from './utils';
 
 declare class NativeBlob extends SharedObject {
   readonly size: number;
@@ -80,7 +85,7 @@ export class ExpoBlob extends NativeBlobModule.Blob implements Blob {
           return;
         }
 
-        const chunkSize = 65_536;
+        const chunkSize = DEFAULT_CHUNK_SIZE;
         const end = Math.min(offset + chunkSize, bytes.length);
         controller.enqueue(bytes.subarray(offset, end));
         offset = end;

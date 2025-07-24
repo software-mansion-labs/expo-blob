@@ -66,4 +66,15 @@ export const preprocessOptions = (options) => {
     }
     return options;
 };
+/**
+ * The default chunk size (64 KB) used for binary streaming operations.
+ *
+ * This value is not specified by the W3C File API specification or MDN documentation.
+ * It is chosen as a widely adopted industry standard that balances performance
+ * (by reducing the number of read operations) and memory usage (by avoiding excessively large buffers).
+ *
+ * @see https://w3c.github.io/FileAPI/
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Blob
+ */
+export const DEFAULT_CHUNK_SIZE = 65_536;
 //# sourceMappingURL=utils.js.map
