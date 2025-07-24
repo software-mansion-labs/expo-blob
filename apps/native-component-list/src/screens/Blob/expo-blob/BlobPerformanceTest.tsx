@@ -5,7 +5,6 @@ import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 import HeadingText from '../../../components/HeadingText';
 import MonoText from '../../../components/MonoText';
 import { Page } from '../../../components/Page';
-import { Q, S } from '@expo/html-elements';
 
 type PerformanceTestData = {
   key: string;
@@ -27,7 +26,7 @@ const performanceTest: PerformanceTestData[] = [
     blobOperation: (blob: Blob | ExpoBlob) => {
       blob.slice(100, 9_900);
     },
-    title: '10_000 blob [100, 9_900) slice',
+    title: 'Slice',
   },
 ];
 
@@ -41,6 +40,21 @@ type ArrayBufferExampleItemProps = {
 };
 
 function ArrayBufferExampleItem({ example, result, onEvaluate }: ArrayBufferExampleItemProps) {
+  let comparison = null;
+  if (result) {
+    const { blobTime, expoBlobTime } = result;
+    if (blobTime < expoBlobTime) {
+      const diff = expoBlobTime - blobTime;
+      const percent = (100 * diff) / expoBlobTime;
+      comparison = `Blob is ${percent.toFixed(6)}% (${diff.toFixed(6)} ms) faster`;
+    } else if (expoBlobTime < blobTime) {
+      const diff = blobTime - expoBlobTime;
+      const percent = (100 * diff) / blobTime;
+      comparison = `ExpoBlob is ${percent.toFixed(6)}% (${diff.toFixed(6)} ms) faster`;
+    } else {
+      comparison = 'Both are equally fast';
+    }
+  }
   return (
     <View>
       <Text>{example.title}</Text>
@@ -48,8 +62,9 @@ function ArrayBufferExampleItem({ example, result, onEvaluate }: ArrayBufferExam
         {!result && <Button title="Evaluate" onPress={() => onEvaluate(example)} />}
         {result && (
           <MonoText containerStyle={styles.resultContainer}>
-            <Text>Blob time: {result.blobTime}</Text> {'\n'}
-            <Text>Expo Blob time: {result.expoBlobTime}</Text> {'\n'}
+            <Text>Blob time: {result.blobTime.toFixed(6)} ms</Text> {'\n'}
+            <Text>Expo Blob time: {result.expoBlobTime.toFixed(6)} ms</Text> {'\n'}
+            <Text>{comparison}</Text>
           </MonoText>
         )}
       </View>
@@ -64,42 +79,32 @@ export default function BlobArrayBufferScreen() {
       expoBlobTime: number;
     } | null;
   }>({});
+  const iterations = 100;
 
   const evaluatePerformanceTest = (example: PerformanceTestData) => {
     try {
-      const expoBlob = example.expoBlobCreation();
-      gc();
-      const expoBlobT0 = performance.now();
-      example.blobOperation(expoBlob);
-      const expoBlobT1 = performance.now();
+      let expoBlobTotal = 0;
+      let blobTotal = 0;
+      for (let i = 0; i < iterations; i++) {
+        const expoBlob = example.expoBlobCreation();
+        const expoBlobT0 = performance.now();
+        example.blobOperation(expoBlob);
+        const expoBlobT1 = performance.now();
+        expoBlobTotal += expoBlobT1 - expoBlobT0;
 
-      const blob = example.blobCreation();
-      gc();
-      const blobT0 = performance.now();
-      example.blobOperation(blob);
-      const blobT1 = performance.now();
-
+        const blob = example.blobCreation();
+        const blobT0 = performance.now();
+        example.blobOperation(blob);
+        const blobT1 = performance.now();
+        blobTotal += blobT1 - blobT0;
+      }
       setResults((prev) => ({
         ...prev,
         [example.key]: {
-          blobTime: blobT1 - blobT0,
-          expoBlobTime: expoBlobT1 - expoBlobT0,
+          blobTime: blobTotal / iterations,
+          expoBlobTime: expoBlobTotal / iterations,
         },
       }));
-      // blob.text().then((text: string) => {
-      //   blob.arrayBuffer().then((arrayBuffer: ArrayBufferLike) => {
-      //     setResults((prev) => ({
-      //       ...prev,
-      //       [example.key]: {
-      //         size: blob.size,
-      //         type: blob.type,
-      //         text,
-      //         arrayBuffer,
-      //         hexString: arrayBufferToHex(arrayBuffer),
-      //       },
-      //     }));
-      //   });
-      // });
     } catch (error) {
       console.error('Error creating blob or slicing it', error);
       setResults((prev) => ({
@@ -150,5 +155,13 @@ const styles = StyleSheet.create({
     borderColor: '#229D2AFF',
     padding: 10,
     borderRadius: 5,
+  },
+  iterationsInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 4,
+    minWidth: 60,
+    marginLeft: 8,
   },
 });
