@@ -252,12 +252,8 @@ export async function test({ describe, it, expect }) {
       });
       it('Invalid endings value', () => {
         [null, '', 'invalidEnumValue', 'Transparent', 'NATIVE', 0, {}].forEach((ending) => {
-          try {
-            // @ts-expect-error
-            new Blob([], { endings: ending });
-          } catch (e) {
-            expect(e instanceof TypeError).toBeTruthy();
-          }
+          // @ts-expect-error
+          expect(() => new Blob([], { endings: ending })).toThrowError(TypeError);
         });
       });
       it('Exception propagation from options', () => {
@@ -376,13 +372,8 @@ export async function test({ describe, it, expect }) {
           {},
           { 0: 'FAIL', length: 1 },
         ].forEach((arg) => {
-          try {
-            // @ts-expect-error
-            new Blob(arg);
-            expect(false).toBeTruthy();
-          } catch (err) {
-            expect(err instanceof TypeError).toBeTruthy();
-          }
+          // @ts-expect-error
+          expect(() => new Blob(arg)).toThrowError(TypeError);
         });
       });
       test_blob(
@@ -564,12 +555,7 @@ export async function test({ describe, it, expect }) {
             ])
         ).toThrow(test_error);
 
-        try {
-          new Blob([{ toString: null, valueOf: null }]);
-          expect('NOT REACHABLE').toBe('');
-        } catch (e) {
-          expect(e instanceof TypeError).toBeTruthy();
-        }
+        expect(() => new Blob([{ toString: null, valueOf: null }])).toThrowError(TypeError);
       });
       test_blob(
         function () {
