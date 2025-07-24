@@ -1399,31 +1399,25 @@ export async function test({ describe, it, expect }) {
         expect(chunks).toEqual(input_arr);
       });
 
-      it(
-        "Blob.stream() garbage collection of blob shouldn't break stream " + 'consumption',
-        async () => {
-          const input_arr = [8, 241, 48, 123, 151];
-          const typed_arr = new Uint8Array(input_arr);
-          let blob = new Blob([typed_arr]);
-          const stream = blob.stream();
-          blob = null;
-          gc();
-          const chunks = await read_all_chunks(stream, { perform_gc: true });
-          expect(chunks).toEqual(input_arr);
-        }
-      );
+      it("Blob.stream() garbage collection of blob shouldn't break stream consumption", async () => {
+        const input_arr = [8, 241, 48, 123, 151];
+        const typed_arr = new Uint8Array(input_arr);
+        let blob = new Blob([typed_arr]);
+        const stream = blob.stream();
+        blob = null;
+        gc();
+        const chunks = await read_all_chunks(stream, { perform_gc: true });
+        expect(chunks).toEqual(input_arr);
+      });
 
-      it(
-        "Blob.stream() garbage collection of stream shouldn't break stream " + 'consumption',
-        async () => {
-          const input_arr = [8, 241, 48, 123, 151];
-          const typed_arr = new Uint8Array(input_arr);
-          const blob = new Blob([typed_arr]);
-          const chunksPromise = read_all_chunks(blob.stream());
-          gc();
-          expect(await chunksPromise).toEqual(input_arr);
-        }
-      );
+      it("Blob.stream() garbage collection of stream shouldn't break stream consumption", async () => {
+        const input_arr = [8, 241, 48, 123, 151];
+        const typed_arr = new Uint8Array(input_arr);
+        const blob = new Blob([typed_arr]);
+        const chunksPromise = read_all_chunks(blob.stream());
+        gc();
+        expect(await chunksPromise).toEqual(input_arr);
+      });
 
       it('Reading Blob.stream() with BYOB reader', async () => {
         const input_arr = [8, 241, 48, 123, 151];
