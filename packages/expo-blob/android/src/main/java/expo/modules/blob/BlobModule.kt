@@ -2,6 +2,7 @@ package expo.modules.blob
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.io.ByteArrayOutputStream
 import kotlin.math.max
 import kotlin.math.min
 
@@ -41,11 +42,15 @@ class BlobModule : Module() {
             }
 
             AsyncFunction("bytes") { blob: Blob ->
-                blob.bytes()
+                val byteStream = ByteArrayOutputStream(blob.size)
+                blob.bytesToStream(byteStream)
+                byteStream.toByteArray()
             }
 
             AsyncFunction("text") { blob: Blob ->
-                blob.text()
+                val builder = StringBuilder(blob.size)
+                blob.textToBuilder(builder)
+                builder.toString()
             }
         }
     }
