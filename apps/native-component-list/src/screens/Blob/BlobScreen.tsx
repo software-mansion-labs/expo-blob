@@ -55,7 +55,7 @@ export const BlobScreens = [
     route: 'expo-blob/performance',
     options: {},
     getComponent() {
-      return optionalRequire(() => require('./expo-blob/BlobPerformanceTest'));
+      return optionalRequire(() => require('./expo-blob/BlobPerformanceTestScreen'));
     },
   },
 ];
