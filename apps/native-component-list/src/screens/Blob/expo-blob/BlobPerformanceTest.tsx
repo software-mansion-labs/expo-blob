@@ -1,3 +1,4 @@
+import { Asset } from 'expo-asset';
 import { ExpoBlob } from 'expo-blob';
 import { useState } from 'react';
 import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
@@ -8,36 +9,106 @@ import { Page } from '../../../components/Page';
 
 type PerformanceTestData = {
   key: string;
-  expoBlobCreation: () => ExpoBlob;
-  blobCreation: () => Blob;
-  blobOperation: (blob: Blob | ExpoBlob) => void;
+  blobOperation: () => Promise<void>;
+  expoBlobOperation: () => Promise<void>;
   title: string;
+  iterations: number;
 };
 
 const performanceTest: PerformanceTestData[] = [
   {
-    key: '10_000 blob [100, 9_900) slice',
-    blobCreation: () => {
-      return new Blob(['a'.repeat(10_000)]);
+    key: 'basic-test',
+    blobOperation: async () => {
+      const blob = new Blob(['abcd'.repeat(5000)]);
+      blob.slice(0, 1000);
     },
-    expoBlobCreation: () => {
-      return new ExpoBlob(['a'.repeat(10_000)]);
+    expoBlobOperation: async () => {
+      const blob = new ExpoBlob(['abcd'.repeat(5000)]);
+      blob.slice(0, 1000);
     },
-    blobOperation: (blob: Blob | ExpoBlob) => {
-      blob.slice(100, 9_900);
-    },
-    title: 'Slice',
+    title: 'String Test',
+    iterations: 100,
   },
   {
-    key: '1MB arrayBuffer',
-    blobCreation: () => {
-      throw new Error('async'); // sygnalizuje, że to test asynchroniczny
+    key: 'bmp-file-test',
+    blobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-2mb.bmp')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new Blob([text]);
+      blob.slice(0, 1000);
     },
-    expoBlobCreation: () => {
-      throw new Error('async');
+    expoBlobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-2mb.bmp')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new ExpoBlob([text]);
+      blob.slice(0, 1000);
     },
-    blobOperation: () => {}, // nieużywane
-    title: 'arrayBuffer() on 1-MB-DOC',
+    title: 'File Test (2MB BMP)',
+    iterations: 25,
+  },
+  {
+    key: 'audio-file-test',
+    blobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-1mb.mp3')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new Blob([text]);
+      blob.slice(0, 1000);
+    },
+    expoBlobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-1mb.mp3')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new ExpoBlob([text]);
+      blob.slice(0, 1000);
+    },
+    title: 'File Test (1MB Audio)',
+    iterations: 25,
+  },
+  {
+    key: 'video-file-test',
+    blobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-1mb.mp4')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new Blob([text]);
+      blob.slice(0, 1000);
+    },
+    expoBlobOperation: async () => {
+      const asset = Asset.fromModule(
+        require('../../../../assets/expo-blob/performance-test-1mb.mp4')
+      );
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      const response = await fetch(uri);
+      const text = await response.text();
+      const blob = new ExpoBlob([text]);
+      blob.slice(0, 1000);
+    },
+    title: 'File Test (1MB Video)',
+    iterations: 25,
   },
 ];
 
@@ -72,11 +143,14 @@ function ArrayBufferExampleItem({ example, result, onEvaluate }: ArrayBufferExam
       <View>
         {!result && <Button title="Evaluate" onPress={() => onEvaluate(example)} />}
         {result && (
-          <MonoText containerStyle={styles.resultContainer}>
-            <Text>Blob time: {result.blobTime.toFixed(6)} ms</Text> {'\n'}
-            <Text>Expo Blob time: {result.expoBlobTime.toFixed(6)} ms</Text> {'\n'}
-            <Text>{comparison}</Text>
-          </MonoText>
+          <View>
+            <MonoText containerStyle={styles.resultContainer}>
+              <Text>Blob time: {result.blobTime.toFixed(6)} ms</Text> {'\n'}
+              <Text>Expo Blob time: {result.expoBlobTime.toFixed(6)} ms</Text> {'\n'}
+              <Text>{comparison}</Text>
+            </MonoText>
+            <Button title="Re-evaluate" onPress={() => onEvaluate(example)} />
+          </View>
         )}
       </View>
     </View>
@@ -90,71 +164,31 @@ export default function BlobArrayBufferScreen() {
       expoBlobTime: number;
     } | null;
   }>({});
-  const iterations = 3;
 
   const evaluatePerformanceTest = async (example: PerformanceTestData) => {
-    if (example.key === '1MB arrayBuffer') {
-      try {
-        const url =
-          'https://github.com/software-mansion-labs/expo-blob/blob/performance-testing/apps/native-component-list/src/screens/Blob/expo-blob/1-MB-DOC.doc';
-        const response = await fetch(url);
-        const text = await response.text();
-
-        // ExpoBlob
-        const expoBlob = new ExpoBlob([text]);
-        const expoBlobT0 = performance.now();
-        expoBlob.slice(0, 179850);
-        const expoBlobT1 = performance.now();
-        const expoBlobTime = expoBlobT1 - expoBlobT0;
-
-        // Native Blob
-        const blob = new Blob([text]);
-        const blobT0 = performance.now();
-        blob.slice(0, 179850);
-        const blobT1 = performance.now();
-        const blobTime = blobT1 - blobT0;
-
-        setResults((prev) => ({
-          ...prev,
-          [example.key]: {
-            blobTime,
-            expoBlobTime,
-          },
-        }));
-      } catch (error) {
-        console.error('Error in 1MB arrayBuffer test', error);
-        setResults((prev) => ({
-          ...prev,
-          [example.key]: null,
-        }));
-      }
-      return;
-    }
     try {
       let expoBlobTotal = 0;
       let blobTotal = 0;
-      for (let i = 0; i < iterations; i++) {
-        const expoBlob = example.expoBlobCreation();
+      for (let i = 0; i < example.iterations; i++) {
         const expoBlobT0 = performance.now();
-        example.blobOperation(expoBlob);
+        await example.expoBlobOperation();
         const expoBlobT1 = performance.now();
         expoBlobTotal += expoBlobT1 - expoBlobT0;
 
-        const blob = example.blobCreation();
         const blobT0 = performance.now();
-        example.blobOperation(blob);
+        await example.blobOperation();
         const blobT1 = performance.now();
         blobTotal += blobT1 - blobT0;
       }
       setResults((prev) => ({
         ...prev,
         [example.key]: {
-          blobTime: blobTotal / iterations,
-          expoBlobTime: expoBlobTotal / iterations,
+          blobTime: blobTotal / example.iterations,
+          expoBlobTime: expoBlobTotal / example.iterations,
         },
       }));
     } catch (error) {
-      console.error('Error creating blob or slicing it', error);
+      console.error('Error in performance test', error);
       setResults((prev) => ({
         ...prev,
         [example.key]: null,
