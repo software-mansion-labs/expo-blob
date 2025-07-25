@@ -25,20 +25,16 @@ class Blob() : SharedObject() {
         this.type = if(validType(type)) type.lowercase() else ""
     }
 
-    fun text(): String {
-        var str = ""
+    fun textToBuilder(builder: StringBuilder) {
         for (bp in blobParts) {
-            str += bp.text()
+          bp.textToBuilder(builder)
         }
-        return str
     }
 
-    fun bytes(): ByteArray {
-        val stream = ByteArrayOutputStream()
+    fun bytesToStream(byteStream: ByteArrayOutputStream) {
         for (bp in blobParts) {
-            stream.write(bp.bytes())
+            bp.bytesToStream(byteStream)
         }
-        return stream.toByteArray()
     }
 
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
@@ -95,7 +91,7 @@ private fun validType(type : String): Boolean {
 typealias BlobPart = EitherOfThree<String, Blob, TypedArray>
 
 private fun TypedArray.bytes(): ByteArray {
-    var ba = ByteArray(this.byteLength)
+    val ba = ByteArray(this.byteLength)
 
     for (i in 0..<this.byteLength) {
         ba[i] = this.readByte(i)
@@ -161,19 +157,19 @@ sealed class InternalBlobPart() {
         }
     }
 
-    fun text(): String {
-        return when (this) {
-            is StringPart -> string
-            is BlobPart -> blob.text()
-            is BufferPart -> buffer.decodeToString()
+    fun textToBuilder(builder: StringBuilder) {
+        when (this) {
+            is StringPart -> builder.append(string)
+            is BlobPart -> blob.textToBuilder(builder)
+            is BufferPart -> builder.append(buffer.decodeToString())
         }
     }
 
-    fun bytes(): ByteArray {
-        return when (this) {
-            is StringPart -> string.toByteArray()
-            is BlobPart -> blob.bytes()
-            is BufferPart -> buffer
+    fun bytesToStream(byteStream: ByteArrayOutputStream) {
+        when (this) {
+            is StringPart -> byteStream.write(string.toByteArray())
+            is BlobPart -> blob.bytesToStream(byteStream)
+            is BufferPart -> byteStream.write(buffer)
         }
     }
 }
