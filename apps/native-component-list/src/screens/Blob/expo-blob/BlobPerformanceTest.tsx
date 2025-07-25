@@ -35,12 +35,12 @@ const performanceTest: PerformanceTestData[] = [
   {
     key: 'basic-test',
     blobOperation: async () => {
-      const blob = new Blob(['abcd'.repeat(5000)]);
-      blob.slice(0, 1000);
+      const blob = new Blob(['abcd'.repeat(50000)]);
+      blob.slice(0, 500000).slice(0, 50_000).slice(0, 40_000).slice(0, 30_000);
     },
     expoBlobOperation: async () => {
-      const blob = new ExpoBlob(['abcd'.repeat(5000)]);
-      blob.slice(0, 1000);
+      const blob = new ExpoBlob(['abcd'.repeat(50000)]);
+      blob.slice(0, 500000).slice(0, 50_000).slice(0, 40_000).slice(0, 30_000);
     },
     title: 'String Test',
     iterations: 100,
