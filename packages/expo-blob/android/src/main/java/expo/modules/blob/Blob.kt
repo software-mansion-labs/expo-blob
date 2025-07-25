@@ -1,6 +1,5 @@
 package expo.modules.blob
 
-import android.util.Log
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -25,12 +24,6 @@ class Blob() : SharedObject() {
     constructor(blobParts: List<InternalBlobPart>, type: String) : this() {
         this.blobParts = blobParts
         this.type = if(validType(type)) type.lowercase() else ""
-    }
-
-    fun textToBuilder(builder: StringBuilder) {
-        for (bp in blobParts) {
-          bp.textToBuilder(builder)
-        }
     }
 
     fun bytesToStream(byteStream: ByteArrayOutputStream) {
@@ -87,7 +80,6 @@ class Blob() : SharedObject() {
 }
 
 private fun validType(type : String): Boolean {
-    Log.d("UT", "type: " + type + ", type length: " + type.length.toString())
     for (c in type) {
         if (c.code < 0x20 || c.code > 0x7E) {
             return false;
@@ -133,7 +125,7 @@ fun ByteArray.toInternalBlobParts(): List<InternalBlobPart> {
     if (size <= MAX_CHUNK_BYTE_SIZE) {
       return listOf(InternalBlobPart.BufferPart(this))
     }
-    var bps = mutableListOf<InternalBlobPart>()
+    val bps = mutableListOf<InternalBlobPart>()
     var s = 0
     while ( s < size) {
       val e = kotlin.math.min(s + MAX_CHUNK_BYTE_SIZE, size)
@@ -145,6 +137,9 @@ fun ByteArray.toInternalBlobParts(): List<InternalBlobPart> {
 }
 
 fun String.toInternalBlobParts(): List<InternalBlobPart> {
+    if(length <= MAX_CHUNK_BYTE_SIZE / 4) {
+        return listOf(InternalBlobPart.StringPart(this))
+    }
     return toByteArray().toInternalBlobParts()
 }
 
@@ -181,14 +176,6 @@ sealed class InternalBlobPart() {
             is StringPart -> string.toByteArray().size
             is BlobPart -> blob.size
             is BufferPart -> buffer.size
-        }
-    }
-
-    fun textToBuilder(builder: StringBuilder) {
-        when (this) {
-            is StringPart -> builder.append(string)
-            is BlobPart -> blob.textToBuilder(builder)
-            is BufferPart -> builder.append(buffer.decodeToString())
         }
     }
 
