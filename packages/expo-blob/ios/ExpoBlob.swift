@@ -45,7 +45,7 @@ public class ExpoBlob: Module {
       }
 
       AsyncFunction("text") { (blob: Blob) in
-        blob.text()
+        await blob.text()
       }
 
       AsyncFunction("bytes") { (blob: Blob) async -> Data in

@@ -7,14 +7,14 @@ enum BlobPart {
 }
 
 extension BlobPart {
-  func text() -> String {
+  func text() async -> String {
     switch self {
       case .string(let str):
         return str
       case .data(let data):
         return String(decoding: data, as: UTF8.self)
       case .blob(let blob):
-        return blob.text()
+        return await blob.text()
     }
   }
 
