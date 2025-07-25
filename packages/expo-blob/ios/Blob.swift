@@ -1,12 +1,45 @@
 import Foundation
 import ExpoModulesCore
 
+let MAX_CHUNK_BYTE_SIZE = 16_384
+
 public class Blob: SharedObject {
   var blobParts: [BlobPart]
   var options: BlobOptions
 
+  static func chunkData(_ data: Data) -> [BlobPart] {
+    var chunks: [BlobPart] = []
+    var offset = 0
+    while offset < data.count {
+      let end = min(offset + MAX_CHUNK_BYTE_SIZE, data.count)
+      let chunk = data.subdata(in: offset..<end)
+      chunks.append(.data(chunk))
+      offset = end
+    }
+    return chunks
+  }
+
+  static func chunkString(_ str: String) -> [BlobPart] {
+    guard let data = str.data(using: .utf8) else { return [] }
+    if data.count <= MAX_CHUNK_BYTE_SIZE / 4 {
+      return [.string(str)]
+    }
+    return chunkData(data)
+  }
+
   init(blobParts: [BlobPart]?, options: BlobOptions?) {
-    self.blobParts = blobParts ?? []
+    var chunkedParts: [BlobPart] = []
+    for part in blobParts ?? [] {
+      switch part {
+        case .string(let str):
+          chunkedParts.append(contentsOf: Blob.chunkString(str))
+        case .data(let data):
+          chunkedParts.append(contentsOf: Blob.chunkData(data))
+        case .blob(let blob):
+          chunkedParts.append(.blob(blob))
+      }
+    }
+    self.blobParts = chunkedParts
     self.options = options ?? BlobOptions()
   }
 
@@ -21,36 +54,28 @@ public class Blob: SharedObject {
   func slice(start: Int, end: Int, contentType: String) -> Blob {
     let span = max(end - start, 0)
     let typeString = contentType
-
     if span == 0 {
       return Blob(blobParts: [], options: BlobOptions(type: typeString, endings: self.options.endings))
     }
-
     var dataSlice: [BlobPart] = []
     var currentPos = 0
     var remaining = span
-
     for part in blobParts {
       let partSize = part.size()
-
       if currentPos + partSize <= start {
         currentPos += partSize
         continue
       }
-
       if remaining <= 0 {
         break
       }
-
       let partStart = max(0, start - currentPos)
       let partEnd = min(partSize, partStart + remaining)
       let length = partEnd - partStart
-
       if length <= 0 {
         currentPos += partSize
         continue
       }
-
       if partStart == 0 && partEnd == partSize {
         dataSlice.append(part)
       } else {
@@ -69,16 +94,15 @@ public class Blob: SharedObject {
             dataSlice.append(.blob(subBlob))
         }
       }
-
       currentPos += partSize
       remaining -= length
     }
-
     return Blob(blobParts: dataSlice, options: BlobOptions(type: typeString, endings: self.options.endings))
   }
 
-  func text() -> String {
-    return blobParts.reduce("") { $0 + $1.text() }
+  func text() async -> String {
+    let allBytes = await self.bytes()
+    return String(decoding: allBytes, as: UTF8.self)
   }
 
   func bytes() async -> [UInt8] {
