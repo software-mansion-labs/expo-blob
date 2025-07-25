@@ -24,7 +24,7 @@ public class Blob: SharedObject {
     if data.count <= MAX_CHUNK_BYTE_SIZE / 4 {
       return [.string(str)]
     }
-  return chunkData(data)
+    return chunkData(data)
   }
 
   init(blobParts: [BlobPart]?, options: BlobOptions?) {
