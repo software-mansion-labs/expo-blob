@@ -40,6 +40,9 @@ class Blob() : SharedObject() {
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
         var s: Int = start - offset
         var e: Int = end - offset
+        if (s <= 0 && e >= size()) {
+          return this
+        }
         if (s < 0) {
             s = 0
         }
@@ -56,6 +59,9 @@ class Blob() : SharedObject() {
     }
 
     fun slice(start: Int, end: Int, contentType: String): Blob {
+        if(start <= 0 && end >= size) {
+            return Blob(blobParts, contentType)
+        }
         if (start >= end) {
           return Blob(listOf(), contentType)
         }
