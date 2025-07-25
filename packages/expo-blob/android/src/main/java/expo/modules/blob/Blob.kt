@@ -140,15 +140,8 @@ fun ByteArray.toInternalBlobParts(): List<InternalBlobPart> {
       bps.add(InternalBlobPart.BufferPart(copyOfRange(s, e)))
       s += MAX_CHUNK_BYTE_SIZE
     }
-//    for (i in 0..size / MAX_CHUNK_BYTE_SIZE) {
-//      val s = i * MAX_CHUNK_BYTE_SIZE
-//      if (s >= size) break
-//      val e = (i + 1) * MAX_CHUNK_BYTE_SIZE
-//      bps.add(InternalBlobPart.BufferPart(copyOfRange(s, kotlin.math.min(e, size))))
-//    }
 
     return bps
-//    return listOf(InternalBlobPart.BufferPart(this))
 }
 
 fun String.toInternalBlobParts(): List<InternalBlobPart> {
@@ -165,7 +158,6 @@ internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlob
                     it
                 }
                 str.toInternalBlobParts()
-//                listOf(InternalBlobPart.StringPart(str))
             }
         } else if (bp.`is`(Blob::class)) {
             bp.get(Blob::class).let {
@@ -174,7 +166,6 @@ internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlob
         } else {
             bp.get(TypedArray::class).let {
                 it.bytes().toInternalBlobParts()
-//                listOf(InternalBlobPart.BufferPart(it.bytes()))
             }
         }
     }
