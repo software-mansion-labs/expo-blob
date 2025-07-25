@@ -9,6 +9,8 @@ import expo.modules.kotlin.types.EitherOfThree
 import expo.modules.kotlin.types.Enumerable
 import java.io.ByteArrayOutputStream
 
+internal const val MAX_CHUNK_BYTE_SIZE = 16384
+
 class Blob() : SharedObject() {
     var blobParts: List<InternalBlobPart> = listOf()
     var type: String = ""
@@ -127,8 +129,34 @@ private fun String.toNativeNewlines(): String {
     return str
 }
 
+fun ByteArray.toInternalBlobParts(): List<InternalBlobPart> {
+    if (size <= MAX_CHUNK_BYTE_SIZE) {
+      return listOf(InternalBlobPart.BufferPart(this))
+    }
+    var bps = mutableListOf<InternalBlobPart>()
+    var s = 0
+    while ( s < size) {
+      val e = kotlin.math.min(s + MAX_CHUNK_BYTE_SIZE, size)
+      bps.add(InternalBlobPart.BufferPart(copyOfRange(s, e)))
+      s += MAX_CHUNK_BYTE_SIZE
+    }
+//    for (i in 0..size / MAX_CHUNK_BYTE_SIZE) {
+//      val s = i * MAX_CHUNK_BYTE_SIZE
+//      if (s >= size) break
+//      val e = (i + 1) * MAX_CHUNK_BYTE_SIZE
+//      bps.add(InternalBlobPart.BufferPart(copyOfRange(s, kotlin.math.min(e, size))))
+//    }
+
+    return bps
+//    return listOf(InternalBlobPart.BufferPart(this))
+}
+
+fun String.toInternalBlobParts(): List<InternalBlobPart> {
+    return toByteArray().toInternalBlobParts()
+}
+
 internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlobPart> {
-    return this.map() { bp: BlobPart ->
+    return this.flatMap() { bp: BlobPart ->
         if (bp.`is`(String::class)) {
             bp.get(String::class).let {
                 val str = if (nativeNewlines) {
@@ -136,15 +164,17 @@ internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlob
                 } else {
                     it
                 }
-                InternalBlobPart.StringPart(str)
+                str.toInternalBlobParts()
+//                listOf(InternalBlobPart.StringPart(str))
             }
         } else if (bp.`is`(Blob::class)) {
             bp.get(Blob::class).let {
-                InternalBlobPart.BlobPart(it)
+                listOf(InternalBlobPart.BlobPart(it))
             }
         } else {
             bp.get(TypedArray::class).let {
-                InternalBlobPart.BufferPart(it.bytes())
+                it.bytes().toInternalBlobParts()
+//                listOf(InternalBlobPart.BufferPart(it.bytes()))
             }
         }
     }

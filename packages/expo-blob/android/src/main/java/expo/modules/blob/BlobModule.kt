@@ -48,9 +48,12 @@ class BlobModule : Module() {
             }
 
             AsyncFunction("text") { blob: Blob ->
-                val builder = StringBuilder(blob.size)
-                blob.textToBuilder(builder)
-                builder.toString()
+//                val builder = StringBuilder(blob.size)
+//                blob.textToBuilder(builder)
+//                builder.toString()
+                val byteStream = ByteArrayOutputStream(blob.size)
+                blob.bytesToStream(byteStream)
+                byteStream.toByteArray().decodeToString()
             }
         }
     }
