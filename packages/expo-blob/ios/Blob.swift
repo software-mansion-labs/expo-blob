@@ -1,7 +1,7 @@
 import Foundation
 import ExpoModulesCore
 
-let kBlobChunkSize = 8192 * 2
+let MAX_CHUNK_BYTE_SIZE = 16384
 
 public class Blob: SharedObject {
   var blobParts: [BlobPart]
@@ -11,7 +11,7 @@ public class Blob: SharedObject {
     var chunks: [BlobPart] = []
     var offset = 0
     while offset < data.count {
-      let end = min(offset + kBlobChunkSize, data.count)
+      let end = min(offset + MAX_CHUNK_BYTE_SIZE, data.count)
       let chunk = data.subdata(in: offset..<end)
       chunks.append(.data(chunk))
       offset = end
@@ -20,29 +20,24 @@ public class Blob: SharedObject {
   }
 
   static func chunkString(_ str: String) -> [BlobPart] {
-    var parts: [BlobPart] = []
-    var current = str.startIndex
-    while current < str.endIndex {
-      let next = str.index(current, offsetBy: kBlobChunkSize, limitedBy: str.endIndex) ?? str.endIndex
-      let chunk = String(str[current..<next])
-      if let data = chunk.data(using: .utf8) {
-        parts.append(.data(data))
-      }
-      current = next
+    guard let data = str.data(using: .utf8) else { return [] }
+    if data.count <= MAX_CHUNK_BYTE_SIZE / 4 {
+      return [.string(str)]
+    } else {
+      return chunkData(data)
     }
-    return parts
   }
 
   init(blobParts: [BlobPart]?, options: BlobOptions?) {
     var chunkedParts: [BlobPart] = []
     for part in blobParts ?? [] {
       switch part {
+        case .string(let str):
+          chunkedParts.append(contentsOf: Blob.chunkString(str))
         case .data(let data):
           chunkedParts.append(contentsOf: Blob.chunkData(data))
         case .blob(let blob):
           chunkedParts.append(.blob(blob))
-        case .string(let str):
-          chunkedParts.append(contentsOf: Blob.chunkString(str))
       }
     }
     self.blobParts = chunkedParts
@@ -86,14 +81,18 @@ public class Blob: SharedObject {
         dataSlice.append(part)
       } else {
         switch part {
+          case .string(let str):
+            let utf8 = Array(str.utf8)
+            let subUtf8 = Array(utf8[partStart..<partEnd])
+            if let subStr = String(bytes: subUtf8, encoding: .utf8) {
+              dataSlice.append(.string(subStr))
+            }
           case .data(let data):
             let subData = data.subdata(in: partStart..<partEnd)
             dataSlice.append(.data(subData))
           case .blob(let blob):
             let subBlob = blob.slice(start: partStart, end: partEnd, contentType: blob.type)
             dataSlice.append(.blob(subBlob))
-          case .string:
-            break
         }
       }
       currentPos += partSize
@@ -103,25 +102,10 @@ public class Blob: SharedObject {
   }
 
   func text() async -> String {
-    var allBytes: [UInt8] = []
-    for part in blobParts {
-      switch part {
-        case .data(let data):
-          allBytes.append(contentsOf: [UInt8](data))
-        case .blob(let blob):
-          allBytes.append(contentsOf: await blob.bytes())
-        case .string:
-          break
-      }
-    }
-    let data = Data(allBytes)
-    if let str = String(data: data, encoding: .utf8) {
-      return str
-    } else {
-      return String(repeating: "\u{FFFD}", count: data.count)
-    }
+    let allBytes = await self.bytes()
+    return String(decoding: allBytes, as: UTF8.self)
   }
-  
+
   func bytes() async -> [UInt8] {
     var result: [UInt8] = []
     for part in blobParts {
