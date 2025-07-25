@@ -1,5 +1,4 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo';
-
 import { Blob, BlobPart } from './BlobModule.types';
 import {
   isTypedArray,
