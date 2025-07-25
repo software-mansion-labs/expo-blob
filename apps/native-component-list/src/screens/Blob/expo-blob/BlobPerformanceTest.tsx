@@ -15,6 +15,22 @@ type PerformanceTestData = {
   iterations: number;
 };
 
+function blobToBase64(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        resolve(result);
+      } else {
+        // eslint-disable-next-line prefer-promise-reject-errors
+        reject('error: incompatible types');
+      }
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 const performanceTest: PerformanceTestData[] = [
   {
     key: 'basic-test',
@@ -38,8 +54,9 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new Blob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new Blob([base64]);
       blob.slice(0, 1000);
     },
     expoBlobOperation: async () => {
@@ -49,12 +66,13 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new ExpoBlob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
     },
     title: 'File Test (2MB BMP)',
-    iterations: 25,
+    iterations: 5,
   },
   {
     key: 'audio-file-test',
@@ -65,8 +83,9 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new Blob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new Blob([base64]);
       blob.slice(0, 1000);
     },
     expoBlobOperation: async () => {
@@ -76,8 +95,9 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new ExpoBlob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
     },
     title: 'File Test (1MB Audio)',
@@ -92,8 +112,9 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new Blob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new Blob([base64]);
       blob.slice(0, 1000);
     },
     expoBlobOperation: async () => {
@@ -103,8 +124,9 @@ const performanceTest: PerformanceTestData[] = [
       await asset.downloadAsync();
       const uri = asset.localUri || asset.uri;
       const response = await fetch(uri);
-      const text = await response.text();
-      const blob = new ExpoBlob([text]);
+      const blobResponse = await response.blob();
+      const base64 = await blobToBase64(blobResponse);
+      const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
     },
     title: 'File Test (1MB Video)',
