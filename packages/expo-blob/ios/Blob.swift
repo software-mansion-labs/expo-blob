@@ -1,7 +1,7 @@
 import Foundation
 import ExpoModulesCore
 
-let MAX_CHUNK_BYTE_SIZE = 16384
+let MAX_CHUNK_BYTE_SIZE = 16_384
 
 public class Blob: SharedObject {
   var blobParts: [BlobPart]
@@ -23,9 +23,8 @@ public class Blob: SharedObject {
     guard let data = str.data(using: .utf8) else { return [] }
     if data.count <= MAX_CHUNK_BYTE_SIZE / 4 {
       return [.string(str)]
-    } else {
-      return chunkData(data)
     }
+  return chunkData(data)
   }
 
   init(blobParts: [BlobPart]?, options: BlobOptions?) {
