@@ -74,9 +74,9 @@ export class ExpoBlob extends NativeBlobModule.Blob {
     toString() {
         return '[object Blob]';
     }
+    // Changed the length property to match that of the default js implementation
+    static get length() {
+        return 0;
+    }
 }
-Object.defineProperty(ExpoBlob, 'length', {
-    value: 0,
-    writable: false,
-});
 //# sourceMappingURL=BlobModule.js.map
