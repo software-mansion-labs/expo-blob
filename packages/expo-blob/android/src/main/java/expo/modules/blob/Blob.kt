@@ -1,6 +1,5 @@
 package expo.modules.blob
 
-import android.util.Log
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -8,6 +7,8 @@ import expo.modules.kotlin.typedarray.TypedArray
 import expo.modules.kotlin.types.EitherOfThree
 import expo.modules.kotlin.types.Enumerable
 import java.io.ByteArrayOutputStream
+
+internal const val MAX_CHUNK_BYTE_SIZE = 16384
 
 class Blob() : SharedObject() {
     var blobParts: List<InternalBlobPart> = listOf()
@@ -25,25 +26,24 @@ class Blob() : SharedObject() {
         this.type = if(validType(type)) type.lowercase() else ""
     }
 
-    fun text(): String {
-        var str = ""
+    fun bytesToStream(byteStream: ByteArrayOutputStream) {
         for (bp in blobParts) {
-            str += bp.text()
+            bp.bytesToStream(byteStream)
         }
-        return str
     }
 
-    fun bytes(): ByteArray {
-        val stream = ByteArrayOutputStream()
-        for (bp in blobParts) {
-            stream.write(bp.bytes())
-        }
-        return stream.toByteArray()
-    }
+  fun bytes(): ByteArray {
+      val byteStream = ByteArrayOutputStream(size)
+      bytesToStream(byteStream)
+      return byteStream.toByteArray()
+  }
 
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
         var s: Int = start - offset
         var e: Int = end - offset
+        if (s <= 0 && e >= size()) {
+          return this
+        }
         if (s < 0) {
             s = 0
         }
@@ -60,6 +60,9 @@ class Blob() : SharedObject() {
     }
 
     fun slice(start: Int, end: Int, contentType: String): Blob {
+        if(start <= 0 && end >= size) {
+            return Blob(blobParts, contentType)
+        }
         if (start >= end) {
           return Blob(listOf(), contentType)
         }
@@ -83,7 +86,6 @@ class Blob() : SharedObject() {
 }
 
 private fun validType(type : String): Boolean {
-    Log.d("UT", "type: " + type + ", type length: " + type.length.toString())
     for (c in type) {
         if (c.code < 0x20 || c.code > 0x7E) {
             return false;
@@ -95,7 +97,7 @@ private fun validType(type : String): Boolean {
 typealias BlobPart = EitherOfThree<String, Blob, TypedArray>
 
 private fun TypedArray.bytes(): ByteArray {
-    var ba = ByteArray(this.byteLength)
+    val ba = ByteArray(this.byteLength)
 
     for (i in 0..<this.byteLength) {
         ba[i] = this.readByte(i)
@@ -125,8 +127,30 @@ private fun String.toNativeNewlines(): String {
     return str
 }
 
+fun ByteArray.toInternalBlobParts(): List<InternalBlobPart> {
+    if (size <= MAX_CHUNK_BYTE_SIZE) {
+      return listOf(InternalBlobPart.BufferPart(this))
+    }
+    val bps = mutableListOf<InternalBlobPart>()
+    var s = 0
+    while ( s < size) {
+      val e = kotlin.math.min(s + MAX_CHUNK_BYTE_SIZE, size)
+      bps.add(InternalBlobPart.BufferPart(copyOfRange(s, e)))
+      s += MAX_CHUNK_BYTE_SIZE
+    }
+
+    return bps
+}
+
+fun String.toInternalBlobParts(): List<InternalBlobPart> {
+    if(length <= MAX_CHUNK_BYTE_SIZE / 4) {
+        return listOf(InternalBlobPart.StringPart(this))
+    }
+    return toByteArray().toInternalBlobParts()
+}
+
 internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlobPart> {
-    return this.map() { bp: BlobPart ->
+    return this.flatMap() { bp: BlobPart ->
         if (bp.`is`(String::class)) {
             bp.get(String::class).let {
                 val str = if (nativeNewlines) {
@@ -134,15 +158,15 @@ internal fun List<BlobPart>.internal(nativeNewlines: Boolean): List<InternalBlob
                 } else {
                     it
                 }
-                InternalBlobPart.StringPart(str)
+                str.toInternalBlobParts()
             }
         } else if (bp.`is`(Blob::class)) {
             bp.get(Blob::class).let {
-                InternalBlobPart.BlobPart(it)
+                listOf(InternalBlobPart.BlobPart(it))
             }
         } else {
             bp.get(TypedArray::class).let {
-                InternalBlobPart.BufferPart(it.bytes())
+                it.bytes().toInternalBlobParts()
             }
         }
     }
@@ -161,19 +185,11 @@ sealed class InternalBlobPart() {
         }
     }
 
-    fun text(): String {
-        return when (this) {
-            is StringPart -> string
-            is BlobPart -> blob.text()
-            is BufferPart -> buffer.decodeToString()
-        }
-    }
-
-    fun bytes(): ByteArray {
-        return when (this) {
-            is StringPart -> string.toByteArray()
-            is BlobPart -> blob.bytes()
-            is BufferPart -> buffer
+    fun bytesToStream(byteStream: ByteArrayOutputStream) {
+        when (this) {
+            is StringPart -> byteStream.write(string.toByteArray())
+            is BlobPart -> blob.bytesToStream(byteStream)
+            is BufferPart -> byteStream.write(buffer)
         }
     }
 }
