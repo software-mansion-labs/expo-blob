@@ -32,6 +32,12 @@ class Blob() : SharedObject() {
         }
     }
 
+  fun bytes(): ByteArray {
+      val byteStream = ByteArrayOutputStream(size)
+      bytesToStream(byteStream)
+      return byteStream.toByteArray()
+  }
+
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
         var s: Int = start - offset
         var e: Int = end - offset
