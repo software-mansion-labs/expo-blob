@@ -9,22 +9,19 @@ import { Page } from '../../../components/Page';
 
 type PerformanceTestData = {
   key: string;
-  blobOperation: () => Promise<void>;
-  expoBlobOperation: () => Promise<void>;
+  blobOperation: () => Promise<number>;
+  expoBlobOperation: () => Promise<number>;
   title: string;
   iterations: number;
 };
 
 function blobToBase64(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result;
       if (typeof result === 'string') {
         resolve(result);
-      } else {
-        // eslint-disable-next-line prefer-promise-reject-errors
-        reject('error: incompatible types');
       }
     };
     reader.readAsDataURL(blob);
@@ -35,12 +32,18 @@ const performanceTest: PerformanceTestData[] = [
   {
     key: 'basic-test',
     blobOperation: async () => {
+      const T0 = performance.now();
       const blob = new Blob(['abcd'.repeat(50000)]);
       blob.slice(0, 500000).slice(0, 50_000).slice(0, 40_000).slice(0, 30_000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     expoBlobOperation: async () => {
+      const T0 = performance.now();
       const blob = new ExpoBlob(['abcd'.repeat(50000)]);
       blob.slice(0, 500000).slice(0, 50_000).slice(0, 40_000).slice(0, 30_000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     title: 'String Test',
     iterations: 100,
@@ -56,8 +59,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new Blob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     expoBlobOperation: async () => {
       const asset = Asset.fromModule(
@@ -68,8 +75,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     title: 'File Test (2MB BMP)',
     iterations: 5,
@@ -85,8 +96,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new Blob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     expoBlobOperation: async () => {
       const asset = Asset.fromModule(
@@ -97,8 +112,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     title: 'File Test (1MB Audio)',
     iterations: 25,
@@ -114,8 +133,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new Blob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     expoBlobOperation: async () => {
       const asset = Asset.fromModule(
@@ -126,8 +149,12 @@ const performanceTest: PerformanceTestData[] = [
       const response = await fetch(uri);
       const blobResponse = await response.blob();
       const base64 = await blobToBase64(blobResponse);
+
+      const T0 = performance.now();
       const blob = new ExpoBlob([base64]);
       blob.slice(0, 1000);
+      const T1 = performance.now();
+      return T1 - T0;
     },
     title: 'File Test (1MB Video)',
     iterations: 25,
@@ -192,15 +219,8 @@ export default function BlobArrayBufferScreen() {
       let expoBlobTotal = 0;
       let blobTotal = 0;
       for (let i = 0; i < example.iterations; i++) {
-        const expoBlobT0 = performance.now();
-        await example.expoBlobOperation();
-        const expoBlobT1 = performance.now();
-        expoBlobTotal += expoBlobT1 - expoBlobT0;
-
-        const blobT0 = performance.now();
-        await example.blobOperation();
-        const blobT1 = performance.now();
-        blobTotal += blobT1 - blobT0;
+        expoBlobTotal += await example.expoBlobOperation();
+        blobTotal += await example.blobOperation();
       }
       setResults((prev) => ({
         ...prev,
