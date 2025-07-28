@@ -25,16 +25,16 @@ class Blob() : SharedObject() {
         this.type = if(validType(type)) type.lowercase() else ""
     }
 
-    fun textToBuilder(builder: StringBuilder) {
-        for (bp in blobParts) {
-          bp.textToBuilder(builder)
-        }
-    }
-
     fun bytesToStream(byteStream: ByteArrayOutputStream) {
         for (bp in blobParts) {
             bp.bytesToStream(byteStream)
         }
+    }
+
+    fun bytes(): ByteArray {
+        val byteStream = ByteArrayOutputStream(size)
+        bytesToStream(byteStream)
+        return byteStream.toByteArray()
     }
 
     private fun InternalBlobPart.offsetSlice(start: Int, end: Int, offset: Int): InternalBlobPart {
@@ -160,14 +160,6 @@ sealed class InternalBlobPart() {
             is StringPart -> string.toByteArray().size
             is BlobPart -> blob.size
             is BufferPart -> buffer.size
-        }
-    }
-
-    fun textToBuilder(builder: StringBuilder) {
-        when (this) {
-            is StringPart -> builder.append(string)
-            is BlobPart -> blob.textToBuilder(builder)
-            is BufferPart -> builder.append(buffer.decodeToString())
         }
     }
 
