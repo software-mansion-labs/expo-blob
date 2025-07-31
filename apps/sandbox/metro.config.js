@@ -29,16 +29,21 @@ config.watchFolders = [
 config.resetCache = true;
 
 const appendModuleToTheFile = (moduleName) => {
-  fs.writeFileSync(
-    thePath,
-    "import { requireNativeModule } from 'expo';\n\
-    import * as React from 'react';\n\
-    export const " +
-      moduleName +
-      " = requireNativeModule('" +
-      moduleName +
-      "');\n"
+  let fileContent = fs.existsSync(thePath) ? fs.readFileSync(thePath, 'utf8') : '';
+
+  if (!fileContent) {
+    fileContent = "import { requireNativeModule } from 'expo';\nimport * as React from 'react';\n";
+  }
+
+  const moduleExists = fileContent.includes(
+    `export const ${moduleName} = requireNativeModule('${moduleName}')`
   );
+
+  if (!moduleExists) {
+    fileContent += `export const ${moduleName} = requireNativeModule('${moduleName}');\n`;
+  }
+
+  fs.writeFileSync(thePath, fileContent);
   return thePath;
 };
 
