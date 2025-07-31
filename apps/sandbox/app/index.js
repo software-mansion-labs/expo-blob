@@ -1,3 +1,4 @@
+import { ExampleModule } from 'ExampleModule.swift';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function Page() {
@@ -5,6 +6,10 @@ export default function Page() {
     <View style={styles.container}>
       <View style={styles.main}>
         <Text style={styles.title}>Hello World</Text>
+      </View>
+      <View style={styles.container}>
+        <Text>{ExampleModule.hello()}</Text>
+        <Text>{ExampleModule.PI}</Text>
       </View>
     </View>
   );
