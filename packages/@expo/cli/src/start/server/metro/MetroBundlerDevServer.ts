@@ -1337,6 +1337,28 @@ export class MetroBundlerDevServer extends BundlerDevServer {
 
     (async function startModuleGenerationAsync() {
       const regenerateLocalModuleFiles = (outputDir: string) => {};
+      console.log('here 12321312312');
+      const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
+      const typesDirectory = path.resolve(dotExpoDir, './types');
+      const localModulesDirectory = path.resolve(dotExpoDir, './localModules');
+      const { exp } = getConfig(projectRoot);
+      await fs.mkdir(typesDirectory, { recursive: true });
+      await fs.mkdir(localModulesDirectory, { recursive: true });
+
+      process.env.EXPO_ROUTER_APP_ROOT = path.join(
+        projectRoot,
+        getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
+      );
+      const typedRoutesModulePath = resolveFrom.silent(
+        projectRoot,
+        'expo-router/build/typed-routes'
+      );
+      if (!typedRoutesModulePath) {
+        console.log("typedRoutesModulePath couldn't be resolved");
+        return;
+      }
+      const typedRoutesModule = require(typedRoutesModulePath);
+      console.log('Setting up metro watcher for kotlin files');
 
       const metroWatchKotlinFiles = async ({
         projectRoot,
@@ -1374,7 +1396,31 @@ export class MetroBundlerDevServer extends BundlerDevServer {
             ) {
               const { filePath } = event;
               if (/\.kt$/.test(event.filePath)) {
-                console.log('User added a .kt file');
+                if (event.type === 'add') {
+                  console.log('User added a .kt file');
+                  console.log(filePath);
+                  const splitPath = filePath.toString().split('/') ?? ['afhjabjhg.kt'];
+                  const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
+                  const moduleName = justFileName.substring(0, justFileName.length - 3);
+                  // splitPath?.at(splitPath.length)?.substring(0, -3) ?? 'EmptyModule';
+                  console.log(moduleName);
+                  const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.js');
+                  fs.writeFile(
+                    newTypesFilePath,
+                    `
+                      import { requireNativeModule } from 'expo';
+                      import * as React from 'react';
+                      export default requireNativeModule("${moduleName}");
+                    `
+                  );
+                  console.log(
+                    'asynchronously added file',
+                    newTypesFilePath,
+                    'with module name',
+                    moduleName
+                  );
+                }
+                console.log('user did something to a .kt file');
               }
             }
           }
@@ -1386,28 +1432,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         // regenerateLocalModuleFiles();
       };
 
-      console.log('here 12321312312');
-      const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-      const typesDirectory = path.resolve(dotExpoDir, './types');
-      const localModulesDirectory = path.resolve(dotExpoDir, './localModules');
-      const { exp } = getConfig(projectRoot);
-      await fs.mkdir(typesDirectory, { recursive: true });
-      await fs.mkdir(localModulesDirectory, { recursive: true });
-
-      process.env.EXPO_ROUTER_APP_ROOT = path.join(
-        projectRoot,
-        getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
-      );
-      const typedRoutesModulePath = resolveFrom.silent(
-        projectRoot,
-        'expo-router/build/typed-routes'
-      );
-      if (!typedRoutesModulePath) {
-        console.log("typedRoutesModulePath couldn't be resolved");
-        return;
-      }
-      const typedRoutesModule = require(typedRoutesModulePath);
-      console.log('Setting up metro watcher for kotlin files');
       metroWatchKotlinFiles({
         projectRoot,
         metro,
