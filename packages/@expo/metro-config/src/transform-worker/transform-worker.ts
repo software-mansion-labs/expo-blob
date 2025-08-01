@@ -109,6 +109,8 @@ export async function transform(
   // If the file is not CSS, then use the default behavior.
   const environment = options.customTransformOptions?.environment;
   const isClientEnvironment = environment !== 'node' && environment !== 'react-server';
+
+  console.log('transform worker');
   if (
     isClientEnvironment &&
     // TODO: Ensure this works with windows.
@@ -132,6 +134,7 @@ export async function transform(
     );
   }
 
+  console.log('transform worker 2');
   if (
     isClientEnvironment &&
     !filename.match(/\/node_modules\//) &&

@@ -66,6 +66,7 @@ export async function createMetroEndpointAsync(
   const root = getMetroServerRoot(projectRoot);
   const safeOtherFile = await ensureFileInRootDirectory(projectRoot, absoluteFilePath);
   const serverPath = path.relative(root, safeOtherFile).replace(/\.[jt]sx?$/, '');
+  console.log('!async metro endpoint');
 
   const urlFragment = createBundleUrlPath({
     mainModuleName: serverPath,

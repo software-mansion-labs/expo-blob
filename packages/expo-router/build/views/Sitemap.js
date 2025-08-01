@@ -62,6 +62,7 @@ function Sitemap() {
     </react_native_1.View>);
 }
 function SitemapItem({ node, level = 0 }) {
+    console.log('SiteMap item');
     const isLayout = react_1.default.useMemo(() => node.children.length > 0 || node.contextKey.match(/_layout\.[jt]sx?$/), [node]);
     const info = node.isInitial ? 'Initial' : node.isGenerated ? 'Generated' : '';
     if (isLayout) {

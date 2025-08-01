@@ -103,6 +103,8 @@ function getDirectoryTree(contextModule: RequireContext, options: Options) {
 
   const ignoreList: RegExp[] = [/^\.\/\+(html|native-intent)\.[tj]sx?$/]; // Ignore the top level ./+html file
 
+  console.log('ignore list');
+
   if (options.ignore) {
     ignoreList.push(...options.ignore);
   }
@@ -518,6 +520,7 @@ function getNameWithoutInvisibleSegmentsFromRedirectPath(path: string): string {
 function getSourceContextKeyFromRedirectSource(source: string): string {
   const name = getNameFromRedirectPath(source);
   const prefix = './';
+  console.log('getSourceContextkey');
   const suffix = /\.[tj]sx?$/.test(name) ? '' : '.js'; // Ensure it has a file extension
   return `${prefix}${name}${suffix}`;
 }
@@ -600,6 +603,7 @@ function getFileMeta(
 
   const isLayout = filenameWithoutExtensions === '_layout';
   const isApi = originalKey.match(/\+api\.(\w+\.)?[jt]sx?$/);
+  console.log('!is Api');
 
   if (filenameWithoutExtensions.startsWith('(') && filenameWithoutExtensions.endsWith(')')) {
     throw new Error(`Invalid route ${originalKey}. Routes cannot end with '(group)' syntax`);

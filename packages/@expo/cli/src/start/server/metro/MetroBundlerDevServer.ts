@@ -32,6 +32,7 @@ import assert from 'assert';
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+import fs from 'fs/promises';
 
 import {
   createServerComponentsMiddleware,
@@ -61,7 +62,12 @@ import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
 import { toPosixPath } from '../../../utils/filePath';
 import { getFreePortAsync } from '../../../utils/port';
-import { BundlerDevServer, BundlerStartOptions, DevServerInstance } from '../BundlerDevServer';
+import {
+  BundlerDevServer,
+  BundlerStartOptions,
+  DevServerInstance,
+  ServerLike,
+} from '../BundlerDevServer';
 import {
   cachedSourceMaps,
   evalMetroAndWrapFunctions,
@@ -88,6 +94,7 @@ import {
 } from '../middleware/metroOptions';
 import { prependMiddleware } from '../middleware/mutations';
 import { startTypescriptTypeGenerationAsync } from '../type-generation/startTypescriptTypeGeneration';
+import { ensureDotExpoProjectDirectoryInitialized } from '../../project/dotExpo';
 
 export type ExpoRouterRuntimeManifest = Awaited<
   ReturnType<typeof import('expo-router/build/static/renderStaticContent').getManifest>
@@ -198,6 +205,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       const filepath = path.isAbsolute(route.file) ? route.file : path.join(appDir, route.file);
       const contents = await this.bundleApiRoute(filepath, { platform });
 
+      console.log('manifest regex');
       const artifactFilename =
         route.page === rscPath
           ? // HACK: Add RSC renderer to the output...
@@ -1315,11 +1323,97 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }
 
   public async startTypeScriptServices() {
-    return startTypescriptTypeGenerationAsync({
+    console.log('startTypeScriptServices 3');
+    const projectRoot = this.projectRoot;
+    const metro = this.metro;
+    const server = this.instance?.server;
+    console.log('TS services 1');
+    startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
       projectRoot: this.projectRoot,
     });
+
+    (async function startModuleGenerationAsync() {
+      const regenerateLocalModuleFiles = (outputDir: string) => {};
+
+      const metroWatchKotlinFiles = async ({
+        projectRoot,
+        metro,
+        server,
+        eventTypes = ['add', 'change', 'delete'],
+      }: {
+        metro: MetroServer | null;
+        server?: ServerLike;
+        projectRoot: string;
+        eventTypes?: string[];
+      }) => {
+        const watcher = metro?.getBundler().getBundler().getWatcher();
+
+        const listener = ({
+          eventsQueue,
+        }: {
+          eventsQueue: {
+            filePath: string;
+            metadata?: {
+              type: 'f' | 'd' | 'l'; // Regular file / Directory / Symlink
+            } | null;
+            type: string;
+          }[];
+        }) => {
+          console.log('changed files queue');
+          console.log(eventsQueue.length);
+          for (const event of eventsQueue) {
+            // console.log(event.filePath);
+            if (
+              eventTypes.includes(event.type) &&
+              event.metadata?.type !== 'd' &&
+              !/node_modules/.test(event.filePath) &&
+              !/\.d\.ts$/.test(event.filePath)
+            ) {
+              const { filePath } = event;
+              if (/\.kt$/.test(event.filePath)) {
+                console.log('User added a .kt file');
+              }
+            }
+          }
+        };
+
+        console.log('Waiting for .kt files to be added to the project...');
+        watcher?.addListener('change', listener);
+        watcher?.addListener('add', listener);
+        // regenerateLocalModuleFiles();
+      };
+
+      console.log('here 12321312312');
+      const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
+      const typesDirectory = path.resolve(dotExpoDir, './types');
+      const localModulesDirectory = path.resolve(dotExpoDir, './localModules');
+      const { exp } = getConfig(projectRoot);
+      await fs.mkdir(typesDirectory, { recursive: true });
+      await fs.mkdir(localModulesDirectory, { recursive: true });
+
+      process.env.EXPO_ROUTER_APP_ROOT = path.join(
+        projectRoot,
+        getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
+      );
+      const typedRoutesModulePath = resolveFrom.silent(
+        projectRoot,
+        'expo-router/build/typed-routes'
+      );
+      if (!typedRoutesModulePath) {
+        console.log("typedRoutesModulePath couldn't be resolved");
+        return;
+      }
+      const typedRoutesModule = require(typedRoutesModulePath);
+      console.log('Setting up metro watcher for kotlin files');
+      metroWatchKotlinFiles({
+        projectRoot,
+        metro,
+        server,
+        eventTypes: ['add', 'delete', 'change'],
+      });
+    })();
   }
 
   protected getConfigModuleIds(): string[] {

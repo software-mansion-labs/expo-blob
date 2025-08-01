@@ -26,12 +26,14 @@ export async function startTypescriptTypeGenerationAsync({
   server,
 }: TypeScriptTypeGenerationOptions) {
   const { exp } = getConfig(projectRoot);
-
+  console.log('TS services 2');
   // If typed routes are disabled, remove any files that were added.
   if (!exp.experiments?.typedRoutes) {
+    console.log('TS services 3 if');
     debug('Removing typed routes side-effects (experiments.typedRoutes: false)');
     await Promise.all([forceRemovalTSConfig(projectRoot), removeExpoEnvDTS(projectRoot)]);
   } else {
+    console.log('TS services 3 else');
     const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
     const typesDirectory = path.resolve(dotExpoDir, './types');
     debug(
@@ -41,7 +43,7 @@ export async function startTypescriptTypeGenerationAsync({
 
     // Ensure the types directory exists.
     await fs.mkdir(typesDirectory, { recursive: true });
-
+    console.log('start Typescript type generation async before await');
     await Promise.all([
       upsertGitIgnoreContents(path.join(projectRoot, '.gitignore'), 'expo-env.d.ts'),
       writeExpoEnvDTS(projectRoot),

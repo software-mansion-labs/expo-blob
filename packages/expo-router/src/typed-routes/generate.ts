@@ -27,6 +27,7 @@ export function getTypedRoutesDeclarationFile(
   let routeNode: RouteNode | null = null;
 
   try {
+    console.log('generate getTypedRoutes');
     routeNode = getRoutes(ctx, {
       ignore: [/_layout\.[tj]sx?$/], // Skip layout files
       platformRoutes: false, // We don't need to generate platform specific routes

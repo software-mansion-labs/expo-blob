@@ -46,6 +46,7 @@ export async function setupTypedRoutes(options: SetupTypedRoutesOptions) {
     options.projectRoot,
     'expo-router/build/typed-routes'
   );
+  console.log(typedRoutesModule ? 'typed routes' : 'legacy typed routes');
   return typedRoutesModule ? typedRoutes(typedRoutesModule, options) : legacyTypedRoutes(options);
 }
 
@@ -225,6 +226,7 @@ export function getTypedRoutesUtils(appRoot: string, filePathSeperator = path.se
   const normalizedAppRoot = normalizedFilePath(appRoot);
 
   const filePathToRoute = (filePath: string) => {
+    console.log('!normalizing path');
     return normalizedFilePath(filePath)
       .replace(normalizedAppRoot, '')
       .replace(/index\.[jt]sx?/, '')
@@ -232,6 +234,7 @@ export function getTypedRoutesUtils(appRoot: string, filePathSeperator = path.se
   };
 
   const isRouteFile = (filePath: string) => {
+    console.log('!!! is route file ');
     if (filePath.match(TYPED_ROUTES_EXCLUSION_REGEX)) {
       return false;
     }

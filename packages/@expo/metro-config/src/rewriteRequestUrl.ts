@@ -96,6 +96,7 @@ export function getRewriteRequestUrl(projectRoot: string) {
         }
       }
 
+      console.log('rewrite request url');
       const serverRoot = getMetroServerRoot(projectRoot);
       const relativeEntry = path.relative(serverRoot, entry).replace(/\.[tj]sx?$/, '');
       debug('Resolved entry point', { entry, relativeEntry, serverRoot });

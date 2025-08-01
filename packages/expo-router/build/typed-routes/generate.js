@@ -13,6 +13,7 @@ const urlParams = "${`?${string}` | `#${string}` | ''}";
 function getTypedRoutesDeclarationFile(ctx, { partialTypedGroups = false, testIgnoreComments = false, } = {}) {
     let routeNode = null;
     try {
+        console.log('generate getTypedRoutes');
         routeNode = (0, getRoutes_1.getRoutes)(ctx, {
             ignore: [/_layout\.[tj]sx?$/], // Skip layout files
             platformRoutes: false, // We don't need to generate platform specific routes

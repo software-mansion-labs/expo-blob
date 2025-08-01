@@ -86,6 +86,7 @@ interface SitemapItemProps {
 }
 
 function SitemapItem({ node, level = 0 }: SitemapItemProps) {
+  console.log('SiteMap item');
   const isLayout = React.useMemo(
     () => node.children.length > 0 || node.contextKey.match(/_layout\.[jt]sx?$/),
     [node]

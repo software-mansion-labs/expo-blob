@@ -24,6 +24,7 @@ const routeHref = (route, parents) => '/' +
 const routeFilename = (route) => {
     const segments = route.contextKey.split('/');
     // join last two segments for layout routes
+    console.log('!routeFilename');
     if (route.contextKey.match(/_layout\.[jt]sx?$/)) {
         return segments[segments.length - 2] + '/' + segments[segments.length - 1];
     }

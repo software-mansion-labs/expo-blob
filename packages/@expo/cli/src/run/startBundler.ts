@@ -32,7 +32,7 @@ export async function startBundlerAsync(
   };
 
   const devServerManager = await DevServerManager.startMetroAsync(projectRoot, options);
-
+  throw new Error();
   // Present the Terminal UI.
   if (!headless && isInteractive()) {
     // Only read the config if we are going to use the results.

@@ -16,6 +16,7 @@ export default function requireContext(
   regularExpression = /\.[tj]sx?$/,
   files: Record<string, unknown> = {}
 ) {
+  console.log('require context ponyfill');
   function readDirectory(directory: string) {
     fs.readdirSync(directory).forEach((file: string) => {
       const fullPath = path.resolve(directory, file);
@@ -27,7 +28,11 @@ export default function requireContext(
         return;
       }
 
-      if (!regularExpression.test(relativePath)) return;
+      console.log('polyfill 2');
+      if (!regularExpression.test(relativePath) && !/\.kt?$/.test(relativePath)) {
+        console.log('polyfill might be a problem');
+        return;
+      }
 
       files[relativePath] = true;
     });
