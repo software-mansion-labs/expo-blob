@@ -211,6 +211,9 @@ export function getDefaultConfig(
 
   // Add support for cjs (without platform extensions).
   sourceExts.push('cjs');
+  sourceExts.push('kt');
+
+  console.log('!Trying to add the .kt extension in here');
 
   const reanimatedVersion = getPkgVersion(projectRoot, 'react-native-reanimated');
 

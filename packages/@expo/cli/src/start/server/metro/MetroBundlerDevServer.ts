@@ -1061,6 +1061,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
             server,
           },
           (events) => {
+            console.log('! observe any file changes');
             if (hasApiRoutes) {
               // NOTE(EvanBacon): We aren't sure what files the API routes are using so we'll just invalidate
               // aggressively to ensure we always have the latest. The only caching we really get here is for
