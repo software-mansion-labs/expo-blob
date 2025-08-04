@@ -1337,7 +1337,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     });
 
     (async function startModuleGenerationAsync() {
-      const regenerateLocalModuleFiles = (outputDir: string) => {};
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const typesDirectory = path.resolve(dotExpoDir, './types');
@@ -1358,7 +1357,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         const splitPath = filePath.toString().split('/') ?? ['afhjabjhg.kt'];
         const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
         const moduleName = justFileName.substring(0, justFileName.length - 3);
-        // splitPath?.at(splitPath.length)?.substring(0, -3) ?? 'EmptyModule';
         console.log(moduleName);
         const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.kt.d.ts');
         const newModuleExportPath = path.resolve(localModulesDirectory, moduleName + '.js');
@@ -1433,7 +1431,6 @@ export default requireNativeModule("${moduleName}");`
         };
         console.log('project root: ' + projectRoot);
         generateExportsAndTypesForDirectory(path.resolve(projectRoot, './app/'));
-        // regenerateLocalModuleFiles();
       };
 
       metroWatchKotlinFiles({
