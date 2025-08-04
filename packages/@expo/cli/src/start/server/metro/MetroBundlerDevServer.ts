@@ -95,6 +95,7 @@ import {
 import { prependMiddleware } from '../middleware/mutations';
 import { startTypescriptTypeGenerationAsync } from '../type-generation/startTypescriptTypeGeneration';
 import { ensureDotExpoProjectDirectoryInitialized } from '../../project/dotExpo';
+import { Dir, Dirent } from 'fs';
 
 export type ExpoRouterRuntimeManifest = Awaited<
   ReturnType<typeof import('expo-router/build/static/renderStaticContent').getManifest>
@@ -1349,16 +1350,27 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         projectRoot,
         getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
       );
-      const typedRoutesModulePath = resolveFrom.silent(
-        projectRoot,
-        'expo-router/build/typed-routes'
-      );
-      if (!typedRoutesModulePath) {
-        console.log("typedRoutesModulePath couldn't be resolved");
-        return;
-      }
-      const typedRoutesModule = require(typedRoutesModulePath);
       console.log('Setting up metro watcher for kotlin files');
+
+      const addNewFile = async (filePath: string) => {
+        console.log('User added a .kt file');
+        console.log(filePath);
+        const splitPath = filePath.toString().split('/') ?? ['afhjabjhg.kt'];
+        const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
+        const moduleName = justFileName.substring(0, justFileName.length - 3);
+        // splitPath?.at(splitPath.length)?.substring(0, -3) ?? 'EmptyModule';
+        console.log(moduleName);
+        const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.kt.d.ts');
+        const newModuleExportPath = path.resolve(localModulesDirectory, moduleName + '.js');
+        fs.writeFile(
+          newModuleExportPath,
+          `import { requireNativeModule } from 'expo';
+import * as React from 'react';
+export default requireNativeModule("${moduleName}");`
+        );
+        fs.writeFile(newTypesFilePath, `declare module "${justFileName}" {}`);
+        console.log('asynchronously added file', newTypesFilePath, 'with module name', moduleName);
+      };
 
       const metroWatchKotlinFiles = async ({
         projectRoot,
@@ -1397,36 +1409,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
               const { filePath } = event;
               if (/\.kt$/.test(event.filePath)) {
                 if (event.type === 'add') {
-                  console.log('User added a .kt file');
-                  console.log(filePath);
-                  const splitPath = filePath.toString().split('/') ?? ['afhjabjhg.kt'];
-                  const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
-                  const moduleName = justFileName.substring(0, justFileName.length - 3);
-                  // splitPath?.at(splitPath.length)?.substring(0, -3) ?? 'EmptyModule';
-                  console.log(moduleName);
-                  const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.js');
-                  const newModuleExportPath = path.resolve(
-                    localModulesDirectory,
-                    moduleName + '.js'
-                  );
-                  fs.writeFile(
-                    newModuleExportPath,
-                    `
-                      import { requireNativeModule } from 'expo';
-                      import * as React from 'react';
-                      export default requireNativeModule("${moduleName}");
-                    `
-                  );
-                  fs.writeFile(
-                    newTypesFilePath,
-                    'export declare class ${moduleName} extends NativeModule {}'
-                  );
-                  console.log(
-                    'asynchronously added file',
-                    newTypesFilePath,
-                    'with module name',
-                    moduleName
-                  );
+                  addNewFile(filePath);
                 }
                 console.log('user did something to a .kt file');
               }
@@ -1437,6 +1420,19 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         console.log('Waiting for .kt files to be added to the project...');
         watcher?.addListener('change', listener);
         watcher?.addListener('add', listener);
+
+        const generateExportsAndTypesForDirectory = async (dirPath: string) => {
+          const dir = await fs.opendir(dirPath);
+          for await (const dirent of dir) {
+            if (dirent.isFile() && dirent.name.endsWith('.kt')) {
+              addNewFile(dirent.name);
+            } else if (dirent.isDirectory()) {
+              generateExportsAndTypesForDirectory(dirent.name);
+            }
+          }
+        };
+        console.log('project root: ' + projectRoot);
+        generateExportsAndTypesForDirectory(path.resolve(projectRoot, './app/'));
         // regenerateLocalModuleFiles();
       };
 

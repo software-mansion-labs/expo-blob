@@ -4,8 +4,8 @@ const { getDefaultConfig } = require('expo/metro-config');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 console.log('in metro config');
 
@@ -16,33 +16,21 @@ fs.mkdirSync(theFolderPath, {
 });
 fs.writeFileSync(thePath, '');
 
-// config.watchFolders = [__dirname, theFolderPath];
-// config.resetCache = true;
+console.log(__dirname);
 
-// const appendModuleToTheFile = (moduleName) => {
-//   fs.writeFileSync(
-//     thePath,
-//     "import { requireNativeModule } from 'expo';\n\
-//     import * as React from 'react';\n\
-//     export const " +
-//       moduleName +
-//       " = requireNativeModule('" +
-//       moduleName +
-//       "');\n"
-//   );
-//   return thePath;
-// };
+const localModulesExports = path.resolve(__dirname, './.expo/localModules/');
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.endsWith('.kt')) {
-    console.log('trying to resolve .kt module');
-    // const pathToNewFile = appendModuleToTheFile(moduleName.slice(0, -3).toString());
-    // const pathToExportFile = path.resolve()
-    // return {
-    //   filePath: pathToNewFile,
-    //   type: 'sourceFile',
-    // };
-    return context.resolveRequest(context, moduleName.slice(0, -3).toString(), platform);
+    console.log('trying to resolve .kt module: ' + moduleName);
+    const pathToExportFile = path.resolve(
+      localModulesExports,
+      moduleName.slice(0, -3).toString() + '.js'
+    );
+    return {
+      filePath: pathToExportFile,
+      type: 'sourceFile',
+    };
   }
 
   const resolution = context.resolveRequest(context, moduleName, platform);

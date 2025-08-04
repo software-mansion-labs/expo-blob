@@ -211,6 +211,7 @@ export function getDefaultConfig(
 
   // Add support for cjs (without platform extensions).
   sourceExts.push('cjs');
+  // [TODO]
   sourceExts.push('kt');
 
   console.log('!Trying to add the .kt extension in here');
