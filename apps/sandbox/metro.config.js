@@ -19,28 +19,30 @@ fs.writeFileSync(thePath, '');
 // config.watchFolders = [__dirname, theFolderPath];
 // config.resetCache = true;
 
-const appendModuleToTheFile = (moduleName) => {
-  fs.writeFileSync(
-    thePath,
-    "import { requireNativeModule } from 'expo';\n\
-    import * as React from 'react';\n\
-    export const " +
-      moduleName +
-      " = requireNativeModule('" +
-      moduleName +
-      "');\n"
-  );
-  return thePath;
-};
+// const appendModuleToTheFile = (moduleName) => {
+//   fs.writeFileSync(
+//     thePath,
+//     "import { requireNativeModule } from 'expo';\n\
+//     import * as React from 'react';\n\
+//     export const " +
+//       moduleName +
+//       " = requireNativeModule('" +
+//       moduleName +
+//       "');\n"
+//   );
+//   return thePath;
+// };
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.endsWith('.kt')) {
     console.log('trying to resolve .kt module');
-    const pathToNewFile = appendModuleToTheFile(moduleName.slice(0, -3).toString());
-    return {
-      filePath: pathToNewFile,
-      type: 'sourceFile',
-    };
+    // const pathToNewFile = appendModuleToTheFile(moduleName.slice(0, -3).toString());
+    // const pathToExportFile = path.resolve()
+    // return {
+    //   filePath: pathToNewFile,
+    //   type: 'sourceFile',
+    // };
+    return context.resolveRequest(context, moduleName.slice(0, -3).toString(), platform);
   }
 
   const resolution = context.resolveRequest(context, moduleName, platform);

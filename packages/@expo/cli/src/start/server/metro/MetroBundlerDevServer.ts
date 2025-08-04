@@ -1405,13 +1405,21 @@ export class MetroBundlerDevServer extends BundlerDevServer {
                   // splitPath?.at(splitPath.length)?.substring(0, -3) ?? 'EmptyModule';
                   console.log(moduleName);
                   const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.js');
+                  const newModuleExportPath = path.resolve(
+                    localModulesDirectory,
+                    moduleName + '.js'
+                  );
                   fs.writeFile(
-                    newTypesFilePath,
+                    newModuleExportPath,
                     `
                       import { requireNativeModule } from 'expo';
                       import * as React from 'react';
                       export default requireNativeModule("${moduleName}");
                     `
+                  );
+                  fs.writeFile(
+                    newTypesFilePath,
+                    'export declare class ${moduleName} extends NativeModule {}'
                   );
                   console.log(
                     'asynchronously added file',

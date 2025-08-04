@@ -139,7 +139,7 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     // Add support for cjs (without platform extensions).
     sourceExts.push('cjs');
     sourceExts.push('kt');
-    console.log('!trying this out');
+    console.log('!Trying to add the .kt extension in here');
     const reanimatedVersion = getPkgVersion(projectRoot, 'react-native-reanimated');
     let sassVersion = null;
     if (isCSSEnabled) {
