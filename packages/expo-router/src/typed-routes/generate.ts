@@ -24,6 +24,7 @@ export function getTypedRoutesDeclarationFile(
     testIgnoreComments = false,
   }: GetTypedRoutesDeclarationFileOptions = {}
 ) {
+  console.log('!!! generation in start...');
   let routeNode: RouteNode | null = null;
 
   try {

@@ -1339,11 +1339,13 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     (async function startModuleGenerationAsync() {
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-      const typesDirectory = path.resolve(dotExpoDir, './types');
-      const localModulesDirectory = path.resolve(dotExpoDir, './localModules');
+      const appDirPath = path.resolve(projectRoot, './app');
+      const typesAppPath = path.resolve(projectRoot, './.expo/types/app/');
+      const localModulesAppPath = path.resolve(projectRoot, './.expo/localModules/app/');
       const { exp } = getConfig(projectRoot);
-      await fs.mkdir(typesDirectory, { recursive: true });
-      await fs.mkdir(localModulesDirectory, { recursive: true });
+
+      await fs.mkdir(typesAppPath, { recursive: true });
+      await fs.mkdir(localModulesAppPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
         projectRoot,
@@ -1351,22 +1353,31 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       );
       console.log('Setting up metro watcher for kotlin files');
 
-      const addNewFile = async (filePath: string) => {
+      const addNewFile = async (absoluteFilePath: string) => {
         console.log('User added a .kt file');
-        console.log(filePath);
-        const splitPath = filePath.toString().split('/') ?? ['afhjabjhg.kt'];
+        console.log(absoluteFilePath);
+        const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
         const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
         const moduleName = justFileName.substring(0, justFileName.length - 3);
         console.log(moduleName);
-        const newTypesFilePath = path.resolve(typesDirectory, moduleName + '.kt.d.ts');
-        const newModuleExportPath = path.resolve(localModulesDirectory, moduleName + '.js');
+
+        const filePathRelativeToApp = path.relative(appDirPath, absoluteFilePath);
+        const newTypesFilePath = path.resolve(typesAppPath, filePathRelativeToApp + '.d.ts');
+        const newModuleExportPath = path.resolve(
+          localModulesAppPath,
+          filePathRelativeToApp.substring(0, filePathRelativeToApp.length - 3) + '.js'
+        );
+        await fs.mkdir(path.dirname(newModuleExportPath), { recursive: true });
+        await fs.mkdir(path.dirname(newTypesFilePath), { recursive: true });
+
         fs.writeFile(
           newModuleExportPath,
           `import { requireNativeModule } from 'expo';
 import * as React from 'react';
 export default requireNativeModule("${moduleName}");`
         );
-        fs.writeFile(newTypesFilePath, `declare module "${justFileName}" {}`);
+        // fs.writeFile(newTypesFilePath, `declare module "*/${justFileName}" {}`);
+        fs.writeFile(newTypesFilePath, 'const _default: any\nexport default _default');
         console.log('asynchronously added file', newTypesFilePath, 'with module name', moduleName);
       };
 
@@ -1394,38 +1405,32 @@ export default requireNativeModule("${moduleName}");`
             type: string;
           }[];
         }) => {
-          console.log('changed files queue');
-          console.log(eventsQueue.length);
           for (const event of eventsQueue) {
-            // console.log(event.filePath);
             if (
               eventTypes.includes(event.type) &&
               event.metadata?.type !== 'd' &&
               !/node_modules/.test(event.filePath) &&
-              !/\.d\.ts$/.test(event.filePath)
+              /\.kt$/.test(event.filePath)
             ) {
               const { filePath } = event;
-              if (/\.kt$/.test(event.filePath)) {
-                if (event.type === 'add') {
-                  addNewFile(filePath);
-                }
-                console.log('user did something to a .kt file');
+              if (event.type === 'add') {
+                addNewFile(filePath);
               }
             }
           }
         };
 
-        console.log('Waiting for .kt files to be added to the project...');
         watcher?.addListener('change', listener);
         watcher?.addListener('add', listener);
 
         const generateExportsAndTypesForDirectory = async (dirPath: string) => {
           const dir = await fs.opendir(dirPath);
           for await (const dirent of dir) {
+            const absoluteDirentPath = path.resolve(dirPath, dirent.name);
             if (dirent.isFile() && dirent.name.endsWith('.kt')) {
-              addNewFile(dirent.name);
+              addNewFile(absoluteDirentPath);
             } else if (dirent.isDirectory()) {
-              generateExportsAndTypesForDirectory(dirent.name);
+              generateExportsAndTypesForDirectory(absoluteDirentPath);
             }
           }
         };

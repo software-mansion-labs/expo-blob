@@ -72,6 +72,7 @@ function getWatchHandler(outputDir, { ctx = defaultCtx, regenerateFn = exports.r
  * If you process the types after the ADD, then they will crash as you will have conflicting routes
  */
 exports.regenerateDeclarations = debounce((outputDir, options = {}, ctx = defaultCtx) => {
+    console.log('!!! regenerate declarations expor router');
     // Don't crash the process, just log the error. The user will most likely fix it and continue
     try {
         const file = (0, generate_1.getTypedRoutesDeclarationFile)(ctx, options);

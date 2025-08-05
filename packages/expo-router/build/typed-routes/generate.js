@@ -11,6 +11,7 @@ const SLUG = /\[.+?\]/g;
 const GROUP = /(?:^|\/)\(.*?\)/g;
 const urlParams = "${`?${string}` | `#${string}` | ''}";
 function getTypedRoutesDeclarationFile(ctx, { partialTypedGroups = false, testIgnoreComments = false, } = {}) {
+    console.log('!!! generation in start...');
     let routeNode = null;
     try {
         console.log('generate getTypedRoutes');

@@ -83,6 +83,7 @@ export const regenerateDeclarations = debounce(
     options: { partialTypedGroups?: boolean } = {},
     ctx: RequireContextPonyFill = defaultCtx
   ) => {
+    console.log('!!! regenerate declarations expor router');
     // Don't crash the process, just log the error. The user will most likely fix it and continue
     try {
       const file = getTypedRoutesDeclarationFile(ctx, options);

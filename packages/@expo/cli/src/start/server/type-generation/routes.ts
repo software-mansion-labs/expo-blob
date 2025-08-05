@@ -85,8 +85,10 @@ async function typedRoutes(
    * TODO(@marklawlor): In SDK53+ we should remove this check and always use the new method.
    */
   if ('version' in typedRoutesModule && typedRoutesModule.version >= 52) {
+    console.log('!!! if');
     typedRoutesModule.regenerateDeclarations(typesDirectory, plugin);
   } else {
+    console.log('!!! else');
     typedRoutesModule.regenerateDeclarations(typesDirectory);
   }
 }
@@ -169,6 +171,7 @@ const regenerateRouterDotTS = debounce(
     dynamicRoutes: Set<string>,
     dynamicRouteTemplates: Set<string>
   ) => {
+    console.log('!!! regenerate Router Dot TS expo cli');
     await fs.mkdir(typesDir, { recursive: true });
     await fs.writeFile(
       path.resolve(typesDir, './router.d.ts'),

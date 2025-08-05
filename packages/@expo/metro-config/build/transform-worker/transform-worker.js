@@ -107,7 +107,7 @@ async function transform(config, projectRoot, filename, data, options) {
     // If the file is not CSS, then use the default behavior.
     const environment = options.customTransformOptions?.environment;
     const isClientEnvironment = environment !== 'node' && environment !== 'react-server';
-    console.log('transform worker');
+    // console.log('transform worker');
     if (isClientEnvironment &&
         // TODO: Ensure this works with windows.
         (filename.match(new RegExp(`^app/\\+html(\\.${options.platform})?\\.([tj]sx?|[cm]js)?$`)) ||
@@ -121,7 +121,7 @@ async function transform(config, projectRoot, filename, data, options) {
             '"> The server-only file was removed from the client JS bundle by Expo CLI."')
             : Buffer.from(''), options);
     }
-    console.log('transform worker 2');
+    // console.log('transform worker 2');
     if (isClientEnvironment &&
         !filename.match(/\/node_modules\//) &&
         filename.match(/\+api(\.(native|ios|android|web))?\.[tj]sx?$/)) {
