@@ -1340,11 +1340,9 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const appDirPath = path.resolve(projectRoot, './app');
-      const typesAppPath = path.resolve(dotExpoDir, './types/app/');
       const localModulesAppPath = path.resolve(dotExpoDir, './localModules/app/');
       const { exp } = getConfig(projectRoot);
 
-      await fs.mkdir(typesAppPath, { recursive: true });
       await fs.mkdir(localModulesAppPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
@@ -1360,10 +1358,10 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         console.log(moduleName);
 
         const filePathRelativeToApp = path.relative(appDirPath, absoluteFilePath);
-        const typesFilePath = path.resolve(typesAppPath, filePathRelativeToApp + '.d.ts');
+        const typesFilePath = path.resolve(localModulesAppPath, filePathRelativeToApp + '.d.ts');
         const moduleExportPath = path.resolve(
           localModulesAppPath,
-          filePathRelativeToApp.substring(0, filePathRelativeToApp.length - 3) + '.js'
+          filePathRelativeToApp.slice(0, -3) + '.js'
         );
         return {
           typesFilePath,
@@ -1400,8 +1398,8 @@ export default requireNativeModule("${moduleName}");`
 
       const onRemoveAppFile = async (absoluteFilePath: string) => {
         const { typesFilePath, moduleExportPath } = typesAndLocalModulePaths(absoluteFilePath);
-        removeFileAndEmptyDirectories(typesFilePath);
-        removeFileAndEmptyDirectories(moduleExportPath);
+        await removeFileAndEmptyDirectories(typesFilePath);
+        await removeFileAndEmptyDirectories(moduleExportPath);
       };
 
       const metroWatchKotlinFiles = async ({
