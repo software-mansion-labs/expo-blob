@@ -1339,13 +1339,12 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     (async function startModuleGenerationAsync() {
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-      const appDirPath = path.resolve(projectRoot, './app');
-      const localModulesAppPath = path.resolve(dotExpoDir, './localModules/app/');
+      const localModulesPath = path.resolve(dotExpoDir, './localModules/');
       const { exp } = getConfig(projectRoot);
 
-      await fs.mkdir(localModulesAppPath, { recursive: true });
-      await fs.rm(localModulesAppPath, { recursive: true });
-      await fs.mkdir(localModulesAppPath, { recursive: true });
+      await fs.mkdir(localModulesPath, { recursive: true });
+      await fs.rm(localModulesPath, { recursive: true });
+      await fs.mkdir(localModulesPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
         projectRoot,
@@ -1359,11 +1358,11 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         const moduleName = justFileName.substring(0, justFileName.length - 3);
         console.log(moduleName);
 
-        const filePathRelativeToApp = path.relative(appDirPath, absoluteFilePath);
-        const typesFilePath = path.resolve(localModulesAppPath, filePathRelativeToApp + '.d.ts');
+        const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
+        const typesFilePath = path.resolve(localModulesPath, filePathRelativeToRoot + '.d.ts');
         const moduleExportPath = path.resolve(
-          localModulesAppPath,
-          filePathRelativeToApp.slice(0, -3) + '.js'
+          localModulesPath,
+          filePathRelativeToRoot.slice(0, -3) + '.js'
         );
         return {
           typesFilePath,
@@ -1451,10 +1450,31 @@ export default requireNativeModule("${moduleName}");`
         watcher?.addListener('add', listener);
         watcher?.addListener('remove', listener);
 
-        const generateExportsAndTypesForDirectory = async (dirPath: string) => {
-          const dir = await fs.opendir(dirPath);
+        const excludePathsGlobs = [
+          path.resolve(projectRoot, '.expo'),
+          path.resolve(projectRoot, '.expo', './**'),
+          path.resolve(projectRoot, '.expo', './**/*'),
+          path.resolve(projectRoot, 'node_modules'),
+          path.resolve(projectRoot, 'node_modules', './**'),
+          path.resolve(projectRoot, 'node_modules', './**/*'),
+          path.resolve(projectRoot, 'android'),
+          path.resolve(projectRoot, 'android', './**'),
+          path.resolve(projectRoot, 'android', './**/*'),
+          path.resolve(projectRoot, 'ios'),
+          path.resolve(projectRoot, 'ios', './**'),
+          path.resolve(projectRoot, 'ios', './**/*'),
+        ];
+
+        const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
+          for (const glob of excludePathsGlobs) {
+            if (path.matchesGlob(absoluteDirPath, glob)) {
+              return;
+            }
+          }
+
+          const dir = await fs.opendir(absoluteDirPath);
           for await (const dirent of dir) {
-            const absoluteDirentPath = path.resolve(dirPath, dirent.name);
+            const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
             if (dirent.isFile() && dirent.name.endsWith('.kt')) {
               addNewFile(absoluteDirentPath);
             } else if (dirent.isDirectory()) {
@@ -1462,8 +1482,7 @@ export default requireNativeModule("${moduleName}");`
             }
           }
         };
-        console.log('project root: ' + projectRoot);
-        generateExportsAndTypesForDirectory(path.resolve(projectRoot, './app/'));
+        generateExportsAndTypesForDirectory(projectRoot);
       };
 
       metroWatchKotlinFiles({

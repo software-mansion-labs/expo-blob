@@ -5,19 +5,17 @@ const { getDefaultConfig } = require('expo/metro-config');
 const config = getDefaultConfig(__dirname);
 
 const path = require('path');
-
-const appDirPath = path.resolve(__dirname, './app');
-const localModulesApp = path.resolve(__dirname, './.expo/localModules/./app');
+const localModulesPath = path.resolve(__dirname, './.expo/localModules');
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.endsWith('.kt')) {
     const relativePathToOriginModule = path.relative(
-      appDirPath,
+      __dirname,
       path.dirname(context.originModulePath)
     );
 
     const modulePath = path.resolve(
-      localModulesApp,
+      localModulesPath,
       relativePathToOriginModule,
       moduleName.slice(0, -3) + '.js'
     );
