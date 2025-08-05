@@ -1344,6 +1344,8 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       const { exp } = getConfig(projectRoot);
 
       await fs.mkdir(localModulesAppPath, { recursive: true });
+      await fs.rm(localModulesAppPath, { recursive: true });
+      await fs.mkdir(localModulesAppPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
         projectRoot,
