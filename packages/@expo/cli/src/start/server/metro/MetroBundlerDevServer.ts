@@ -1340,8 +1340,8 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const appDirPath = path.resolve(projectRoot, './app');
-      const typesAppPath = path.resolve(projectRoot, './.expo/types/app/');
-      const localModulesAppPath = path.resolve(projectRoot, './.expo/localModules/app/');
+      const typesAppPath = path.resolve(dotExpoDir, './types/app/');
+      const localModulesAppPath = path.resolve(dotExpoDir, './localModules/app/');
       const { exp } = getConfig(projectRoot);
 
       await fs.mkdir(typesAppPath, { recursive: true });
@@ -1353,32 +1353,55 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       );
       console.log('Setting up metro watcher for kotlin files');
 
-      const addNewFile = async (absoluteFilePath: string) => {
-        console.log('User added a .kt file');
-        console.log(absoluteFilePath);
+      const typesAndLocalModulePaths = (absoluteFilePath: string) => {
         const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
         const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
         const moduleName = justFileName.substring(0, justFileName.length - 3);
         console.log(moduleName);
 
         const filePathRelativeToApp = path.relative(appDirPath, absoluteFilePath);
-        const newTypesFilePath = path.resolve(typesAppPath, filePathRelativeToApp + '.d.ts');
-        const newModuleExportPath = path.resolve(
+        const typesFilePath = path.resolve(typesAppPath, filePathRelativeToApp + '.d.ts');
+        const moduleExportPath = path.resolve(
           localModulesAppPath,
           filePathRelativeToApp.substring(0, filePathRelativeToApp.length - 3) + '.js'
         );
-        await fs.mkdir(path.dirname(newModuleExportPath), { recursive: true });
-        await fs.mkdir(path.dirname(newTypesFilePath), { recursive: true });
+        return {
+          typesFilePath,
+          moduleExportPath,
+          moduleName,
+        };
+      };
+
+      const addNewFile = async (absoluteFilePath: string) => {
+        const { typesFilePath, moduleExportPath, moduleName } =
+          typesAndLocalModulePaths(absoluteFilePath);
+        await fs.mkdir(path.dirname(moduleExportPath), { recursive: true });
+        await fs.mkdir(path.dirname(typesFilePath), { recursive: true });
 
         fs.writeFile(
-          newModuleExportPath,
+          moduleExportPath,
           `import { requireNativeModule } from 'expo';
 import * as React from 'react';
 export default requireNativeModule("${moduleName}");`
         );
         // fs.writeFile(newTypesFilePath, `declare module "*/${justFileName}" {}`);
-        fs.writeFile(newTypesFilePath, 'const _default: any\nexport default _default');
-        console.log('asynchronously added file', newTypesFilePath, 'with module name', moduleName);
+        fs.writeFile(typesFilePath, 'const _default: any\nexport default _default');
+        console.log('asynchronously added file', typesFilePath, 'with module name', moduleName);
+      };
+
+      const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
+        await fs.rm(absoluteFilePath);
+        let dirNow: string = path.dirname(absoluteFilePath);
+        while ((await fs.readdir(dirNow)).length === 0 && dirNow !== dotExpoDir) {
+          await fs.rmdir(dirNow);
+          dirNow = path.dirname(dirNow);
+        }
+      };
+
+      const onRemoveAppFile = async (absoluteFilePath: string) => {
+        const { typesFilePath, moduleExportPath } = typesAndLocalModulePaths(absoluteFilePath);
+        removeFileAndEmptyDirectories(typesFilePath);
+        removeFileAndEmptyDirectories(moduleExportPath);
       };
 
       const metroWatchKotlinFiles = async ({
@@ -1415,6 +1438,10 @@ export default requireNativeModule("${moduleName}");`
               const { filePath } = event;
               if (event.type === 'add') {
                 addNewFile(filePath);
+                console.log('add' + event.filePath);
+              } else if (event.type === 'delete') {
+                console.log('delete ' + event.filePath);
+                onRemoveAppFile(filePath);
               }
             }
           }
@@ -1422,6 +1449,7 @@ export default requireNativeModule("${moduleName}");`
 
         watcher?.addListener('change', listener);
         watcher?.addListener('add', listener);
+        watcher?.addListener('remove', listener);
 
         const generateExportsAndTypesForDirectory = async (dirPath: string) => {
           const dir = await fs.opendir(dirPath);
