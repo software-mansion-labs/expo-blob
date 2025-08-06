@@ -1363,7 +1363,10 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         console.log(moduleName);
 
         const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
-        const typesFilePath = path.resolve(localModulesPath, filePathRelativeToRoot + '.d.ts');
+        const typesFilePath = path.resolve(
+          localModulesPath,
+          trimExtension(filePathRelativeToRoot) + '.nativeModule.d.ts'
+        );
         const moduleExportPath = path.resolve(
           localModulesPath,
           trimExtension(filePathRelativeToRoot) + '.js'

@@ -8,7 +8,7 @@ const path = require('path');
 const localModulesPath = path.resolve(__dirname, './.expo/localModules');
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.endsWith('.kt')) {
+  if (moduleName.endsWith('.nativeModule')) {
     const relativePathToOriginModule = path.relative(
       __dirname,
       path.dirname(context.originModulePath)
@@ -17,7 +17,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const modulePath = path.resolve(
       localModulesPath,
       relativePathToOriginModule,
-      moduleName.slice(0, -3) + '.js'
+      moduleName.substring(0, moduleName.lastIndexOf('.nativeModule')) + '.js'
     );
 
     return {
