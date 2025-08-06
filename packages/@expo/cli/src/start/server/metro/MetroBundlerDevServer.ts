@@ -1352,17 +1352,21 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       );
       console.log('Setting up metro watcher for kotlin files');
 
+      const trimExtension = (fileName: string) => {
+        return fileName.substring(0, fileName.lastIndexOf('.'));
+      };
+
       const typesAndLocalModulePaths = (absoluteFilePath: string) => {
         const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
         const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
-        const moduleName = justFileName.substring(0, justFileName.length - 3);
+        const moduleName = trimExtension(justFileName);
         console.log(moduleName);
 
         const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
         const typesFilePath = path.resolve(localModulesPath, filePathRelativeToRoot + '.d.ts');
         const moduleExportPath = path.resolve(
           localModulesPath,
-          filePathRelativeToRoot.slice(0, -3) + '.js'
+          trimExtension(filePathRelativeToRoot) + '.js'
         );
         return {
           typesFilePath,
@@ -1416,7 +1420,7 @@ export default requireNativeModule("${moduleName}");`
       }) => {
         const watcher = metro?.getBundler().getBundler().getWatcher();
 
-        const listener = ({
+        const listener = async ({
           eventsQueue,
         }: {
           eventsQueue: {
@@ -1432,15 +1436,15 @@ export default requireNativeModule("${moduleName}");`
               eventTypes.includes(event.type) &&
               event.metadata?.type !== 'd' &&
               !/node_modules/.test(event.filePath) &&
-              /\.kt$/.test(event.filePath)
+              /\.(kt|swift)$/.test(event.filePath)
             ) {
               const { filePath } = event;
               if (event.type === 'add') {
-                addNewFile(filePath);
+                await addNewFile(filePath);
                 console.log('add' + event.filePath);
               } else if (event.type === 'delete') {
                 console.log('delete ' + event.filePath);
-                onRemoveAppFile(filePath);
+                await onRemoveAppFile(filePath);
               }
             }
           }
@@ -1475,7 +1479,7 @@ export default requireNativeModule("${moduleName}");`
           const dir = await fs.opendir(absoluteDirPath);
           for await (const dirent of dir) {
             const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
-            if (dirent.isFile() && dirent.name.endsWith('.kt')) {
+            if (dirent.isFile() && /\.(kt|swift)$/.test(dirent.name)) {
               addNewFile(absoluteDirentPath);
             } else if (dirent.isDirectory()) {
               generateExportsAndTypesForDirectory(absoluteDirentPath);

@@ -213,6 +213,7 @@ export function getDefaultConfig(
   sourceExts.push('cjs');
   // [TODO]
   sourceExts.push('kt');
+  sourceExts.push('swift');
 
   console.log('!Trying to add the .kt extension in here');
 
