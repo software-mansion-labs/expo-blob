@@ -1341,6 +1341,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const localModulesPath = path.resolve(dotExpoDir, './localModules/');
       const { exp } = getConfig(projectRoot);
+      const filesWatched = new Set<string>();
 
       await fs.mkdir(localModulesPath, { recursive: true });
       await fs.rm(localModulesPath, { recursive: true });
@@ -1379,6 +1380,11 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       };
 
       const addNewFile = async (absoluteFilePath: string) => {
+        if (fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
+          filesWatched.add(absoluteFilePath);
+          return;
+        }
+        filesWatched.add(absoluteFilePath);
         const { typesFilePath, moduleExportPath, moduleName } =
           typesAndLocalModulePaths(absoluteFilePath);
         await fs.mkdir(path.dirname(moduleExportPath), { recursive: true });
@@ -1404,10 +1410,25 @@ export default requireNativeModule("${moduleName}");`
         }
       };
 
+      const nativeExtensions = ['.kt', '.swift'];
+      const fileWatchedWithAnyNativeExtension = (absoluteFilePath: string) => {
+        const fileWithoutExtension = trimExtension(absoluteFilePath);
+        for (const extension of nativeExtensions) {
+          const fileToCheck = fileWithoutExtension + extension;
+          if (filesWatched.has(fileToCheck)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       const onRemoveAppFile = async (absoluteFilePath: string) => {
         const { typesFilePath, moduleExportPath } = typesAndLocalModulePaths(absoluteFilePath);
-        await removeFileAndEmptyDirectories(typesFilePath);
-        await removeFileAndEmptyDirectories(moduleExportPath);
+        filesWatched.delete(absoluteFilePath);
+        if (!fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
+          await removeFileAndEmptyDirectories(typesFilePath);
+          await removeFileAndEmptyDirectories(moduleExportPath);
+        }
       };
 
       const metroWatchKotlinFiles = async ({
