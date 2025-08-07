@@ -84,7 +84,7 @@ export function expoUseDomDirectivePlugin(
 
         // Assert that _layout routes cannot be used in DOM components.
         const fileBasename = basename(filePath);
-        console.log('!Use dom');
+
         if (
           projectRoot &&
           // Detecting if the file is in the router root would be extensive as it would cause a more complex

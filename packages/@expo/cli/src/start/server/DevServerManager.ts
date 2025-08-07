@@ -208,13 +208,10 @@ export class DevServerManager {
     if (!typescriptPrerequisite) {
       server.waitForTypeScriptAsync().then(async (success) => {
         if (success) {
-          console.log('startTypeScriptServices');
           server.startTypeScriptServices();
         }
       });
     } else {
-      console.log('startTypeScriptServices2');
-
       server.startTypeScriptServices();
     }
   }

@@ -46,7 +46,6 @@ export async function setupTypedRoutes(options: SetupTypedRoutesOptions) {
     options.projectRoot,
     'expo-router/build/typed-routes'
   );
-  console.log(typedRoutesModule ? 'typed routes' : 'legacy typed routes');
   return typedRoutesModule ? typedRoutes(typedRoutesModule, options) : legacyTypedRoutes(options);
 }
 
@@ -85,10 +84,8 @@ async function typedRoutes(
    * TODO(@marklawlor): In SDK53+ we should remove this check and always use the new method.
    */
   if ('version' in typedRoutesModule && typedRoutesModule.version >= 52) {
-    console.log('!!! if');
     typedRoutesModule.regenerateDeclarations(typesDirectory, plugin);
   } else {
-    console.log('!!! else');
     typedRoutesModule.regenerateDeclarations(typesDirectory);
   }
 }
@@ -171,7 +168,6 @@ const regenerateRouterDotTS = debounce(
     dynamicRoutes: Set<string>,
     dynamicRouteTemplates: Set<string>
   ) => {
-    console.log('!!! regenerate Router Dot TS expo cli');
     await fs.mkdir(typesDir, { recursive: true });
     await fs.writeFile(
       path.resolve(typesDir, './router.d.ts'),
@@ -229,7 +225,6 @@ export function getTypedRoutesUtils(appRoot: string, filePathSeperator = path.se
   const normalizedAppRoot = normalizedFilePath(appRoot);
 
   const filePathToRoute = (filePath: string) => {
-    console.log('!normalizing path');
     return normalizedFilePath(filePath)
       .replace(normalizedAppRoot, '')
       .replace(/index\.[jt]sx?/, '')
@@ -237,7 +232,6 @@ export function getTypedRoutesUtils(appRoot: string, filePathSeperator = path.se
   };
 
   const isRouteFile = (filePath: string) => {
-    console.log('!!! is route file ');
     if (filePath.match(TYPED_ROUTES_EXCLUSION_REGEX)) {
       return false;
     }

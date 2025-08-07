@@ -1062,7 +1062,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
             server,
           },
           (events) => {
-            console.log('! observe any file changes');
             if (hasApiRoutes) {
               // NOTE(EvanBacon): We aren't sure what files the API routes are using so we'll just invalidate
               // aggressively to ensure we always have the latest. The only caching we really get here is for
@@ -1325,11 +1324,9 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }
 
   public async startTypeScriptServices() {
-    console.log('startTypeScriptServices 3');
     const projectRoot = this.projectRoot;
     const metro = this.metro;
     const server = this.instance?.server;
-    console.log('TS services 1');
     startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
@@ -1337,7 +1334,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     });
 
     (async function startModuleGenerationAsync() {
-      console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const localModulesPath = path.resolve(dotExpoDir, './localModules/');
       const androidLocalModulesPath = path.resolve(projectRoot, 'android/localModules');
@@ -1380,7 +1376,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         projectRoot,
         getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
       );
-      console.log('Setting up metro watcher for kotlin files');
 
       const trimExtension = (fileName: string) => {
         return fileName.substring(0, fileName.lastIndexOf('.'));

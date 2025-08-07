@@ -603,7 +603,6 @@ function getFileMeta(
 
   const isLayout = filenameWithoutExtensions === '_layout';
   const isApi = originalKey.match(/\+api\.(\w+\.)?[jt]sx?$/);
-  console.log('!is Api');
 
   if (filenameWithoutExtensions.startsWith('(') && filenameWithoutExtensions.endsWith(')')) {
     throw new Error(`Invalid route ${originalKey}. Routes cannot end with '(group)' syntax`);

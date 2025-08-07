@@ -58,12 +58,10 @@ function getContextKey(name) {
 }
 /** Remove `.js`, `.ts`, `.jsx`, `.tsx`, and the +api suffix */
 function removeSupportedExtensions(name) {
-    console.log('!remove extensions');
     return name.replace(/(\+api)?\.[jt]sx?$/g, '');
 }
 /** Remove `.js`, `.ts`, `.jsx`, `.tsx` */
 function removeFileSystemExtensions(name) {
-    console.log('!remove fs extension');
     return name.replace(/\.[jt]sx?$/g, '');
 }
 // Remove any amount of `./` and `../` from the start of the string
@@ -90,7 +88,6 @@ function stripInvisibleSegmentsFromPath(path) {
  *  - Routes can still use `+`, but it cannot be in the last segment.
  */
 function isTypedRoute(name) {
-    console.log('isTypedRoute');
     return !name.startsWith('+') && name.match(/(_layout|[^/]*?\+[^/]*?)\.[tj]sx?$/) === null;
 }
 //# sourceMappingURL=matchers.js.map

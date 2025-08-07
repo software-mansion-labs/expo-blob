@@ -54,13 +54,11 @@ export function getContextKey(name: string): string {
 
 /** Remove `.js`, `.ts`, `.jsx`, `.tsx`, and the +api suffix */
 export function removeSupportedExtensions(name: string): string {
-  console.log('!remove extensions');
   return name.replace(/(\+api)?\.[jt]sx?$/g, '');
 }
 
 /** Remove `.js`, `.ts`, `.jsx`, `.tsx` */
 export function removeFileSystemExtensions(name: string): string {
-  console.log('!remove fs extension');
   return name.replace(/\.[jt]sx?$/g, '');
 }
 
