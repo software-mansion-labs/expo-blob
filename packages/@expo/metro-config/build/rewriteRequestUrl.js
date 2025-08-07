@@ -79,7 +79,6 @@ function getRewriteRequestUrl(projectRoot) {
                     ensured.searchParams.set('unstable_transformProfile', 'hermes-stable');
                 }
             }
-            console.log('rewrite request url');
             const serverRoot = (0, paths_1.getMetroServerRoot)(projectRoot);
             const relativeEntry = path_1.default.relative(serverRoot, entry).replace(/\.[tj]sx?$/, '');
             debug('Resolved entry point', { entry, relativeEntry, serverRoot });

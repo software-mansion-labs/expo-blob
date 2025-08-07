@@ -103,8 +103,6 @@ function getDirectoryTree(contextModule: RequireContext, options: Options) {
 
   const ignoreList: RegExp[] = [/^\.\/\+(html|native-intent)\.[tj]sx?$/]; // Ignore the top level ./+html file
 
-  console.log('ignore list');
-
   if (options.ignore) {
     ignoreList.push(...options.ignore);
   }
@@ -520,7 +518,6 @@ function getNameWithoutInvisibleSegmentsFromRedirectPath(path: string): string {
 function getSourceContextKeyFromRedirectSource(source: string): string {
   const name = getNameFromRedirectPath(source);
   const prefix = './';
-  console.log('getSourceContextkey');
   const suffix = /\.[tj]sx?$/.test(name) ? '' : '.js'; // Ensure it has a file extension
   return `${prefix}${name}${suffix}`;
 }

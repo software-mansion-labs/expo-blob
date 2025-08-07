@@ -22,7 +22,6 @@ function getLinkingConfig(routes, context, getRouteInfo, { metaOnly = true, serv
     // Returning `undefined` / `null from `getInitialURL` are valid values, so we need to track if it's been called.
     let hasCachedInitialUrl = false;
     let initialUrl;
-    console.log('linking config');
     const nativeLinkingKey = context
         .keys()
         .find((key) => key.match(/^\.\/\+native-intent\.[tj]sx?$/));

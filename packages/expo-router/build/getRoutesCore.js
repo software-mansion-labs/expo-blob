@@ -36,7 +36,6 @@ function getRoutes(contextModule, options) {
 function getDirectoryTree(contextModule, options) {
     const importMode = options.importMode || process.env.EXPO_ROUTER_IMPORT_MODE;
     const ignoreList = [/^\.\/\+(html|native-intent)\.[tj]sx?$/]; // Ignore the top level ./+html file
-    console.log('ignore list');
     if (options.ignore) {
         ignoreList.push(...options.ignore);
     }
@@ -379,7 +378,6 @@ function getNameWithoutInvisibleSegmentsFromRedirectPath(path) {
 function getSourceContextKeyFromRedirectSource(source) {
     const name = getNameFromRedirectPath(source);
     const prefix = './';
-    console.log('getSourceContextkey');
     const suffix = /\.[tj]sx?$/.test(name) ? '' : '.js'; // Ensure it has a file extension
     return `${prefix}${name}${suffix}`;
 }

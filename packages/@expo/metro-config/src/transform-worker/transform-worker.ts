@@ -110,7 +110,6 @@ export async function transform(
   const environment = options.customTransformOptions?.environment;
   const isClientEnvironment = environment !== 'node' && environment !== 'react-server';
 
-  // console.log('transform worker');
   if (
     isClientEnvironment &&
     // TODO: Ensure this works with windows.
@@ -134,7 +133,6 @@ export async function transform(
     );
   }
 
-  // console.log('transform worker 2');
   if (
     isClientEnvironment &&
     !filename.match(/\/node_modules\//) &&

@@ -16,8 +16,6 @@ import { env } from '../utils/env';
 import { isInteractive } from '../utils/interactive';
 import { profile } from '../utils/profile';
 
-console.log('inside start');
-
 async function getMultiBundlerStartOptions(
   projectRoot: string,
   options: Options,
