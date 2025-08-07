@@ -1340,11 +1340,40 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       console.log('here 12321312312');
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const localModulesPath = path.resolve(dotExpoDir, './localModules/');
+      const androidLocalModulesPath = path.resolve(projectRoot, 'android/localModules');
       const { exp } = getConfig(projectRoot);
       const filesWatched = new Set<string>();
 
+      const excludePathsGlobs = [
+        path.resolve(projectRoot, '.expo'),
+        path.resolve(projectRoot, '.expo', './**'),
+        path.resolve(projectRoot, '.expo', './**/*'),
+        path.resolve(projectRoot, 'node_modules'),
+        path.resolve(projectRoot, 'node_modules', './**'),
+        path.resolve(projectRoot, 'node_modules', './**/*'),
+        path.resolve(projectRoot, 'android'),
+        path.resolve(projectRoot, 'localModules'),
+        path.resolve(projectRoot, 'localModules', './**'),
+        path.resolve(projectRoot, 'localModules', './**/*'),
+        path.resolve(projectRoot, 'android'),
+        path.resolve(projectRoot, 'android', './**'),
+        path.resolve(projectRoot, 'android', './**/*'),
+        path.resolve(projectRoot, 'ios'),
+        path.resolve(projectRoot, 'ios', './**'),
+        path.resolve(projectRoot, 'ios', './**/*'),
+      ];
+      const fileExcluded = (absolutePath: string) => {
+        for (const glob of excludePathsGlobs) {
+          if (path.matchesGlob(absolutePath, glob)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       await fs.mkdir(localModulesPath, { recursive: true });
       await fs.rm(localModulesPath, { recursive: true });
+      await fs.rm(androidLocalModulesPath, { recursive: true });
       await fs.mkdir(localModulesPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
@@ -1372,21 +1401,31 @@ export class MetroBundlerDevServer extends BundlerDevServer {
           localModulesPath,
           trimExtension(filePathRelativeToRoot) + '.js'
         );
+        const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
         return {
           typesFilePath,
           moduleExportPath,
           moduleName,
+          androidPath,
         };
       };
 
       const addNewFile = async (absoluteFilePath: string) => {
+        const { typesFilePath, moduleExportPath, moduleName, androidPath } =
+          typesAndLocalModulePaths(absoluteFilePath);
+        if (absoluteFilePath.endsWith('.kt')) {
+          await fs.mkdir(path.dirname(androidPath), { recursive: true });
+          // await fs.symlink(absoluteFilePath, androidPath);
+          await fs.symlink(absoluteFilePath, androidPath);
+        } else if (absoluteFilePath.endsWith('.swift')) {
+        }
+
         if (fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
           filesWatched.add(absoluteFilePath);
           return;
         }
         filesWatched.add(absoluteFilePath);
-        const { typesFilePath, moduleExportPath, moduleName } =
-          typesAndLocalModulePaths(absoluteFilePath);
+
         await fs.mkdir(path.dirname(moduleExportPath), { recursive: true });
         await fs.mkdir(path.dirname(typesFilePath), { recursive: true });
 
@@ -1402,9 +1441,11 @@ export default requireNativeModule("${moduleName}");`
       };
 
       const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
+        console.log('remove File: ' + absoluteFilePath);
         await fs.rm(absoluteFilePath);
         let dirNow: string = path.dirname(absoluteFilePath);
         while ((await fs.readdir(dirNow)).length === 0 && dirNow !== dotExpoDir) {
+          console.log('remove dir: ' + dirNow);
           await fs.rmdir(dirNow);
           dirNow = path.dirname(dirNow);
         }
@@ -1423,7 +1464,11 @@ export default requireNativeModule("${moduleName}");`
       };
 
       const onRemoveAppFile = async (absoluteFilePath: string) => {
-        const { typesFilePath, moduleExportPath } = typesAndLocalModulePaths(absoluteFilePath);
+        const { typesFilePath, moduleExportPath, androidPath } =
+          typesAndLocalModulePaths(absoluteFilePath);
+        if (absoluteFilePath.endsWith('.kt')) {
+          removeFileAndEmptyDirectories(androidPath);
+        }
         filesWatched.delete(absoluteFilePath);
         if (!fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
           await removeFileAndEmptyDirectories(typesFilePath);
@@ -1460,7 +1505,8 @@ export default requireNativeModule("${moduleName}");`
               eventTypes.includes(event.type) &&
               event.metadata?.type !== 'd' &&
               !/node_modules/.test(event.filePath) &&
-              /\.(kt|swift)$/.test(event.filePath)
+              /\.(kt|swift)$/.test(event.filePath) &&
+              !fileExcluded(event.filePath)
             ) {
               const { filePath } = event;
               if (event.type === 'add') {
@@ -1477,21 +1523,6 @@ export default requireNativeModule("${moduleName}");`
         watcher?.addListener('change', listener);
         watcher?.addListener('add', listener);
         watcher?.addListener('remove', listener);
-
-        const excludePathsGlobs = [
-          path.resolve(projectRoot, '.expo'),
-          path.resolve(projectRoot, '.expo', './**'),
-          path.resolve(projectRoot, '.expo', './**/*'),
-          path.resolve(projectRoot, 'node_modules'),
-          path.resolve(projectRoot, 'node_modules', './**'),
-          path.resolve(projectRoot, 'node_modules', './**/*'),
-          path.resolve(projectRoot, 'android'),
-          path.resolve(projectRoot, 'android', './**'),
-          path.resolve(projectRoot, 'android', './**/*'),
-          path.resolve(projectRoot, 'ios'),
-          path.resolve(projectRoot, 'ios', './**'),
-          path.resolve(projectRoot, 'ios', './**/*'),
-        ];
 
         const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
           for (const glob of excludePathsGlobs) {
