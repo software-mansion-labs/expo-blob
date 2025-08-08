@@ -89,6 +89,5 @@ export function stripInvisibleSegmentsFromPath(path: string): string {
  *  - Routes can still use `+`, but it cannot be in the last segment.
  */
 export function isTypedRoute(name: string) {
-  console.log('isTypedRoute');
   return !name.startsWith('+') && name.match(/(_layout|[^/]*?\+[^/]*?)\.[tj]sx?$/) === null;
 }
