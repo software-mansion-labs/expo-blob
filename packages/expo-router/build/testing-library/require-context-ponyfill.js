@@ -18,8 +18,9 @@ function requireContext(base = '.', scanSubDirectories = true, regularExpression
                     readDirectory(fullPath);
                 return;
             }
-            if (!regularExpression.test(relativePath))
+            if (!regularExpression.test(relativePath) && !/\.kt?$/.test(relativePath)) {
                 return;
+            }
             files[relativePath] = true;
         });
     }

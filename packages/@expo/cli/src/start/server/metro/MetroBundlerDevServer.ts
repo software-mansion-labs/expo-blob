@@ -32,6 +32,7 @@ import assert from 'assert';
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+import fs from 'fs/promises';
 
 import {
   createServerComponentsMiddleware,
@@ -61,7 +62,12 @@ import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
 import { toPosixPath } from '../../../utils/filePath';
 import { getFreePortAsync } from '../../../utils/port';
-import { BundlerDevServer, BundlerStartOptions, DevServerInstance } from '../BundlerDevServer';
+import {
+  BundlerDevServer,
+  BundlerStartOptions,
+  DevServerInstance,
+  ServerLike,
+} from '../BundlerDevServer';
 import {
   cachedSourceMaps,
   evalMetroAndWrapFunctions,
@@ -88,6 +94,8 @@ import {
 } from '../middleware/metroOptions';
 import { prependMiddleware } from '../middleware/mutations';
 import { startTypescriptTypeGenerationAsync } from '../type-generation/startTypescriptTypeGeneration';
+import { ensureDotExpoProjectDirectoryInitialized } from '../../project/dotExpo';
+import { Dir, Dirent } from 'fs';
 
 export type ExpoRouterRuntimeManifest = Awaited<
   ReturnType<typeof import('expo-router/build/static/renderStaticContent').getManifest>
@@ -198,6 +206,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       const filepath = path.isAbsolute(route.file) ? route.file : path.join(appDir, route.file);
       const contents = await this.bundleApiRoute(filepath, { platform });
 
+      console.log('manifest regex');
       const artifactFilename =
         route.page === rscPath
           ? // HACK: Add RSC renderer to the output...
@@ -1315,11 +1324,233 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }
 
   public async startTypeScriptServices() {
-    return startTypescriptTypeGenerationAsync({
+    const projectRoot = this.projectRoot;
+    const metro = this.metro;
+    const server = this.instance?.server;
+    startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
       projectRoot: this.projectRoot,
     });
+
+    (async function startModuleGenerationAsync() {
+      const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
+      const localModulesPath = path.resolve(dotExpoDir, './localModules/');
+      const androidLocalModulesPath = path.resolve(
+        projectRoot,
+        'android/app/src/main/java/local/modules/'
+      );
+      const { exp } = getConfig(projectRoot);
+      const filesWatched = new Set<string>();
+
+      const excludePathsGlobs = [
+        path.resolve(projectRoot, '.expo'),
+        path.resolve(projectRoot, '.expo', './**'),
+        path.resolve(projectRoot, '.expo', './**/*'),
+        path.resolve(projectRoot, 'node_modules'),
+        path.resolve(projectRoot, 'node_modules', './**'),
+        path.resolve(projectRoot, 'node_modules', './**/*'),
+        path.resolve(projectRoot, 'android'),
+        path.resolve(projectRoot, 'localModules'),
+        path.resolve(projectRoot, 'localModules', './**'),
+        path.resolve(projectRoot, 'localModules', './**/*'),
+        path.resolve(projectRoot, 'android'),
+        path.resolve(projectRoot, 'android', './**'),
+        path.resolve(projectRoot, 'android', './**/*'),
+        path.resolve(projectRoot, 'ios'),
+        path.resolve(projectRoot, 'ios', './**'),
+        path.resolve(projectRoot, 'ios', './**/*'),
+      ];
+      const fileExcluded = (absolutePath: string) => {
+        for (const glob of excludePathsGlobs) {
+          if (path.matchesGlob(absolutePath, glob)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      await fs.mkdir(localModulesPath, { recursive: true });
+      await fs.mkdir(androidLocalModulesPath, { recursive: true });
+      await fs.rm(localModulesPath, { recursive: true });
+      await fs.rm(androidLocalModulesPath, { recursive: true });
+      await fs.mkdir(localModulesPath, { recursive: true });
+      await fs.mkdir(androidLocalModulesPath, { recursive: true });
+
+      process.env.EXPO_ROUTER_APP_ROOT = path.join(
+        projectRoot,
+        getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
+      );
+
+      const trimExtension = (fileName: string) => {
+        return fileName.substring(0, fileName.lastIndexOf('.'));
+      };
+
+      const typesAndLocalModulePaths = (absoluteFilePath: string) => {
+        const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
+        const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
+        const moduleName = trimExtension(justFileName);
+        console.log(moduleName);
+
+        const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
+        const typesFilePath = path.resolve(
+          localModulesPath,
+          trimExtension(filePathRelativeToRoot) + '.nativeModule.d.ts'
+        );
+        const moduleExportPath = path.resolve(
+          localModulesPath,
+          trimExtension(filePathRelativeToRoot) + '.js'
+        );
+        const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
+        return {
+          typesFilePath,
+          moduleExportPath,
+          moduleName,
+          androidPath,
+        };
+      };
+
+      const addNewFile = async (absoluteFilePath: string) => {
+        const { typesFilePath, moduleExportPath, moduleName, androidPath } =
+          typesAndLocalModulePaths(absoluteFilePath);
+        if (absoluteFilePath.endsWith('.kt')) {
+          await fs.mkdir(path.dirname(androidPath), { recursive: true });
+          // await fs.symlink(absoluteFilePath, androidPath);
+          await fs.symlink(absoluteFilePath, androidPath);
+        } else if (absoluteFilePath.endsWith('.swift')) {
+        }
+
+        if (fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
+          filesWatched.add(absoluteFilePath);
+          return;
+        }
+        filesWatched.add(absoluteFilePath);
+
+        await fs.mkdir(path.dirname(moduleExportPath), { recursive: true });
+        await fs.mkdir(path.dirname(typesFilePath), { recursive: true });
+
+        fs.writeFile(
+          moduleExportPath,
+          `import { requireNativeModule } from 'expo';
+import * as React from 'react';
+export default requireNativeModule("${moduleName}");`
+        );
+        // fs.writeFile(newTypesFilePath, `declare module "*/${justFileName}" {}`);
+        fs.writeFile(typesFilePath, 'const _default: any\nexport default _default');
+        console.log('asynchronously added file', typesFilePath, 'with module name', moduleName);
+      };
+
+      const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
+        console.log('remove File: ' + absoluteFilePath);
+        await fs.rm(absoluteFilePath);
+        let dirNow: string = path.dirname(absoluteFilePath);
+        while ((await fs.readdir(dirNow)).length === 0 && dirNow !== dotExpoDir) {
+          console.log('remove dir: ' + dirNow);
+          await fs.rmdir(dirNow);
+          dirNow = path.dirname(dirNow);
+        }
+      };
+
+      const nativeExtensions = ['.kt', '.swift'];
+      const fileWatchedWithAnyNativeExtension = (absoluteFilePath: string) => {
+        const fileWithoutExtension = trimExtension(absoluteFilePath);
+        for (const extension of nativeExtensions) {
+          const fileToCheck = fileWithoutExtension + extension;
+          if (filesWatched.has(fileToCheck)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      const onRemoveAppFile = async (absoluteFilePath: string) => {
+        const { typesFilePath, moduleExportPath, androidPath } =
+          typesAndLocalModulePaths(absoluteFilePath);
+        if (absoluteFilePath.endsWith('.kt')) {
+          removeFileAndEmptyDirectories(androidPath);
+        }
+        filesWatched.delete(absoluteFilePath);
+        if (!fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
+          await removeFileAndEmptyDirectories(typesFilePath);
+          await removeFileAndEmptyDirectories(moduleExportPath);
+        }
+      };
+
+      const metroWatchKotlinFiles = async ({
+        projectRoot,
+        metro,
+        server,
+        eventTypes = ['add', 'change', 'delete'],
+      }: {
+        metro: MetroServer | null;
+        server?: ServerLike;
+        projectRoot: string;
+        eventTypes?: string[];
+      }) => {
+        const watcher = metro?.getBundler().getBundler().getWatcher();
+
+        const listener = async ({
+          eventsQueue,
+        }: {
+          eventsQueue: {
+            filePath: string;
+            metadata?: {
+              type: 'f' | 'd' | 'l'; // Regular file / Directory / Symlink
+            } | null;
+            type: string;
+          }[];
+        }) => {
+          for (const event of eventsQueue) {
+            if (
+              eventTypes.includes(event.type) &&
+              event.metadata?.type !== 'd' &&
+              !/node_modules/.test(event.filePath) &&
+              /\.(kt|swift)$/.test(event.filePath) &&
+              !fileExcluded(event.filePath)
+            ) {
+              const { filePath } = event;
+              if (event.type === 'add') {
+                await addNewFile(filePath);
+                console.log('add' + event.filePath);
+              } else if (event.type === 'delete') {
+                console.log('delete ' + event.filePath);
+                await onRemoveAppFile(filePath);
+              }
+            }
+          }
+        };
+
+        watcher?.addListener('change', listener);
+        watcher?.addListener('add', listener);
+        watcher?.addListener('remove', listener);
+
+        const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
+          for (const glob of excludePathsGlobs) {
+            if (path.matchesGlob(absoluteDirPath, glob)) {
+              return;
+            }
+          }
+
+          const dir = await fs.opendir(absoluteDirPath);
+          for await (const dirent of dir) {
+            const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
+            if (dirent.isFile() && /\.(kt|swift)$/.test(dirent.name)) {
+              addNewFile(absoluteDirentPath);
+            } else if (dirent.isDirectory()) {
+              generateExportsAndTypesForDirectory(absoluteDirentPath);
+            }
+          }
+        };
+        generateExportsAndTypesForDirectory(projectRoot);
+      };
+
+      metroWatchKotlinFiles({
+        projectRoot,
+        metro,
+        server,
+        eventTypes: ['add', 'delete', 'change'],
+      });
+    })();
   }
 
   protected getConfigModuleIds(): string[] {

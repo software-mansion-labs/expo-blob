@@ -12,13 +12,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "experiments": {
+      "typedRoutes": true
+    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.sandbox"
     },
     "plugins": [
       [
@@ -41,6 +45,9 @@
     "web": {
       "bundler": "metro",
       "output": "server"
+    },
+    "android": {
+      "package": "com.anonymous.sandbox"
     }
   }
 }
