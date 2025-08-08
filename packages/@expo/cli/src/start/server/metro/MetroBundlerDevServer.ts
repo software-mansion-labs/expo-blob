@@ -1336,7 +1336,10 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     (async function startModuleGenerationAsync() {
       const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
       const localModulesPath = path.resolve(dotExpoDir, './localModules/');
-      const androidLocalModulesPath = path.resolve(projectRoot, 'android/localModules');
+      const androidLocalModulesPath = path.resolve(
+        projectRoot,
+        'android/app/src/main/java/local/modules/'
+      );
       const { exp } = getConfig(projectRoot);
       const filesWatched = new Set<string>();
 
