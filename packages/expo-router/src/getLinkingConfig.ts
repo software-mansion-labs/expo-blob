@@ -79,7 +79,6 @@ export function getLinkingConfig(
   // Returning `undefined` / `null from `getInitialURL` are valid values, so we need to track if it's been called.
   let hasCachedInitialUrl = false;
   let initialUrl: ReturnType<typeof getInitialURL> | undefined;
-
   const nativeLinkingKey = context
     .keys()
     .find((key) => key.match(/^\.\/\+native-intent\.[tj]sx?$/));

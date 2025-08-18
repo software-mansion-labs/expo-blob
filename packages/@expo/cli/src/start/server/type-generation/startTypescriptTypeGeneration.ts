@@ -26,7 +26,6 @@ export async function startTypescriptTypeGenerationAsync({
   server,
 }: TypeScriptTypeGenerationOptions) {
   const { exp } = getConfig(projectRoot);
-
   // If typed routes are disabled, remove any files that were added.
   if (!exp.experiments?.typedRoutes) {
     debug('Removing typed routes side-effects (experiments.typedRoutes: false)');
@@ -41,7 +40,6 @@ export async function startTypescriptTypeGenerationAsync({
 
     // Ensure the types directory exists.
     await fs.mkdir(typesDirectory, { recursive: true });
-
     await Promise.all([
       upsertGitIgnoreContents(path.join(projectRoot, '.gitignore'), 'expo-env.d.ts'),
       writeExpoEnvDTS(projectRoot),
