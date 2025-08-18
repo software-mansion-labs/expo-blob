@@ -56,11 +56,7 @@ import {
 } from './router';
 import { serializeHtmlWithAssets } from './serializeHtml';
 import { observeAnyFileChanges, observeFileChanges } from './waitForMetroToObserveTypeScriptFile';
-import {
-  BundleAssetWithFileHashes,
-  ExportAssetDescriptor,
-  ExportAssetMap,
-} from '../../../export/saveAssets';
+import { BundleAssetWithFileHashes, ExportAssetMap } from '../../../export/saveAssets';
 import { Log } from '../../../log';
 import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
@@ -165,96 +161,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     return port;
   }
 
-  private async exportServerRoute({
-    contents,
-    artifactFilename,
-    files,
-    includeSourceMaps,
-    descriptor,
-  }: {
-    contents: { src: string; map?: any } | null | undefined;
-    artifactFilename: string;
-    files: ExportAssetMap;
-    includeSourceMaps?: boolean;
-    routeId?: string;
-    descriptor: Partial<ExportAssetDescriptor>;
-  }) {
-    if (!contents) return;
-
-    let src = contents.src;
-    if (includeSourceMaps && contents.map) {
-      // TODO(kitten): Merge the source map transformer in the future
-      // https://github.com/expo/expo/blob/0dffdb15/packages/%40expo/metro-config/src/serializer/serializeChunks.ts#L422-L439
-      // Alternatively, check whether `sourcesRoot` helps here
-      const artifactBasename = encodeURIComponent(path.basename(artifactFilename) + '.map');
-      src = src.replace(/\/\/# sourceMappingURL=.*/g, `//# sourceMappingURL=${artifactBasename}`);
-      const parsedMap = typeof contents.map === 'string' ? JSON.parse(contents.map) : contents.map;
-      const mapData: any = {
-        ...descriptor,
-        contents: JSON.stringify({
-          version: parsedMap.version,
-          sources: parsedMap.sources.map((source: string) => {
-            source =
-              typeof source === 'string' && source.startsWith(this.projectRoot)
-                ? path.relative(this.projectRoot, source)
-                : source;
-            return convertPathToModuleSpecifier(source);
-          }),
-          sourcesContent: new Array(parsedMap.sources.length).fill(null),
-          names: parsedMap.names,
-          mappings: parsedMap.mappings,
-        }),
-        targetDomain: 'server',
-      };
-      files.set(artifactFilename + '.map', mapData);
-    }
-    const fileData: ExportAssetDescriptor = {
-      ...descriptor,
-      contents: src,
-      targetDomain: 'server',
-    };
-    files.set(artifactFilename, fileData);
-  }
-
-  private async exportMiddleware({
-    manifest,
-    appDir,
-    outputDir,
-    files,
-    platform,
-    includeSourceMaps,
-  }: {
-    manifest: ExpoRouterServerManifestV1;
-    appDir: string;
-    outputDir: string;
-    files: ExportAssetMap;
-    platform: string;
-    includeSourceMaps?: boolean;
-  }) {
-    if (!manifest.middleware) return;
-
-    const middlewareFilePath = path.isAbsolute(manifest.middleware.file)
-      ? manifest.middleware.file
-      : path.join(appDir, manifest.middleware.file);
-    const contents = await this.bundleApiRoute(middlewareFilePath, { platform });
-    const artifactFilename = convertPathToModuleSpecifier(
-      path.join(outputDir, path.relative(appDir, middlewareFilePath.replace(/\.[tj]sx?$/, '.js')))
-    );
-
-    await this.exportServerRoute({
-      contents,
-      artifactFilename,
-      files,
-      includeSourceMaps,
-      descriptor: {
-        middlewareId: '/middleware',
-      },
-    });
-
-    // Remap the middleware file to represent the output file.
-    manifest.middleware.file = artifactFilename;
-  }
-
   async exportExpoRouterApiRoutesAsync({
     includeSourceMaps,
     outputDir,
@@ -296,15 +202,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       });
     }
 
-    await this.exportMiddleware({
-      manifest,
-      appDir,
-      outputDir,
-      files,
-      platform,
-      includeSourceMaps,
-    });
-
     for (const route of manifest.apiRoutes) {
       const filepath = path.isAbsolute(route.file) ? route.file : path.join(appDir, route.file);
       const contents = await this.bundleApiRoute(filepath, { platform });
@@ -318,15 +215,45 @@ export class MetroBundlerDevServer extends BundlerDevServer {
               path.join(outputDir, path.relative(appDir, filepath.replace(/\.[tj]sx?$/, '.js')))
             );
 
-      await this.exportServerRoute({
-        contents,
-        artifactFilename,
-        files,
-        includeSourceMaps,
-        descriptor: {
+      if (contents) {
+        let src = contents.src;
+
+        if (includeSourceMaps && contents.map) {
+          // TODO(kitten): Merge the source map transformer in the future
+          // https://github.com/expo/expo/blob/0dffdb15/packages/%40expo/metro-config/src/serializer/serializeChunks.ts#L422-L439
+          // Alternatively, check whether `sourcesRoot` helps here
+          const artifactBasename = encodeURIComponent(path.basename(artifactFilename) + '.map');
+          src = src.replace(
+            /\/\/# sourceMappingURL=.*/g,
+            `//# sourceMappingURL=${artifactBasename}`
+          );
+
+          const parsedMap =
+            typeof contents.map === 'string' ? JSON.parse(contents.map) : contents.map;
+          files.set(artifactFilename + '.map', {
+            contents: JSON.stringify({
+              version: parsedMap.version,
+              sources: parsedMap.sources.map((source: string) => {
+                source =
+                  typeof source === 'string' && source.startsWith(this.projectRoot)
+                    ? path.relative(this.projectRoot, source)
+                    : source;
+                return convertPathToModuleSpecifier(source);
+              }),
+              sourcesContent: new Array(parsedMap.sources.length).fill(null),
+              names: parsedMap.names,
+              mappings: parsedMap.mappings,
+            }),
+            apiRouteId: route.page,
+            targetDomain: 'server',
+          });
+        }
+        files.set(artifactFilename, {
+          contents: src,
           apiRouteId: route.page,
-        },
-      });
+          targetDomain: 'server',
+        });
+      }
       // Remap the manifest files to represent the output files.
       route.file = artifactFilename;
     }
@@ -925,7 +852,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   async legacySinglePageExportBundleAsync(
     options: Omit<
       ExpoMetroOptions,
-      'routerRoot' | 'asyncRoutes' | 'isExporting' | 'serializerOutput' | 'environment' | 'hosted'
+      'routerRoot' | 'asyncRoutes' | 'isExporting' | 'serializerOutput' | 'environment'
     >,
     extraOptions: {
       sourceMapUrl?: string;
@@ -1413,6 +1340,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         projectRoot,
         'android/app/src/main/java/local/modules/'
       );
+      const iosLocalModulesPath = path.resolve(projectRoot, 'ios/localModules');
       const { exp } = getConfig(projectRoot);
       const filesWatched = new Set<string>();
 
@@ -1449,6 +1377,8 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       await fs.rm(androidLocalModulesPath, { recursive: true });
       await fs.mkdir(localModulesPath, { recursive: true });
       await fs.mkdir(androidLocalModulesPath, { recursive: true });
+      // "don't remove ios as maybe xcode will have problems..."
+      await fs.mkdir(iosLocalModulesPath, { recursive: true });
 
       process.env.EXPO_ROUTER_APP_ROOT = path.join(
         projectRoot,
@@ -1475,22 +1405,25 @@ export class MetroBundlerDevServer extends BundlerDevServer {
           trimExtension(filePathRelativeToRoot) + '.js'
         );
         const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
+        const iosPath = path.resolve(iosLocalModulesPath, filePathRelativeToRoot);
         return {
           typesFilePath,
           moduleExportPath,
           moduleName,
           androidPath,
+          iosPath,
         };
       };
 
       const addNewFile = async (absoluteFilePath: string) => {
-        const { typesFilePath, moduleExportPath, moduleName, androidPath } =
+        const { typesFilePath, moduleExportPath, moduleName, androidPath, iosPath } =
           typesAndLocalModulePaths(absoluteFilePath);
         if (absoluteFilePath.endsWith('.kt')) {
           await fs.mkdir(path.dirname(androidPath), { recursive: true });
-          // await fs.symlink(absoluteFilePath, androidPath);
           await fs.symlink(absoluteFilePath, androidPath);
         } else if (absoluteFilePath.endsWith('.swift')) {
+          await fs.mkdir(path.dirname(iosPath), { recursive: true });
+          await fs.symlink(absoluteFilePath, iosPath);
         }
 
         if (fileWatchedWithAnyNativeExtension(absoluteFilePath)) {
@@ -1537,10 +1470,13 @@ export default requireNativeModule("${moduleName}");`
       };
 
       const onRemoveAppFile = async (absoluteFilePath: string) => {
-        const { typesFilePath, moduleExportPath, androidPath } =
+        const { typesFilePath, moduleExportPath, androidPath, iosPath } =
           typesAndLocalModulePaths(absoluteFilePath);
         if (absoluteFilePath.endsWith('.kt')) {
           removeFileAndEmptyDirectories(androidPath);
+        }
+        if (absoluteFilePath.endsWith('.swift')) {
+          removeFileAndEmptyDirectories(iosPath);
         }
         filesWatched.delete(absoluteFilePath);
         if (!fileWatchedWithAnyNativeExtension(absoluteFilePath)) {

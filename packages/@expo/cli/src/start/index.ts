@@ -28,6 +28,7 @@ export const expoStart: Command = async (argv) => {
       '--localhost': Boolean,
       '--offline': Boolean,
       '--go': Boolean,
+      '--generateProjectLocalModuleMirrors': Boolean,
       // Aliases
       '-h': '--help',
       '-c': '--clear',
@@ -96,6 +97,11 @@ export const expoStart: Command = async (argv) => {
     disableNetwork();
   }
 
+  if (options.generateProjectLocalModuleMirrors) {
+    console.log('Here we can generate the mirrors');
+    // const generateProjectLocalModuleMirrors = require('');
+    return;
+  }
   const { startAsync } = await import('./startAsync.js');
   return startAsync(projectRoot, options, { webOnly: false }).catch(logCmdError);
 };

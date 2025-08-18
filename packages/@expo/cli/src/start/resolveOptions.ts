@@ -23,6 +23,7 @@ export type Options = {
   devClient: boolean;
   scheme: string | null;
   host: 'localhost' | 'lan' | 'tunnel';
+  generateProjectLocalModuleMirrors: boolean;
 };
 
 export async function resolveOptionsAsync(projectRoot: string, args: any): Promise<Options> {
@@ -79,6 +80,8 @@ export async function resolveOptionsAsync(projectRoot: string, args: any): Promi
 
     scheme,
     host,
+
+    generateProjectLocalModuleMirrors: !!args['--generateProjectLocalModuleMirrors'],
   };
 }
 
