@@ -78,6 +78,7 @@ export const expoStart: Command = async (argv) => {
         chalk`-p, --port <number>             Port to start the dev server on (does not apply to web or tunnel). {dim Default: 8081}`,
         ``,
         chalk`--private-key-path <path>       Path to private key for code signing. {dim Default: "private-key.pem" in the same directory as the certificate specified by the expo-updates configuration in app.json.}`,
+        chalk`--generateProjectLocalModuleMirrors   Generates the localModules mirrors of the project in .expo, android and ios folders`,
         `-h, --help                      Usage info`,
       ].join('\n')
     );
