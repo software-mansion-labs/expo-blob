@@ -3,19 +3,17 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 72;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		14F43488446585C06E5FDB75 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A5F535734A3C9A4B6CF772 /* test.swift */; };
 		16EE85CC191423BCEDD66E43 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDBC8C11648CCE5A964D81B8 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		9708751C742A8D1CCC248C1D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0B077697C37CDE7773889AE6 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C921BAA08428E9B492BE5B1B /* libPods-sandbox.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BB79CBE4B433E9E8081F67DB /* libPods-sandbox.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F376CA5B068945625BA9D3C0 /* testtest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44FC0F0E36AEA5AAB43FBF8 /* testtest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,12 +27,14 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BB79CBE4B433E9E8081F67DB /* libPods-sandbox.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-sandbox.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDBC8C11648CCE5A964D81B8 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-sandbox/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		D8A5F535734A3C9A4B6CF772 /* test.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = test.swift; path = localModules/testFolder/test.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = sandbox/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* sandbox-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "sandbox-Bridging-Header.h"; path = "sandbox/sandbox-Bridging-Header.h"; sourceTree = "<group>"; };
-		F44FC0F0E36AEA5AAB43FBF8 /* testtest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = testtest.swift; path = localModules/testtest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		F482196C2E56EC8500115F06 /* localModules */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = localModules; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
@@ -48,14 +48,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		009E1A5FFB213321F2364529 /* testFolder */ = {
-			isa = PBXGroup;
-			children = (
-				D8A5F535734A3C9A4B6CF772 /* test.swift */,
-			);
-			name = testFolder;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* sandbox */ = {
 			isa = PBXGroup;
 			children = (
@@ -111,7 +103,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BDB6923F7B6F439CAE1F1FF3 /* Pods */,
 				7D428D428EFB9017A6057903 /* ExpoModulesProviders */,
-				CAB198AB40484665A33E0D70 /* localModules */,
+				F482196C2E56EC8500115F06 /* localModules */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -144,15 +136,6 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
-		CAB198AB40484665A33E0D70 /* localModules */ = {
-			isa = PBXGroup;
-			children = (
-				009E1A5FFB213321F2364529 /* testFolder */,
-				F44FC0F0E36AEA5AAB43FBF8 /* testtest.swift */,
-			);
-			name = localModules;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -172,6 +155,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F482196C2E56EC8500115F06 /* localModules */,
 			);
 			name = sandbox;
 			productName = sandbox;
@@ -330,8 +316,8 @@
 				"$(SRCROOT)/Pods/Target Support Files/Pods-sandbox/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/zsh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-sandbox/expo-configure-project.sh\"\npushd ../\nbash -l -c \"yarn expo --generateProjectLocalModuleMirrors\"\nexport PATH=\"$PATH:/opt/homebrew/bin\"\nexport PATH=\"$PATH:/Users/hubertb/Projects/expo/.direnv/bin:/Users/hubertb/Projects/expo/.direnv/ruby/bin:/Users/hubertb/Projects/expo/bin:/opt/homebrew/opt/ruby@3.3/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/iTerm.app/Contents/Resources/utilities:/Users/hubertb/Library/Android/sdk/emulator:/Users/hubertb/Library/Android/sdk/platform-tools\"\neval $\"(/opt/homebrew/bin/direnv export zsh)\"\nsource ~/.zshrc\nsource /Users/hubertb/Projects/expo/.direnv/ruby\n/opt/homebrew/opt/ruby@3.3/bin/ruby ./localModulesSetup.rb\npopd\n";
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-sandbox/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -342,8 +328,6 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				16EE85CC191423BCEDD66E43 /* ExpoModulesProvider.swift in Sources */,
-				14F43488446585C06E5FDB75 /* test.swift in Sources */,
-				F376CA5B068945625BA9D3C0 /* testtest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
