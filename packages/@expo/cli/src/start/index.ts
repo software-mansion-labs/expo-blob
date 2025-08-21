@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 
 import { Command } from '../../bin/cli';
-import { generateMirrorDirectories } from '../localModules/generation';
+import { generateMirrorDirectoriesAndUpdateXCodeProject } from '../localModules/generation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
 
@@ -101,7 +101,7 @@ export const expoStart: Command = async (argv) => {
 
   if (options.generateProjectLocalModuleMirrors) {
     console.log('Here we can generate the mirrors');
-    await generateMirrorDirectories(projectRoot);
+    await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);
     return;
   }
   const { startAsync } = await import('./startAsync.js');
