@@ -14,13 +14,12 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C921BAA08428E9B492BE5B1B /* libPods-sandbox.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BB79CBE4B433E9E8081F67DB /* libPods-sandbox.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		579C7703E21D4224A4B9B2E5 /* Constants.swift */ = {isa = PBXBuildFile; fileRef = FD59809CB81B4C3086D61A41; };
-		E24E498122464AC89CF9F53F /* ExpoBlob.swift */ = {isa = PBXBuildFile; fileRef = C15DDF795E574D7FA1968373; };
-		4D317287C48942F6B9B699F4 /* testeste.swift */ = {isa = PBXBuildFile; fileRef = 9C7103F42E6A45BB824AB575; };
-		CD93D3F09FA54DA9A5696B68 /* test.swift */ = {isa = PBXBuildFile; fileRef = 78741FDC70AA4BAA8574BEF8; };
-		C90A37AD50E1483AAF0C0EEA /* test2.swift */ = {isa = PBXBuildFile; fileRef = C92793592BBD44AFA50D8958; };
-		7E6A72D04B73404E9020DFC7 /* file2.swift */ = {isa = PBXBuildFile; fileRef = FA3BD1B906324A27B8D0B9FB; };
-		0DBC5B75B65B42B7B5473E50 /* ntest.swift */ = {isa = PBXBuildFile; fileRef = CA2418EEA9074118819C4483; };
+		4F3B5369C21D40BFAAD63A9E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812925316FF54C16A47059A5 /* Constants.swift */; };
+		32CD9EEB8BF14DE7AD6078DD /* ExpoBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF857CEF1EC14264BFE6B16E /* ExpoBlob.swift */; };
+		C35391D48CF24139AB8908ED /* testeste.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABB829FB3EC942E483A732F7 /* testeste.swift */; };
+		E45CDC2D02964657A2B3EEE7 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B55761D266B44AF960F74F2 /* test.swift */; };
+		F82A6C81D35640C1BC58FB77 /* file2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04BD343A4C1E40E0A5A6E419 /* file2.swift */; };
+		667350E86D9447B8A431CAF2 /* ntest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A025A2A57D74AB9BB00AEE1 /* ntest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,13 +36,12 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = sandbox/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* sandbox-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "sandbox-Bridging-Header.h"; path = "sandbox/sandbox-Bridging-Header.h"; sourceTree = "<group>"; };
-		FD59809CB81B4C3086D61A41 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Constants.swift; path = ../Constants.swift; sourceTree = SOURCE_ROOT; };
-		C15DDF795E574D7FA1968373 /* ExpoBlob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExpoBlob.swift; path = ../ExpoBlob.swift; sourceTree = SOURCE_ROOT; };
-		9C7103F42E6A45BB824AB575 /* testeste.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = testeste.swift; path = ../testeste.swift; sourceTree = SOURCE_ROOT; };
-		78741FDC70AA4BAA8574BEF8 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = test.swift; path = ../app/test.swift; sourceTree = SOURCE_ROOT; };
-		C92793592BBD44AFA50D8958 /* test2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = test2.swift; path = ../app/test2.swift; sourceTree = SOURCE_ROOT; };
-		FA3BD1B906324A27B8D0B9FB /* file2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = file2.swift; path = ../nested/file2.swift; sourceTree = SOURCE_ROOT; };
-		CA2418EEA9074118819C4483 /* ntest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ntest.swift; path = ../nested/ntest.swift; sourceTree = SOURCE_ROOT; };
+		812925316FF54C16A47059A5 /* Constants.swift */ = {isa = PBXFileReference; name = "Constants.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/Constants.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		BF857CEF1EC14264BFE6B16E /* ExpoBlob.swift */ = {isa = PBXFileReference; name = "ExpoBlob.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/ExpoBlob.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		ABB829FB3EC942E483A732F7 /* testeste.swift */ = {isa = PBXFileReference; name = "testeste.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/testeste.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		5B55761D266B44AF960F74F2 /* test.swift */ = {isa = PBXFileReference; name = "test.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/app/test.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		04BD343A4C1E40E0A5A6E419 /* file2.swift */ = {isa = PBXFileReference; name = "file2.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/nested/file2.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		9A025A2A57D74AB9BB00AEE1 /* ntest.swift */ = {isa = PBXFileReference; name = "ntest.swift"; path = "/Users/hubertb/Projects/expo-blob/apps/sandbox/nested/ntest.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,13 +111,12 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BDB6923F7B6F439CAE1F1FF3 /* Pods */,
 				7D428D428EFB9017A6057903 /* ExpoModulesProviders */,
-				FD59809CB81B4C3086D61A41 /* Constants.swift */,
-				C15DDF795E574D7FA1968373 /* ExpoBlob.swift */,
-				9C7103F42E6A45BB824AB575 /* testeste.swift */,
-				78741FDC70AA4BAA8574BEF8 /* test.swift */,
-				C92793592BBD44AFA50D8958 /* test2.swift */,
-				FA3BD1B906324A27B8D0B9FB /* file2.swift */,
-				CA2418EEA9074118819C4483 /* ntest.swift */,
+				812925316FF54C16A47059A5 /* Constants.swift */,
+				BF857CEF1EC14264BFE6B16E /* ExpoBlob.swift */,
+				ABB829FB3EC942E483A732F7 /* testeste.swift */,
+				5B55761D266B44AF960F74F2 /* test.swift */,
+				04BD343A4C1E40E0A5A6E419 /* file2.swift */,
+				9A025A2A57D74AB9BB00AEE1 /* ntest.swift */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -341,13 +338,12 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				16EE85CC191423BCEDD66E43 /* ExpoModulesProvider.swift in Sources */,
-				579C7703E21D4224A4B9B2E5 /* Constants.swift */,
-				E24E498122464AC89CF9F53F /* ExpoBlob.swift */,
-				4D317287C48942F6B9B699F4 /* testeste.swift */,
-				CD93D3F09FA54DA9A5696B68 /* test.swift */,
-				C90A37AD50E1483AAF0C0EEA /* test2.swift */,
-				7E6A72D04B73404E9020DFC7 /* file2.swift */,
-				0DBC5B75B65B42B7B5473E50 /* ntest.swift */,
+				4F3B5369C21D40BFAAD63A9E /* Constants.swift in Sources */,
+				32CD9EEB8BF14DE7AD6078DD /* ExpoBlob.swift in Sources */,
+				C35391D48CF24139AB8908ED /* testeste.swift in Sources */,
+				E45CDC2D02964657A2B3EEE7 /* test.swift in Sources */,
+				F82A6C81D35640C1BC58FB77 /* file2.swift in Sources */,
+				667350E86D9447B8A431CAF2 /* ntest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

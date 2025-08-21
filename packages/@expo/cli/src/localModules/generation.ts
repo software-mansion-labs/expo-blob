@@ -212,107 +212,42 @@ function updateXCodeProject(projectRoot: string) {
 }
 
 function addNewFileToXCodeProject(projectRoot: string, absoluteFilePath: string) {
-  const { iosPath } = mirrorDirectories(projectRoot);
-  const { iosFilePath } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
-
-  const pbxProject = getPbxproj(projectRoot);
-  const newFileUUID = pbxProject.generateUuid();
-  const buildFileUUID = pbxProject.generateUuid();
-  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
-  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-  const fileName = path.basename(absoluteFilePath);
-  const fileRelativeToIos = path.relative(iosPath, absoluteFilePath);
-
-  const objects = pbxProject.hash.project.objects;
-
-  objects.PBXBuildFile[buildFileUUID] = {
-    isa: 'PBXBuildFile',
-    fileRef: newFileUUID,
-  };
-  objects.PBXBuildFile[buildFileUUID + '_comment'] = fileName;
-
-  objects.PBXFileReference[newFileUUID] = {
-    isa: 'PBXFileReference',
-    lastKnownFileType: 'sourcecode.swift',
-    name: fileName,
-    path: fileRelativeToIos,
-    sourceTree: 'SOURCE_ROOT',
-  };
-  objects.PBXFileReference[newFileUUID + '_comment'] = fileName;
-
-  objects.PBXGroup[mainGroupUUID].children.push({
-    value: newFileUUID,
-    comment: fileName,
-  });
-
-  // Need to somehow get to the Sources UUID
-  const sourcesUUID = ((): string => {
-    for (const pr in objects.PBXSourcesBuildPhase) {
-      if (!pr.endsWith('_comment')) {
-        return pr;
-      }
-      return 'INVALID_UUID';
-    }
-  })();
-  objects.PBXSourcesBuildPhase[sourcesUUID].files.push({
-    value: buildFileUUID,
-    comment: fileName,
-  });
-  // console.log(sourcesUUID);
-  // console.log(objects.PBXSourcesBuildPhase[sourcesUUID]);
-
-  // pbxProject.hash.project.objects.PBXGroup[mainGroupUUID];
-  // pbxProject.hash.project.objects.PBXGroup[mainGroupUUID].children.push({
-  //   value: newFileUUID,
-  //   comment: 'localModules',
-  // });
-
-  // const objects = pbxProject.hash.project.objects;
-
-  // if (!objects.PBXFileSystemSynchronizedRootGroup) {
-  //   objects.PBXFileSystemSynchronizedRootGroup = {};
-  // }
-  // pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newFileUUID + '_comment'] =
-  //   'localModules';
-  // pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newFileUUID] = {
-  //   isa: 'PBXFileSystemSynchronizedRootGroup',
-  //   explicitFileTypes: {},
-  //   explicitFolders: [],
-  //   path: 'localModules',
-  //   sourceTree: '"<group>"',
-  // };
-
-  // const nativeTargetGroup = pbxProject.hash.project.objects.PBXNativeTarget[ ];
-  // if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
-  //   nativeTargetGroup.fileSystemSynchronizedGroups = [];
-  // }
-  // nativeTargetGroup.fileSystemSynchronizedGroups.push({
-  //   value: newFileUUID,
-  //   comment: 'localModules',
-  // });
-  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
-}
-
-function onRemoveSwiftFile(projectRoot: string, absoluteFilePath: string) {
-  console.log('Need to remove the "' + path.basename(absoluteFilePath) + '" file');
   // const { iosPath } = mirrorDirectories(projectRoot);
   // const { iosFilePath } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
 
-  // const pbxProject = getPbxproj(projectRoot);
+  const pbxProject = getPbxproj(projectRoot);
   // const newFileUUID = pbxProject.generateUuid();
-  // const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
-  // const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
+  // const buildFileUUID = pbxProject.generateUuid();
+  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
+  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
   // const fileName = path.basename(absoluteFilePath);
   // const fileRelativeToIos = path.relative(iosPath, absoluteFilePath);
 
-  // pbxProject.hash.project.objectVersion += 1;
   // const objects = pbxProject.hash.project.objects;
 
-  // objects.PBXBuildFile[newFileUUID] = {
+  // pbxProject.addToPbxFileReferenceSection(fileName);
+  // pbxProject.addFile(absoluteFilePath, mainGroupUUID);
+
+  pbxProject.addSourceFile(
+    absoluteFilePath,
+    {
+      target: mainTargetUUID,
+    },
+    mainGroupUUID
+  );
+
+  // pbxProject.removeSourceFile(
+  //   absoluteFilePath,
+  //   {
+  //     target: mainTargetUUID,
+  //   },
+  //   mainGroupUUID
+  // );
+  // objects.PBXBuildFile[buildFileUUID] = {
   //   isa: 'PBXBuildFile',
-  //   fileRef: { value: newFileUUID, comment: fileName },
+  //   fileRef: newFileUUID,
   // };
-  // objects.PBXBuildFile[newFileUUID + '_comment'] = fileName;
+  // objects.PBXBuildFile[buildFileUUID + '_comment'] = fileName;
 
   // objects.PBXFileReference[newFileUUID] = {
   //   isa: 'PBXFileReference',
@@ -329,7 +264,37 @@ function onRemoveSwiftFile(projectRoot: string, absoluteFilePath: string) {
   // });
 
   // // Need to somehow get to the Sources UUID
-  // console.log(objects.PBXSourcesBuildPhase);
+  // const sourcesUUID = ((): string => {
+  //   for (const pr in objects.PBXSourcesBuildPhase) {
+  //     if (!pr.endsWith('_comment')) {
+  //       return pr;
+  //     }
+  //     return 'INVALID_UUID';
+  //   }
+  // })();
+  // objects.PBXSourcesBuildPhase[sourcesUUID].files.push({
+  //   value: buildFileUUID,
+  //   comment: fileName,
+  // });
+
+  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
+}
+
+function onRemoveSwiftFile(projectRoot: string, absoluteFilePath: string) {
+  console.log('Need to remove the "' + path.basename(absoluteFilePath) + '" file');
+  const pbxProject = getPbxproj(projectRoot);
+  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
+  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
+
+  pbxProject.removeSourceFile(
+    absoluteFilePath,
+    {
+      target: mainTargetUUID,
+    },
+    mainGroupUUID
+  );
+
+  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
 function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
