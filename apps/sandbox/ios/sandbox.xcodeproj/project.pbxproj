@@ -32,10 +32,6 @@
 		F11748442D0722820044C1D9 /* sandbox-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "sandbox-Bridging-Header.h"; path = "sandbox/sandbox-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		F482196C2E56EC8500115F06 /* localModules */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = localModules; sourceTree = "<group>"; };
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -103,7 +99,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BDB6923F7B6F439CAE1F1FF3 /* Pods */,
 				7D428D428EFB9017A6057903 /* ExpoModulesProviders */,
-				F482196C2E56EC8500115F06 /* localModules */,
+				24695ABC0FFA4F77BF620A95 /* localModules */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -156,13 +152,13 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				F482196C2E56EC8500115F06 /* localModules */,
-			);
 			name = sandbox;
 			productName = sandbox;
 			productReference = 13B07F961A680F5B00A75B9A /* sandbox.app */;
 			productType = "com.apple.product-type.application";
+			fileSystemSynchronizedGroups = (
+				24695ABC0FFA4F77BF620A95 /* localModules */,
+			);
 		};
 /* End PBXNativeTarget section */
 
@@ -538,6 +534,18 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		24695ABC0FFA4F77BF620A95 /* localModules */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = localModules;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

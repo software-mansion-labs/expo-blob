@@ -3,9 +3,16 @@ import Server from '@expo/metro/metro/Server';
 import type MetroServer from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
+import {
+  addBuildSourceFileToGroup,
+  getPbxproj,
+} from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
+import { expoConfig } from '../config';
+import { PBXGroup, UUID } from 'xcode';
+import { createBuildSourceFile } from '@expo/config-plugins/build/ios/XcodeProjectFile.js';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -17,7 +24,9 @@ function mirrorDirectories(projectRoot: string): {
   dotExpoDir: string;
   localModulesPath: string;
   androidLocalModulesPath: string;
+  iosPath: string;
   iosLocalModulesPath: string;
+  xcodeProjPath: string;
 } {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const localModulesPath = path.resolve(dotExpoDir, './localModules/');
@@ -26,12 +35,16 @@ function mirrorDirectories(projectRoot: string): {
     'android/app/src/main/java/local/modules/'
   );
   const iosLocalModulesPath = path.resolve(projectRoot, 'ios/localModules');
+  const xcodeProjPath = path.resolve(projectRoot, 'ios/sandbox.xcodeproj');
+  const iosPath = path.resolve(projectRoot, 'ios');
 
   return {
     dotExpoDir,
     localModulesPath,
     androidLocalModulesPath,
+    iosPath,
     iosLocalModulesPath,
+    xcodeProjPath,
   };
 }
 
@@ -99,6 +112,108 @@ function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
+function addNewChildToParethesisList(children: string, child: string): string {
+  return `(
+  ${child}
+  )`;
+}
+
+async function updateXCodeProject(projectRoot: string) {
+  // return;
+  const { iosLocalModulesPath, iosPath, xcodeProjPath } = mirrorDirectories(projectRoot);
+
+  let pbxProject = getPbxproj(projectRoot);
+  // pbxProject.removePbxGroup('localModules');
+  // const localModulesGroup = pbxProject.pbxCreateGroup('localModules', '');
+  // pbxProject.addPbxGroup(
+  //   [path.resolve(iosLocalModulesPath, 'ExpoBlob.swift')],
+  //   'localModules',
+  //   'localModules'
+  // );
+  // let pbxProjectFirst = pbxProject.getFirstProject().firstProject;
+  //   pbxProjectFirst.mainGroup.
+
+  const newUUID = pbxProject.generateUuid();
+  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
+  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
+  // console.log('main target uuid', mainTargetUUID);
+
+  // console.log(pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup);
+
+  pbxProject.hash.project.objects.PBXGroup[mainGroupUUID];
+  // pbxProject.pbxItemByComment()
+  pbxProject.hash.project.objects.PBXGroup[mainGroupUUID].children.push({
+    value: newUUID,
+    comment: 'localModules',
+  });
+
+  const objects = pbxProject.hash.project.objects;
+
+  if (!objects.PBXFileSystemSynchronizedRootGroup) {
+    objects.PBXFileSystemSynchronizedRootGroup = {};
+  }
+  pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] =
+    'localModules';
+  pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID] = {
+    isa: 'PBXFileSystemSynchronizedRootGroup',
+    explicitFileTypes: {},
+    explicitFolders: [],
+    path: 'localModules',
+    sourceTree: '"<group>"',
+  };
+
+  // console.log(pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID]);
+
+  const nativeTargetGroup = pbxProject.hash.project.objects.PBXNativeTarget[mainTargetUUID];
+  // console.log(nativeTargetGroup);
+  if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
+    nativeTargetGroup.fileSystemSynchronizedGroups = [];
+  }
+  nativeTargetGroup.fileSystemSynchronizedGroups.push({ value: newUUID, comment: 'localModules' });
+
+  // pbxProject.pbxCreateGroup('Test', 'Test');
+  // console.log(pbxProject.getPBXObject('Test'));
+
+  // pbxProject = addBuildSourceFileToGroup({
+  //   filepath: path.resolve(iosLocalModulesPath, 'ExpoBlob.swift'),
+  //   groupName: 'localModules',
+  //   project: pbxProject,
+  // });
+
+  // pbxProject = createBuildSourceFile({
+  //   project: pbxProject,
+  //   nativeProjectRoot: iosPath,
+  //   filePath: 'fun.swift',
+  //   fileContents: 'akjgbnajkg',
+  // });
+
+  // pbxProject.addPbxGroup()
+
+  // pbxProject.pbxCreateGroup('hejoEjo', '""');
+  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
+  // const generateXCodeGroup = async (iosMirrorPath: string, currentGroup: UUID) => {
+  //   if (iosMirrorPath === '.' || iosMirrorPath === '..') {
+  //     return;
+  //   }
+
+  //   const dir = fs.opendirSync(iosMirrorPath);
+  //   for await (const dirent of dir) {
+  //     const absoluteDirentPath = path.resolve(iosMirrorPath, dirent.name);
+  //     console.log('currently visiting dirent: ' + absoluteDirentPath);
+  //     if (dirent.isFile() && /\.swift$/.test(dirent.name)) {
+  //       console.log('adding file to xcode');
+  //       pbxProject.addFile(absoluteDirentPath, 'localModules');
+  //     } else if (dirent.isDirectory()) {
+  //       // pbxProject.pbxCreateGroup();
+  //       await generateXCodeGroup(absoluteDirentPath, currentGroup);
+  //     }
+  //   }
+  // };
+
+  // await generateXCodeGroup(iosLocalModulesPath, localModulesGroup);
+  // fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
+}
+
 function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
   const { typesFilePath, moduleExportPath, moduleName, androidPath, iosPath } =
     typesAndLocalModulePaths(projectRoot, absoluteFilePath);
@@ -155,6 +270,7 @@ export async function generateMirrorDirectories(projectRoot: string, filesWatche
     }
   };
   await generateExportsAndTypesForDirectory(projectRoot);
+  await updateXCodeProject(projectRoot);
 }
 
 function excludePathsGlobs(projectRoot: string): string[] {

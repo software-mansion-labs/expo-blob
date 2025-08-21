@@ -3759,7 +3759,7 @@
     invariant "^2.2.4"
     nullthrows "^1.1.1"
 
-"@react-navigation/bottom-tabs@7.4.6", "@react-navigation/bottom-tabs@^7.4.0":
+"@react-navigation/bottom-tabs@7.4.6", "@react-navigation/bottom-tabs@^7.3.10", "@react-navigation/bottom-tabs@^7.4.0":
   version "7.4.6"
   resolved "https://registry.yarnpkg.com/@react-navigation/bottom-tabs/-/bottom-tabs-7.4.6.tgz#a7c7b4347d9349babc1d481fc59f814dbe7d7222"
   integrity sha512-f4khxwcL70O5aKfZFbxyBo5RnzPFnBNSXmrrT7q9CRmvN4mHov9KFKGQ3H4xD5sLonsTBtyjvyvPfyEC4G7f+g==
@@ -3807,7 +3807,7 @@
     "@react-navigation/elements" "^2.4.4"
     warn-once "^0.1.1"
 
-"@react-navigation/native@7.1.8", "@react-navigation/native@^7.1.8":
+"@react-navigation/native@7.1.8", "@react-navigation/native@^7.1.6", "@react-navigation/native@^7.1.8":
   version "7.1.8"
   resolved "https://registry.yarnpkg.com/@react-navigation/native/-/native-7.1.8.tgz#402b3da515795e886f5a719426624d7c72d6a413"
   integrity sha512-ryKd/qNigi1pUp6mBb2pq75ese7AZ/Cl3xEmTG6PcUGMfMqAMMrmmVbgiys0h8zCGY2tSBSqnDHbGW1/ZtOoKg==
@@ -8565,6 +8565,11 @@ expo-atlas@^0.4.1:
     open "^8.4.2"
     serve-static "^1.15.0"
     stream-json "^1.8.0"
+
+expo-blob@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/expo-blob/-/expo-blob-0.1.0.tgz#136eff36dbe975ae5e104be9e62f0f97d33a015e"
+  integrity sha512-F9ueookCvhgKBnyrq+agtrwAfdtkJfHi6vtZ/VOiAMM0RrJEj63VjVQi98Pkz/+Ru+fV61CmU6AdWNsWm9pX2w==
 
 expo-progress@^0.0.2:
   version "0.0.2"
