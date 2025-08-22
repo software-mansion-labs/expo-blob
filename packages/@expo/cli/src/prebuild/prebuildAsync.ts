@@ -15,6 +15,7 @@ import { clearNodeModulesAsync } from '../utils/nodeModules';
 import { logNewSection } from '../utils/ora';
 import { profile } from '../utils/profile';
 import { confirmAsync } from '../utils/prompts';
+import { generateMirrorDirectoriesAndUpdateXCodeProject } from '../localModules/generation';
 
 const debug = require('debug')('expo:prebuild') as typeof console.log;
 
@@ -172,6 +173,12 @@ export async function prebuildAsync(
     podsInstalled = await installCocoaPodsAsync(projectRoot);
   } else {
     debug('Skipped pod install');
+  }
+
+  // GREPME here generation
+  const shouldGenerateLocalModules = true;
+  if (shouldGenerateLocalModules) {
+    await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);
   }
 
   return {

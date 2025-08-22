@@ -46,6 +46,8 @@ export const expoPrebuild: Command = async (argv) => {
     );
   }
 
+  // GREPME
+
   // Load modules after the help prompt so `npx expo prebuild -h` shows as fast as possible.
   const [
     // ./prebuildAsync
