@@ -8,6 +8,7 @@ import {
 import { findModulesAsync } from '../autolinking/findModules';
 import { generateModulesProviderAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
+import { ModuleDescriptor } from '../types';
 
 interface GenerateModulesProviderArguments extends AutolinkingCommonArguments {
   target: string;
@@ -49,6 +50,9 @@ export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
         const filteredModules = expoModulesResolveResults.filter((module) =>
           includeModules.has(module.packageName)
         );
+
+        // GREPME
+        // const localModules: ModuleDescriptor[] = [];
 
         await generateModulesProviderAsync(filteredModules, {
           platform,

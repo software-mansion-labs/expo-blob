@@ -83,6 +83,34 @@ async function generateModulesProviderAsync(modules, targetPath, entitlementPath
     await fs_1.default.promises.mkdir(parentPath, { recursive: true });
     await fs_1.default.promises.writeFile(targetPath, generatedFileContent, 'utf8');
 }
+// GREPME
+async function getLocalModulesClassNames() {
+    const appRoot = fs_1.default.realpathSync(process.cwd());
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! getLocalModulesclassnames :' + appRoot + '\n', { flag: 'a+' });
+    const modulesPath = path_1.default.resolve(appRoot, 'localModules');
+    if (!fs_1.default.existsSync(modulesPath)) {
+        return [];
+    }
+    const res = [];
+    const recursivelyScanDirectories = async (dirPath) => {
+        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! recursive: ' + dirPath + '\n', { flag: 'a+' });
+        const dir = fs_1.default.opendirSync(dirPath);
+        for await (const dirent of dir) {
+            fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! dirent name: ' + dirent.name + '\n', { flag: 'a+' });
+            if ((dirent.isSymbolicLink() || dirent.isFile()) && dirent.name.endsWith('.swift')) {
+                fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! swift file/symlink: ' + dirent.name + '\n', { flag: 'a+' });
+                res.push(dirent.name.substring(0, dirent.name.length - '.swift'.length));
+            }
+            if (dirent.isDirectory()) {
+                const childPath = path_1.default.resolve(modulesPath, dirent.name);
+                await recursivelyScanDirectories(childPath);
+            }
+        }
+    };
+    await recursivelyScanDirectories(modulesPath);
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! res names: ' + JSON.stringify(res) + '\n', { flag: 'a+' });
+    return res;
+}
 /**
  * Generates the string to put into the generated package list.
  */
@@ -100,7 +128,11 @@ async function generatePackageListFileContentAsync(modules, className, entitleme
         .filter(Boolean);
     const modulesClassNames = []
         .concat(...modulesToImport.map((module) => module.modules))
-        .filter(Boolean);
+        .filter(Boolean)
+        .concat(await getLocalModulesClassNames());
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! modules class names' + JSON.stringify(modulesClassNames) + '\n', { flag: 'a+' });
+    console.log('!!! generate Packe list file GREPME');
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! generate Package list file\n', { flag: 'a+' });
     const debugOnlyModulesClassNames = []
         .concat(...debugOnlyModules.map((module) => module.modules))
         .filter(Boolean);

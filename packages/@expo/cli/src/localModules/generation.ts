@@ -51,12 +51,15 @@ function createFreshMirrorDirectories(projectRoot: string) {
   // make sure the directories exist so we can remove them.
   fs.mkdirSync(localModulesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
+  fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 
   fs.rmSync(localModulesPath, { recursive: true });
   fs.rmSync(androidLocalModulesPath, { recursive: true });
+  fs.rmSync(iosLocalModulesPath, { recursive: true });
 
   fs.mkdirSync(localModulesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
+  fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 }
 
 function trimExtension(fileName: string) {
@@ -164,12 +167,30 @@ function updateXCodeProject(projectRoot: string) {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
+function swiftFileWatched(projectRoot: string, file: string): boolean {
+  for (const dir of swiftWatchedDirectories) {
+    const dirPath = path.resolve(projectRoot, dir);
+    const dirPathAbsolute = fs.realpathSync(dirPath);
+    const filePathAbsolute = fs.realpathSync(file);
+    if (filePathAbsolute.startsWith(dirPathAbsolute)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
   const { typesFilePath, moduleExportPath, moduleName, androidPath, iosFilePath } =
     typesAndLocalModulePaths(projectRoot, absoluteFilePath);
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
+  } else if (
+    absoluteFilePath.endsWith('.swift') &&
+    swiftFileWatched(projectRoot, absoluteFilePath)
+  ) {
+    fs.mkdirSync(path.dirname(iosFilePath), { recursive: true });
+    fs.symlinkSync(absoluteFilePath, iosFilePath);
   }
 
   if (filesWatched) {
@@ -290,12 +311,17 @@ export async function startModuleGenerationAsync({
   };
 
   const onRemoveAppFile = (absoluteFilePath: string) => {
-    const { typesFilePath, moduleExportPath, androidPath } = typesAndLocalModulePaths(
+    const { typesFilePath, moduleExportPath, androidPath, iosFilePath } = typesAndLocalModulePaths(
       projectRoot,
       absoluteFilePath
     );
     if (absoluteFilePath.endsWith('.kt')) {
       removeFileAndEmptyDirectories(androidPath);
+    } else if (
+      absoluteFilePath.endsWith('.swift') &&
+      swiftFileWatched(projectRoot, absoluteFilePath)
+    ) {
+      removeFileAndEmptyDirectories(iosFilePath);
     }
 
     filesWatched.delete(absoluteFilePath);

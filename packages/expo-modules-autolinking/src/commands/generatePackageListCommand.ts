@@ -9,6 +9,7 @@ import { findModulesAsync } from '../autolinking/findModules';
 import { generatePackageListAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
 import type { ModuleDescriptor } from '../types';
+import fs from 'fs';
 
 interface GeneratePackageListArguments extends AutolinkingCommonArguments {
   target: string;
@@ -21,6 +22,11 @@ interface GeneratePackageListArguments extends AutolinkingCommonArguments {
  * This command is deprecated for apple platforms, use `generate-modules-provider` instead.
  */
 export function generatePackageListCommand(cli: commander.CommanderStatic) {
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    '!!! generate something\n',
+    { flag: 'a+' }
+  );
   return registerAutolinkingArguments(cli.command('generate-package-list [searchPaths...]'))
     .option(
       '-t, --target <path>',
@@ -47,6 +53,11 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
         if (!commandArguments.empty) {
           const autolinkingOptions = await autolinkingOptionsLoader.getPlatformOptions(platform);
 
+          fs.writeFileSync(
+            '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+            '!!! inside if\n',
+            { flag: 'a+' }
+          );
           const expoModulesSearchResults = await findModulesAsync({
             autolinkingOptions: await autolinkingOptionsLoader.getPlatformOptions(platform),
             appRoot: await autolinkingOptionsLoader.getAppRoot(),
@@ -57,6 +68,7 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           );
         }
 
+        console.log('!!!generate package list ascyn GREPME');
         await generatePackageListAsync(expoModulesResolveResults, {
           platform,
           targetPath: commandArguments.target,
