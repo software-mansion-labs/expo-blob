@@ -3,22 +3,18 @@ import Server from '@expo/metro/metro/Server';
 import type MetroServer from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
-import {
-  addBuildSourceFileToGroup,
-  getPbxproj,
-} from '@expo/config-plugins/build/ios/utils/Xcodeproj';
+import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
-import { expoConfig } from '../config';
-import { PBXGroup, UUID } from 'xcode';
-import { createBuildSourceFile } from '@expo/config-plugins/build/ios/XcodeProjectFile.js';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
   metro: Server | null;
 }
+
 const nativeExtensions = ['.kt', '.swift'];
+const swiftWatchedDirectories = ['app', 'src'];
 
 function mirrorDirectories(projectRoot: string): {
   dotExpoDir: string;
@@ -109,226 +105,58 @@ function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
-function addNewChildToParethesisList(children: string, child: string): string {
-  return `(
-  ${child}
-  )`;
-}
-
 function updateXCodeProject(projectRoot: string) {
-  return;
-  const { iosLocalModulesPath, iosPath, xcodeProjPath } = mirrorDirectories(projectRoot);
-
-  let pbxProject = getPbxproj(projectRoot);
-  // pbxProject.removePbxGroup('localModules');
-  // const localModulesGroup = pbxProject.pbxCreateGroup('localModules', '');
-  // pbxProject.addPbxGroup(
-  //   [path.resolve(iosLocalModulesPath, 'ExpoBlob.swift')],
-  //   'localModules',
-  //   'localModules'
-  // );
-  // let pbxProjectFirst = pbxProject.getFirstProject().firstProject;
-  //   pbxProjectFirst.mainGroup.
-
-  const newUUID = pbxProject.generateUuid();
+  const pbxProject = getPbxproj(projectRoot);
   const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
   const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-  // console.log('main target uuid', mainTargetUUID);
-
-  // console.log(pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup);
-
-  pbxProject.hash.project.objects.PBXGroup[mainGroupUUID];
-  // pbxProject.pbxItemByComment()
-  pbxProject.hash.project.objects.PBXGroup[mainGroupUUID].children.push({
-    value: newUUID,
-    comment: 'localModules',
-  });
 
   const objects = pbxProject.hash.project.objects;
 
-  if (!objects.PBXFileSystemSynchronizedRootGroup) {
-    objects.PBXFileSystemSynchronizedRootGroup = {};
-  }
-  pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] =
-    'localModules';
-  pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID] = {
-    isa: 'PBXFileSystemSynchronizedRootGroup',
-    explicitFileTypes: {},
-    explicitFolders: [],
-    path: 'localModules',
-    sourceTree: '"<group>"',
+  const dirEntryExists = (dir: string): boolean => {
+    if (!objects.PBXFileSystemSynchronizedRootGroup) {
+      return false;
+    }
+    for (const key of Object.keys(objects.PBXFileSystemSynchronizedRootGroup)) {
+      if (!key.endsWith('_comment')) {
+        continue;
+      }
+      if (dir === objects.PBXFileSystemSynchronizedRootGroup[key]) {
+        return true;
+      }
+    }
+    return false;
   };
 
-  // console.log(pbxProject.hash.project.objects.PBXFileSystemSynchronizedRootGroup[newUUID]);
+  for (const dir of swiftWatchedDirectories) {
+    if (dirEntryExists(dir)) {
+      continue;
+    }
 
-  const nativeTargetGroup = pbxProject.hash.project.objects.PBXNativeTarget[mainTargetUUID];
-  // console.log(nativeTargetGroup);
-  if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
-    nativeTargetGroup.fileSystemSynchronizedGroups = [];
+    const newUUID = pbxProject.generateUuid();
+    objects.PBXGroup[mainGroupUUID].children.push({
+      value: newUUID,
+      comment: dir,
+    });
+
+    if (!objects.PBXFileSystemSynchronizedRootGroup) {
+      objects.PBXFileSystemSynchronizedRootGroup = {};
+    }
+    objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
+    objects.PBXFileSystemSynchronizedRootGroup[newUUID] = {
+      isa: 'PBXFileSystemSynchronizedRootGroup',
+      explicitFileTypes: {},
+      explicitFolders: [],
+      name: dir,
+      path: path.relative('./', path.resolve('../', dir)),
+      sourceTree: 'SOURCE_ROOT',
+    };
+
+    const nativeTargetGroup = objects.PBXNativeTarget[mainTargetUUID];
+    if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
+      nativeTargetGroup.fileSystemSynchronizedGroups = [];
+    }
+    nativeTargetGroup.fileSystemSynchronizedGroups.push({ value: newUUID, comment: dir });
   }
-  nativeTargetGroup.fileSystemSynchronizedGroups.push({ value: newUUID, comment: 'localModules' });
-
-  // pbxProject.pbxCreateGroup('Test', 'Test');
-  // console.log(pbxProject.getPBXObject('Test'));
-
-  // pbxProject = addBuildSourceFileToGroup({
-  //   filepath: path.resolve(iosLocalModulesPath, 'ExpoBlob.swift'),
-  //   groupName: 'localModules',
-  //   project: pbxProject,
-  // });
-
-  // pbxProject = createBuildSourceFile({
-  //   project: pbxProject,
-  //   nativeProjectRoot: iosPath,
-  //   filePath: 'fun.swift',
-  //   fileContents: 'akjgbnajkg',
-  // });
-
-  // pbxProject.addPbxGroup()
-
-  // pbxProject.pbxCreateGroup('hejoEjo', '""');
-  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
-  // const generateXCodeGroup = async (iosMirrorPath: string, currentGroup: UUID) => {
-  //   if (iosMirrorPath === '.' || iosMirrorPath === '..') {
-  //     return;
-  //   }
-
-  //   const dir = fs.opendirSync(iosMirrorPath);
-  //   for await (const dirent of dir) {
-  //     const absoluteDirentPath = path.resolve(iosMirrorPath, dirent.name);
-  //     console.log('currently visiting dirent: ' + absoluteDirentPath);
-  //     if (dirent.isFile() && /\.swift$/.test(dirent.name)) {
-  //       console.log('adding file to xcode');
-  //       pbxProject.addFile(absoluteDirentPath, 'localModules');
-  //     } else if (dirent.isDirectory()) {
-  //       // pbxProject.pbxCreateGroup();
-  //       await generateXCodeGroup(absoluteDirentPath, currentGroup);
-  //     }
-  //   }
-  // };
-
-  // await generateXCodeGroup(iosLocalModulesPath, localModulesGroup);
-  // fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
-}
-
-function addNewFileToXCodeProject(projectRoot: string, absoluteFilePath: string) {
-  // const { iosPath } = mirrorDirectories(projectRoot);
-  // const { iosFilePath } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
-
-  const pbxProject = getPbxproj(projectRoot);
-  // const newFileUUID = pbxProject.generateUuid();
-  // const buildFileUUID = pbxProject.generateUuid();
-  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
-  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-  const fileName = path.basename(absoluteFilePath);
-  // const fileRelativeToIos = path.relative(iosPath, absoluteFilePath);
-
-  const objects = pbxProject.hash.project.objects;
-
-  // pbxProject.addToPbxFileReferenceSection(fileName);
-  // pbxProject.addFile(absoluteFilePath, mainGroupUUID);
-
-  // now this works if we're only dealign with source files not with groups
-  // and we're not cleaning up any added files that may have been removed when the watcher was offline
-
-  // pbxProject.addPbxGroup();
-  // const groupUUID = pbxProject.pbxCreateGroup('testGroup', 'testGroup');
-  // const group1UUID = pbxProject.pbxCreateGroup('testGroup1', 'testGroup/testGroup1');
-
-  // pbxProject.addToPbxGroup(
-  //   {
-  //     isa: 'PBXGroup',
-  //     children: [],
-  //     name: 'testGroup',
-  //     path: 'testGroup',
-  //     sourceTree: '"<group>"',
-  //   },
-  //   mainGroupUUID
-  // );
-
-  pbxProject.removeSourceFile(
-    absoluteFilePath,
-    {
-      target: mainTargetUUID,
-    },
-    mainGroupUUID
-  );
-
-  pbxProject.addSourceFile(
-    absoluteFilePath,
-    {
-      target: mainTargetUUID,
-    },
-    mainGroupUUID
-  );
-
-  const newGroupUUID = pbxProject.addPbxGroup(
-    [absoluteFilePath],
-    'testGroup' + fileName,
-    'testGroup' + fileName
-  );
-  objects.PBXGroup[mainGroupUUID].children.push({
-    value: newGroupUUID,
-    comment: fileName,
-  });
-
-  // pbxProject.removeSourceFile(
-  //   absoluteFilePath,
-  //   {
-  //     target: mainTargetUUID,
-  //   },
-  //   mainGroupUUID
-  // );
-  // objects.PBXBuildFile[buildFileUUID] = {
-  //   isa: 'PBXBuildFile',
-  //   fileRef: newFileUUID,
-  // };
-  // objects.PBXBuildFile[buildFileUUID + '_comment'] = fileName;
-
-  // objects.PBXFileReference[newFileUUID] = {
-  //   isa: 'PBXFileReference',
-  //   lastKnownFileType: 'sourcecode.swift',
-  //   name: fileName,
-  //   path: fileRelativeToIos,
-  //   sourceTree: 'SOURCE_ROOT',
-  // };
-  // objects.PBXFileReference[newFileUUID + '_comment'] = fileName;
-
-  // objects.PBXGroup[mainGroupUUID].children.push({
-  //   value: newFileUUID,
-  //   comment: fileName,
-  // });
-
-  // // Need to somehow get to the Sources UUID
-  // const sourcesUUID = ((): string => {
-  //   for (const pr in objects.PBXSourcesBuildPhase) {
-  //     if (!pr.endsWith('_comment')) {
-  //       return pr;
-  //     }
-  //     return 'INVALID_UUID';
-  //   }
-  // })();
-  // objects.PBXSourcesBuildPhase[sourcesUUID].files.push({
-  //   value: buildFileUUID,
-  //   comment: fileName,
-  // });
-
-  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
-}
-
-function onRemoveSwiftFile(projectRoot: string, absoluteFilePath: string) {
-  console.log('Need to remove the "' + path.basename(absoluteFilePath) + '" file');
-  const pbxProject = getPbxproj(projectRoot);
-  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
-  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-
-  pbxProject.removeSourceFile(
-    absoluteFilePath,
-    {
-      target: mainTargetUUID,
-    },
-    mainGroupUUID
-  );
 
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
@@ -339,8 +167,6 @@ function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
-  } else if (absoluteFilePath.endsWith('.swift')) {
-    addNewFileToXCodeProject(projectRoot, absoluteFilePath);
   }
 
   if (filesWatched) {
@@ -467,9 +293,6 @@ export async function startModuleGenerationAsync({
     );
     if (absoluteFilePath.endsWith('.kt')) {
       removeFileAndEmptyDirectories(androidPath);
-    }
-    if (absoluteFilePath.endsWith('.swift')) {
-      onRemoveSwiftFile(projectRoot, absoluteFilePath);
     }
 
     filesWatched.delete(absoluteFilePath);

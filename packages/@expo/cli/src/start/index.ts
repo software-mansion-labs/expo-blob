@@ -100,7 +100,6 @@ export const expoStart: Command = async (argv) => {
   }
 
   if (options.generateProjectLocalModuleMirrors) {
-    console.log('Here we can generate the mirrors');
     await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);
     return;
   }
