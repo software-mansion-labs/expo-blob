@@ -3759,7 +3759,7 @@
     invariant "^2.2.4"
     nullthrows "^1.1.1"
 
-"@react-navigation/bottom-tabs@7.4.6", "@react-navigation/bottom-tabs@^7.3.10", "@react-navigation/bottom-tabs@^7.4.0":
+"@react-navigation/bottom-tabs@7.4.6", "@react-navigation/bottom-tabs@^7.4.0":
   version "7.4.6"
   resolved "https://registry.yarnpkg.com/@react-navigation/bottom-tabs/-/bottom-tabs-7.4.6.tgz#a7c7b4347d9349babc1d481fc59f814dbe7d7222"
   integrity sha512-f4khxwcL70O5aKfZFbxyBo5RnzPFnBNSXmrrT7q9CRmvN4mHov9KFKGQ3H4xD5sLonsTBtyjvyvPfyEC4G7f+g==

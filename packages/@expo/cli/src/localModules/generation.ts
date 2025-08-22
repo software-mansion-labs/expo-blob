@@ -117,10 +117,13 @@ function updateXCodeProject(projectRoot: string) {
       return false;
     }
     for (const key of Object.keys(objects.PBXFileSystemSynchronizedRootGroup)) {
-      if (!key.endsWith('_comment')) {
+      if (key.endsWith('_comment')) {
         continue;
       }
-      if (dir === objects.PBXFileSystemSynchronizedRootGroup[key]) {
+      if (
+        path.relative('./', path.resolve('../', dir)) ===
+        objects.PBXFileSystemSynchronizedRootGroup[key].path
+      ) {
         return true;
       }
     }
