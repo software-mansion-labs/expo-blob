@@ -220,13 +220,39 @@ function addNewFileToXCodeProject(projectRoot: string, absoluteFilePath: string)
   // const buildFileUUID = pbxProject.generateUuid();
   const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
   const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-  // const fileName = path.basename(absoluteFilePath);
+  const fileName = path.basename(absoluteFilePath);
   // const fileRelativeToIos = path.relative(iosPath, absoluteFilePath);
 
-  // const objects = pbxProject.hash.project.objects;
+  const objects = pbxProject.hash.project.objects;
 
   // pbxProject.addToPbxFileReferenceSection(fileName);
   // pbxProject.addFile(absoluteFilePath, mainGroupUUID);
+
+  // now this works if we're only dealign with source files not with groups
+  // and we're not cleaning up any added files that may have been removed when the watcher was offline
+
+  // pbxProject.addPbxGroup();
+  // const groupUUID = pbxProject.pbxCreateGroup('testGroup', 'testGroup');
+  // const group1UUID = pbxProject.pbxCreateGroup('testGroup1', 'testGroup/testGroup1');
+
+  // pbxProject.addToPbxGroup(
+  //   {
+  //     isa: 'PBXGroup',
+  //     children: [],
+  //     name: 'testGroup',
+  //     path: 'testGroup',
+  //     sourceTree: '"<group>"',
+  //   },
+  //   mainGroupUUID
+  // );
+
+  pbxProject.removeSourceFile(
+    absoluteFilePath,
+    {
+      target: mainTargetUUID,
+    },
+    mainGroupUUID
+  );
 
   pbxProject.addSourceFile(
     absoluteFilePath,
@@ -235,6 +261,16 @@ function addNewFileToXCodeProject(projectRoot: string, absoluteFilePath: string)
     },
     mainGroupUUID
   );
+
+  const newGroupUUID = pbxProject.addPbxGroup(
+    [absoluteFilePath],
+    'testGroup' + fileName,
+    'testGroup' + fileName
+  );
+  objects.PBXGroup[mainGroupUUID].children.push({
+    value: newGroupUUID,
+    comment: fileName,
+  });
 
   // pbxProject.removeSourceFile(
   //   absoluteFilePath,
