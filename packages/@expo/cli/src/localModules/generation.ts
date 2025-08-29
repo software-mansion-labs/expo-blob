@@ -75,9 +75,17 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
   console.log(moduleName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
-  const typesFilePath = path.resolve(
+  const moduleTypesFilePath = path.resolve(
     localModulesPath,
     trimExtension(filePathRelativeToRoot) + '.nativeModule.d.ts'
+  );
+  const viewTypesFilePath = path.resolve(
+    localModulesPath,
+    trimExtension(filePathRelativeToRoot) + '.nativeView.d.ts'
+  );
+  const viewExportPath = path.resolve(
+    localModulesPath,
+    trimExtension(filePathRelativeToRoot) + '.native.view.js'
   );
   const moduleExportPath = path.resolve(
     localModulesPath,
@@ -86,7 +94,9 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
   const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
   const iosFilePath = path.resolve(iosLocalModulesPath, filePathRelativeToRoot);
   return {
-    typesFilePath,
+    moduleTypesFilePath,
+    viewTypesFilePath,
+    viewExportPath,
     moduleExportPath,
     moduleName,
     androidPath,
@@ -180,8 +190,15 @@ function swiftFileWatched(projectRoot: string, file: string): boolean {
 }
 
 function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
-  const { typesFilePath, moduleExportPath, moduleName, androidPath, iosFilePath } =
-    typesAndLocalModulePaths(projectRoot, absoluteFilePath);
+  const {
+    moduleTypesFilePath,
+    viewTypesFilePath,
+    viewExportPath,
+    moduleExportPath,
+    moduleName,
+    androidPath,
+    iosFilePath,
+  } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
@@ -204,7 +221,14 @@ function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?
   }
 
   fs.mkdirSync(path.dirname(moduleExportPath), { recursive: true });
-  fs.mkdirSync(path.dirname(typesFilePath), { recursive: true });
+  fs.mkdirSync(path.dirname(moduleTypesFilePath), { recursive: true });
+
+  fs.writeFileSync(
+    viewExportPath,
+    `import { requireNativeView } from 'expo';
+import * as React from 'react';
+export default requireNativeView("${moduleName}");`
+  );
 
   fs.writeFileSync(
     moduleExportPath,
@@ -212,9 +236,11 @@ function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?
 import * as React from 'react';
 export default requireNativeModule("${moduleName}");`
   );
+
   // fs.writeFile(newTypesFilePath, `declare module "*/${justFileName}" {}`);
-  fs.writeFileSync(typesFilePath, 'const _default: any\nexport default _default');
-  console.log('asynchronously added file', typesFilePath, 'with module name', moduleName);
+  fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
+  fs.writeFileSync(viewTypesFilePath, 'const _default: any\nexport default _default');
+  console.log('asynchronously added file', moduleTypesFilePath, 'with module name', moduleName);
 }
 
 export async function generateMirrorDirectoriesAndUpdateXCodeProject(
@@ -314,10 +340,8 @@ export async function startModuleGenerationAsync({
   };
 
   const onRemoveAppFile = (absoluteFilePath: string) => {
-    const { typesFilePath, moduleExportPath, androidPath, iosFilePath } = typesAndLocalModulePaths(
-      projectRoot,
-      absoluteFilePath
-    );
+    const { moduleTypesFilePath, moduleExportPath, androidPath, iosFilePath } =
+      typesAndLocalModulePaths(projectRoot, absoluteFilePath);
     if (absoluteFilePath.endsWith('.kt')) {
       removeFileAndEmptyDirectories(androidPath);
     } else if (
@@ -330,7 +354,7 @@ export async function startModuleGenerationAsync({
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
       console.log('file is not watched under different extension');
-      removeFileAndEmptyDirectories(typesFilePath);
+      removeFileAndEmptyDirectories(moduleTypesFilePath);
       removeFileAndEmptyDirectories(moduleExportPath);
     }
   };

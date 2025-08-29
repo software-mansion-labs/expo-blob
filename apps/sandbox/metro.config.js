@@ -17,7 +17,23 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const modulePath = path.resolve(
       localModulesPath,
       relativePathToOriginModule,
-      moduleName.substring(0, moduleName.lastIndexOf('.nativeModule')) + '.js'
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.js'
+    );
+
+    return {
+      filePath: modulePath,
+      type: 'sourceFile',
+    };
+  } else if (moduleName.endsWith('.nativeView')) {
+    const relativePathToOriginModule = path.relative(
+      __dirname,
+      path.dirname(context.originModulePath)
+    );
+
+    const modulePath = path.resolve(
+      localModulesPath,
+      relativePathToOriginModule,
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.native.view.js'
     );
 
     return {

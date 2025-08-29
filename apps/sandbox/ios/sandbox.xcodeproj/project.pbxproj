@@ -43,8 +43,29 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8CE8CEC10DED41F2A5A4FA7A /* src */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (5E5ADA942D7CD62A001D415C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); name = src; path = ../src; sourceTree = SOURCE_ROOT; };
-		A9521F1CB36E4A2EBC1830B1 /* app */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = app; path = ../app; sourceTree = SOURCE_ROOT; };
+		8CE8CEC10DED41F2A5A4FA7A /* src */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5E5ADA942D7CD62A001D415C /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			name = src;
+			path = ../src;
+			sourceTree = SOURCE_ROOT;
+		};
+		A9521F1CB36E4A2EBC1830B1 /* app */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			name = app;
+			path = ../app;
+			sourceTree = SOURCE_ROOT;
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
