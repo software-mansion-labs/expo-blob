@@ -108,7 +108,7 @@ export async function findModulesAsync({
     ? [autolinkingOptions.nativeModulesDir, ...autolinkingOptions.searchPaths]
     : autolinkingOptions.searchPaths;
 
-  console.log('GREPME');
+  // console.log('GREPME');
   const searchPaths = [...(await localModulesSearchPaths(appRoot)), ...originalSearchPaths];
   fs.writeFileSync(
     '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',

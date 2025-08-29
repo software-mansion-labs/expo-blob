@@ -161,7 +161,9 @@ async function generatePackageListFileContentAsync(
     modules.filter((module) => module.packageName !== 'expo')
   );
 
-  const modulesClasses = await findAndroidModules(modules);
+  const modulesClasses = await findAndroidModules(modules)
+    // .concat(['expo.modules.src.Abcdefghujk']);
+
 
   return `package ${namespace};
 
@@ -170,6 +172,7 @@ import java.util.List;
 import expo.modules.core.interfaces.Package;
 import expo.modules.kotlin.modules.Module;
 import expo.modules.kotlin.ModulesProvider;
+import android.util.Log;
 
 public class ExpoModulesPackageList implements ModulesProvider {
   private static class LazyHolder {
@@ -183,6 +186,8 @@ ${packagesClasses.map((packageClass) => `      new ${packageClass}()`).join(',\n
   }
 
   public static List<Package> getPackageList() {
+    // for (Package pack: Package.getPackages()) { Log.d("PAC", "package " + pack.toString());}
+    
     return LazyHolder.packagesList;
   }
 

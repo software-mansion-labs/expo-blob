@@ -262,6 +262,9 @@ function excludePathsGlobs(projectRoot: string): string[] {
     path.resolve(projectRoot, 'ios'),
     path.resolve(projectRoot, 'ios', './**'),
     path.resolve(projectRoot, 'ios', './**/*'),
+    path.resolve(projectRoot, 'modules'),
+    path.resolve(projectRoot, 'modules', './**'),
+    path.resolve(projectRoot, 'modules', './**/*'),
   ];
 }
 
