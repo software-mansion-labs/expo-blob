@@ -17,6 +17,20 @@ const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
 
 const indent = '  ';
 
+export type LocalModulesMirror = {
+  files: string[];
+  swiftModuleClassNames: string[];
+};
+
+const mirrorStateFileName = 'mirror.json';
+
+export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
+  const localModulesPath = path.resolve(projectRoot, './.expo/localModules/');
+  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+
+  return JSON.parse(fs.readFileSync(mirrorFilePath).toString()) as LocalModulesMirror;
+}
+
 async function findPodspecFiles(revision: PackageRevision): Promise<string[]> {
   const configPodspecPaths = revision.config?.applePodspecPaths();
   if (configPodspecPaths && configPodspecPaths.length) {
@@ -113,6 +127,8 @@ export async function generateModulesProviderAsync(
 // GREPME
 async function getLocalModulesClassNames(): Promise<string[]> {
   const appRoot = fs.realpathSync(process.cwd());
+  return getMirroStateObject(path.resolve(appRoot, '../')).swiftModuleClassNames;
+
   fs.writeFileSync(
     '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
     '!!! getLocalModulesclassnames :' + appRoot + '\n',

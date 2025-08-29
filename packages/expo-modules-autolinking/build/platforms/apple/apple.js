@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMirroStateObject = getMirroStateObject;
 exports.getSwiftModuleNames = getSwiftModuleNames;
 exports.resolveModuleAsync = resolveModuleAsync;
 exports.resolveExtraBuildDependenciesAsync = resolveExtraBuildDependenciesAsync;
@@ -16,6 +17,12 @@ const fileUtils_1 = require("../../fileUtils");
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
 const indent = '  ';
+const mirrorStateFileName = 'mirror.json';
+function getMirroStateObject(projectRoot) {
+    const localModulesPath = path_1.default.resolve(projectRoot, './.expo/localModules/');
+    const mirrorFilePath = path_1.default.resolve(localModulesPath, mirrorStateFileName);
+    return JSON.parse(fs_1.default.readFileSync(mirrorFilePath).toString());
+}
 async function findPodspecFiles(revision) {
     const configPodspecPaths = revision.config?.applePodspecPaths();
     if (configPodspecPaths && configPodspecPaths.length) {
@@ -86,6 +93,7 @@ async function generateModulesProviderAsync(modules, targetPath, entitlementPath
 // GREPME
 async function getLocalModulesClassNames() {
     const appRoot = fs_1.default.realpathSync(process.cwd());
+    return getMirroStateObject(path_1.default.resolve(appRoot, '../')).swiftModuleClassNames;
     fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! getLocalModulesclassnames :' + appRoot + '\n', { flag: 'a+' });
     const modulesPath = path_1.default.resolve(appRoot, 'localModules');
     if (!fs_1.default.existsSync(modulesPath)) {

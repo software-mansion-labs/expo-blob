@@ -177,11 +177,10 @@ function updateXCodeProject(projectRoot: string) {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
-function swiftFileWatched(projectRoot: string, file: string): boolean {
+function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolean {
   for (const dir of swiftWatchedDirectories) {
-    const dirPath = path.resolve(projectRoot, dir);
-    const dirPathAbsolute = fs.realpathSync(dirPath);
-    const filePathAbsolute = fs.realpathSync(file);
+    const realRoot = fs.realpathSync(projectRoot);
+    const dirPathAbsolute = path.resolve(realRoot, dir);
     if (filePathAbsolute.startsWith(dirPathAbsolute)) {
       return true;
     }
@@ -189,7 +188,37 @@ function swiftFileWatched(projectRoot: string, file: string): boolean {
   return false;
 }
 
-function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
+export type LocalModulesMirror = {
+  files: string[];
+  swiftModuleClassNames: string[];
+};
+
+const mirrorStateFileName = 'mirror.json';
+
+export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
+  const { localModulesPath } = mirrorDirectories(projectRoot);
+  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+
+  return JSON.parse(fs.readFileSync(mirrorFilePath).toString()) as LocalModulesMirror;
+}
+
+function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalModulesMirror) {
+  const { localModulesPath } = mirrorDirectories(projectRoot);
+  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+
+  console.log('saving the mirror object');
+  fs.writeFileSync(mirrorFilePath, JSON.stringify(localModulesMirror));
+}
+
+function addNewFile(
+  projectRoot: string,
+  absoluteFilePath: string,
+  mirrorStateObject: LocalModulesMirror = { files: [], swiftModuleClassNames: [] },
+  filesWatched?: Set<string>
+) {
+  // if (localModulesMirror === null) {
+  //   localModulesMirror = [];
+  // }
   const {
     moduleTypesFilePath,
     viewTypesFilePath,
@@ -199,6 +228,9 @@ function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?
     androidPath,
     iosFilePath,
   } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
+
+  mirrorStateObject.files.push(absoluteFilePath);
+
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
@@ -206,8 +238,11 @@ function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?
     absoluteFilePath.endsWith('.swift') &&
     swiftFileWatched(projectRoot, absoluteFilePath)
   ) {
-    fs.mkdirSync(path.dirname(iosFilePath), { recursive: true });
-    fs.symlinkSync(absoluteFilePath, iosFilePath);
+    // we no longer do that
+    // fs.mkdirSync(path.dirname(iosFilePath), { recursive: true });
+    // fs.symlinkSync(absoluteFilePath, iosFilePath);
+
+    mirrorStateObject.swiftModuleClassNames.push(moduleName);
   }
 
   if (filesWatched) {
@@ -247,8 +282,10 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
   projectRoot: string,
   filesWatched?: Set<string>
 ) {
+  console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
+  const mirrorStateObject: LocalModulesMirror = { files: [], swiftModuleClassNames: [] };
   const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
@@ -260,7 +297,7 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       if (dirent.isFile() && /\.(kt|swift)$/.test(dirent.name)) {
-        addNewFile(projectRoot, absoluteDirentPath, filesWatched);
+        addNewFile(projectRoot, absoluteDirentPath, mirrorStateObject, filesWatched);
       } else if (dirent.isDirectory()) {
         generateExportsAndTypesForDirectory(absoluteDirentPath);
       }
@@ -268,6 +305,7 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
   };
   await generateExportsAndTypesForDirectory(projectRoot);
   updateXCodeProject(projectRoot);
+  saveMirrorStateObject(projectRoot, mirrorStateObject);
 }
 
 function excludePathsGlobs(projectRoot: string): string[] {
@@ -391,7 +429,7 @@ export async function startModuleGenerationAsync({
         ) {
           const { filePath } = event;
           if (event.type === 'add') {
-            addNewFile(projectRoot, filePath, filesWatched);
+            addNewFile(projectRoot, filePath, undefined, filesWatched);
             console.log('add' + event.filePath);
           } else if (event.type === 'delete') {
             console.log('delete ' + event.filePath);
