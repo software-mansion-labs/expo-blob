@@ -32,22 +32,9 @@
 		F11748442D0722820044C1D9 /* sandbox-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "sandbox-Bridging-Header.h"; path = "sandbox/sandbox-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		5E5ADA942D7CD62A001D415C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"**.swift",
-			);
-			target = 13B07F861A680F5B00A75B9A /* sandbox */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8CE8CEC10DED41F2A5A4FA7A /* src */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				5E5ADA942D7CD62A001D415C /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
 			explicitFileTypes = {
 			};
 			explicitFolders = (

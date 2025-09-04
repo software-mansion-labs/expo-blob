@@ -2,6 +2,7 @@ import type { ExtraDependencies, ModuleDescriptorIos, ModuleIosPodspecInfo, Pack
 export type LocalModulesMirror = {
     files: string[];
     swiftModuleClassNames: string[];
+    kotlinClasses: string[];
 };
 export declare function getMirroStateObject(projectRoot: string): LocalModulesMirror;
 export declare function getSwiftModuleNames(pods: ModuleIosPodspecInfo[], swiftModuleNames: string[] | undefined): string[];

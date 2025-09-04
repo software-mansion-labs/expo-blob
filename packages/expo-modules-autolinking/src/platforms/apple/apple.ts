@@ -20,6 +20,7 @@ const indent = '  ';
 export type LocalModulesMirror = {
   files: string[];
   swiftModuleClassNames: string[];
+  kotlinClasses: string[];
 };
 
 const mirrorStateFileName = 'mirror.json';

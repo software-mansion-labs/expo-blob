@@ -1,4 +1,4 @@
-import commander from 'commander';
+import commander, { command } from 'commander';
 
 import {
   AutolinkingCommonArguments,
@@ -10,6 +10,7 @@ import { generatePackageListAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
 import type { ModuleDescriptor } from '../types';
 import fs from 'fs';
+import { generateSymlinksInDirectory } from '../localModules/androidLocalModules';
 
 interface GeneratePackageListArguments extends AutolinkingCommonArguments {
   target: string;
@@ -22,11 +23,6 @@ interface GeneratePackageListArguments extends AutolinkingCommonArguments {
  * This command is deprecated for apple platforms, use `generate-modules-provider` instead.
  */
 export function generatePackageListCommand(cli: commander.CommanderStatic) {
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! generate something\n',
-    { flag: 'a+' }
-  );
   return registerAutolinkingArguments(cli.command('generate-package-list [searchPaths...]'))
     .option(
       '-t, --target <path>',
@@ -53,11 +49,6 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
         if (!commandArguments.empty) {
           const autolinkingOptions = await autolinkingOptionsLoader.getPlatformOptions(platform);
 
-          fs.writeFileSync(
-            '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-            '!!! inside if\n',
-            { flag: 'a+' }
-          );
           const expoModulesSearchResults = await findModulesAsync({
             autolinkingOptions: await autolinkingOptionsLoader.getPlatformOptions(platform),
             appRoot: await autolinkingOptionsLoader.getAppRoot(),
@@ -74,6 +65,12 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           targetPath: commandArguments.target,
           namespace: commandArguments.namespace,
         });
+
+        generateSymlinksInDirectory(
+          commandArguments.target,
+          await autolinkingOptionsLoader.getAppRoot()
+        );
+        // Maybe here I can add symlinks to local modules under the same target
       }
     );
 }

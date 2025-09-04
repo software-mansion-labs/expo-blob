@@ -15,6 +15,7 @@ exports.searchGradlePropertyFirst = searchGradlePropertyFirst;
 const fs_1 = __importDefault(require("fs"));
 const glob_1 = require("glob");
 const path_1 = __importDefault(require("path"));
+const androidLocalModules_1 = require("../../localModules/androidLocalModules");
 const ANDROID_PROPERTIES_FILE = 'gradle.properties';
 const ANDROID_EXTRA_BUILD_DEPS_KEY = 'android.extraMavenRepos';
 function getConfiguration(options) {
@@ -123,8 +124,10 @@ async function resolveGradlePropertyAsync(projectNativeRoot, propertyKey) {
 async function generatePackageListFileContentAsync(modules, namespace) {
     // TODO: Instead of ignoring `expo` here, make the package class paths configurable from `expo-module.config.json`.
     const packagesClasses = await findAndroidPackagesAsync(modules.filter((module) => module.packageName !== 'expo'));
-    const modulesClasses = await findAndroidModules(modules);
-    // .concat(['expo.modules.src.Abcdefghujk']);
+    const modulesClasses = await findAndroidModules(modules)
+        .concat((0, androidLocalModules_1.getAndroidLocalModulesClasses)(path_1.default.resolve(fs_1.default.realpathSync(process.cwd()), '../')));
+    // .concat(['local.modules.test'])
+    // .concat(['local.modules.abcdefghujk']);
     return `package ${namespace};
 
 import java.util.Arrays;
@@ -145,9 +148,7 @@ ${packagesClasses.map((packageClass) => `      new ${packageClass}()`).join(',\n
     );
   }
 
-  public static List<Package> getPackageList() {
-    // for (Package pack: Package.getPackages()) { Log.d("PAC", "package " + pack.toString());}
-    
+  public static List<Package> getPackageList() {    
     return LazyHolder.packagesList;
   }
 

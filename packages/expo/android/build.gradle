@@ -55,6 +55,7 @@ android {
       main {
         java {
           srcDirs += new File(project.buildDir, generatedFilesSrcDir)
+          srcDirs += new File(project.buildDir, )
         }
       }
     }

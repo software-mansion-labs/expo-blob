@@ -191,6 +191,7 @@ function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolea
 export type LocalModulesMirror = {
   files: string[];
   swiftModuleClassNames: string[];
+  kotlinClasses: string[];
 };
 
 const mirrorStateFileName = 'mirror.json';
@@ -213,7 +214,11 @@ function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalMod
 function addNewFile(
   projectRoot: string,
   absoluteFilePath: string,
-  mirrorStateObject: LocalModulesMirror = { files: [], swiftModuleClassNames: [] },
+  mirrorStateObject: LocalModulesMirror = {
+    files: [],
+    swiftModuleClassNames: [],
+    kotlinClasses: [],
+  },
   filesWatched?: Set<string>
 ) {
   // if (localModulesMirror === null) {
@@ -234,6 +239,7 @@ function addNewFile(
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
+    mirrorStateObject.kotlinClasses.push('local.modules.' + moduleName);
   } else if (
     absoluteFilePath.endsWith('.swift') &&
     swiftFileWatched(projectRoot, absoluteFilePath)
@@ -285,7 +291,11 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
   console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
-  const mirrorStateObject: LocalModulesMirror = { files: [], swiftModuleClassNames: [] };
+  const mirrorStateObject: LocalModulesMirror = {
+    files: [],
+    swiftModuleClassNames: [],
+    kotlinClasses: [],
+  };
   const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
@@ -386,7 +396,8 @@ export async function startModuleGenerationAsync({
       absoluteFilePath.endsWith('.swift') &&
       swiftFileWatched(projectRoot, absoluteFilePath)
     ) {
-      removeFileAndEmptyDirectories(iosFilePath);
+      // we don't do that anymore
+      // removeFileAndEmptyDirectories(iosFilePath);
     }
 
     filesWatched.delete(absoluteFilePath);

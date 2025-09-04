@@ -4,6 +4,7 @@ import path from 'path';
 
 import { AutolinkingOptions } from '../../commands/autolinkingOptions';
 import type { ExtraDependencies, ModuleDescriptorAndroid, PackageRevision } from '../../types';
+import { getAndroidLocalModulesClasses } from '../../localModules/androidLocalModules'
 
 const ANDROID_PROPERTIES_FILE = 'gradle.properties';
 const ANDROID_EXTRA_BUILD_DEPS_KEY = 'android.extraMavenRepos';
@@ -162,8 +163,9 @@ async function generatePackageListFileContentAsync(
   );
 
   const modulesClasses = await findAndroidModules(modules)
-    // .concat(['expo.modules.src.Abcdefghujk']);
-
+  .concat(getAndroidLocalModulesClasses(path.resolve(fs.realpathSync(process.cwd()), '../')));
+  // .concat(['local.modules.test'])
+  // .concat(['local.modules.abcdefghujk']);
 
   return `package ${namespace};
 
@@ -185,9 +187,7 @@ ${packagesClasses.map((packageClass) => `      new ${packageClass}()`).join(',\n
     );
   }
 
-  public static List<Package> getPackageList() {
-    // for (Package pack: Package.getPackages()) { Log.d("PAC", "package " + pack.toString());}
-    
+  public static List<Package> getPackageList() {    
     return LazyHolder.packagesList;
   }
 
