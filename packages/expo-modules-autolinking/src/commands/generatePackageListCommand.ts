@@ -59,7 +59,6 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           );
         }
 
-        console.log('!!!generate package list ascyn GREPME');
         await generatePackageListAsync(expoModulesResolveResults, {
           platform,
           targetPath: commandArguments.target,
@@ -70,7 +69,6 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           commandArguments.target,
           await autolinkingOptionsLoader.getAppRoot()
         );
-        // Maybe here I can add symlinks to local modules under the same target
       }
     );
 }

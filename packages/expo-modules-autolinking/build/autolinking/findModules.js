@@ -10,9 +10,7 @@ const dependencies_1 = require("../dependencies");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 async function resolveExpoModule(resolution, platform, excludeNames) {
-    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! resolve expo module ' + JSON.stringify(resolution) + '\n', { flag: 'a+' });
     if (excludeNames.has(resolution.name)) {
-        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', "!!! excluded :'( \n", { flag: 'a+' });
         return null;
     }
     const expoModuleConfig = await (0, ExpoModuleConfig_1.discoverExpoModuleConfigAsync)(resolution.path);
@@ -30,19 +28,16 @@ async function resolveExpoModule(resolution, platform, excludeNames) {
         };
     }
     else {
-        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! resolution RIP ' + JSON.stringify(resolution) + ' \n', { flag: 'a+' });
         return null;
     }
 }
 async function localModulesSearchPaths(appRoot) {
-    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! search local Modules search paths :' + appRoot + '\n', { flag: 'a+' });
     const modulesPath = path_1.default.resolve(appRoot, 'ios/localModules');
     if (!fs_1.default.existsSync(modulesPath)) {
         return [];
     }
     const res = [];
     const recursivelyScanDirectories = async (dirPath) => {
-        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! recursive: ' + dirPath + '\n', { flag: 'a+' });
         res.push(dirPath);
         const dir = fs_1.default.opendirSync(dirPath);
         for await (const dirent of dir) {
@@ -63,9 +58,7 @@ async function findModulesAsync({ appRoot, autolinkingOptions, }) {
     const originalSearchPaths = autolinkingOptions.nativeModulesDir
         ? [autolinkingOptions.nativeModulesDir, ...autolinkingOptions.searchPaths]
         : autolinkingOptions.searchPaths;
-    // console.log('GREPME');
     const searchPaths = [...(await localModulesSearchPaths(appRoot)), ...originalSearchPaths];
-    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! search paths:' + searchPaths + '\n', { flag: 'a+' });
     return (0, dependencies_1.filterMapResolutionResult)((0, dependencies_1.mergeResolutionResults)(await Promise.all([
         ...searchPaths.map((searchPath) => (0, dependencies_1.scanDependenciesInSearchPath)(searchPath)),
         (0, dependencies_1.scanDependenciesRecursively)(appRoot),

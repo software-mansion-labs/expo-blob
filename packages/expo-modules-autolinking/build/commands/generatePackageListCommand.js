@@ -30,14 +30,12 @@ function generatePackageListCommand(cli) {
             });
             expoModulesResolveResults = await (0, resolveModules_1.resolveModulesAsync)(expoModulesSearchResults, autolinkingOptions);
         }
-        console.log('!!!generate package list ascyn GREPME');
         await (0, generatePackageList_1.generatePackageListAsync)(expoModulesResolveResults, {
             platform,
             targetPath: commandArguments.target,
             namespace: commandArguments.namespace,
         });
         (0, androidLocalModules_1.generateSymlinksInDirectory)(commandArguments.target, await autolinkingOptionsLoader.getAppRoot());
-        // Maybe here I can add symlinks to local modules under the same target
     });
 }
 //# sourceMappingURL=generatePackageListCommand.js.map

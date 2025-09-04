@@ -72,7 +72,6 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
   const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
   const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
   const moduleName = trimExtension(justFileName);
-  console.log(moduleName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
   const moduleTypesFilePath = path.resolve(

@@ -51,9 +51,6 @@ export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
           includeModules.has(module.packageName)
         );
 
-        // GREPME
-        // const localModules: ModuleDescriptor[] = [];
-
         await generateModulesProviderAsync(filteredModules, {
           platform,
           targetPath: commandArguments.target,

@@ -175,7 +175,6 @@ export async function prebuildAsync(
     debug('Skipped pod install');
   }
 
-  // GREPME here generation
   const shouldGenerateLocalModules = true;
   if (shouldGenerateLocalModules) {
     await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);

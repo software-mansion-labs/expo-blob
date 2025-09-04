@@ -12,17 +12,7 @@ async function resolveDependency(
   dependencyName: string,
   shouldIncludeDependency: (dependencyName: string) => boolean
 ): Promise<DependencyResolution | null> {
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! resolve dependecny \n',
-    { flag: 'a+' }
-  );
   if (!shouldIncludeDependency(dependencyName)) {
-    fs.writeFileSync(
-      '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-      '!!! NO Should Include Dependency\n',
-      { flag: 'a+' }
-    );
     return null;
   }
   const originPath = fastJoin(basePath, dependencyName);
@@ -49,9 +39,6 @@ async function resolveDependency(
       depth: 0,
     };
   } else {
-    fs.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! NO else\n', {
-      flag: 'a+',
-    });
     return null;
   }
 }
@@ -64,11 +51,6 @@ export async function scanDependenciesInSearchPath(
   rawPath: string,
   { shouldIncludeDependency = defaultShouldIncludeDependency }: ResolutionOptions = {}
 ): Promise<ResolutionResult> {
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! scan dependencies in path: ' + rawPath + '\n',
-    { flag: 'a+' }
-  );
   const rootPath = await maybeRealpath(rawPath);
   const searchResults: ResolutionResult = Object.create(null);
   if (!rootPath) {
@@ -80,18 +62,7 @@ export async function scanDependenciesInSearchPath(
 
   await Promise.all(
     dirents.map(async (entry) => {
-      fs.writeFileSync(
-        '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-        '!!! inside map ' + JSON.stringify(entry) + '\n',
-        { flag: 'a+' }
-      );
-
       if (entry.isSymbolicLink()) {
-        fs.writeFileSync(
-          '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-          '!!! is symlink ' + JSON.stringify(entry) + '\n',
-          { flag: 'a+' }
-        );
         const resolution = await resolveDependency(rootPath, entry.name, shouldIncludeDependency);
         if (resolution) resolvedDependencies.push(resolution);
       } else if (entry.isDirectory()) {
@@ -106,29 +77,12 @@ export async function scanDependenciesInSearchPath(
           const childEntries = await fs.promises.readdir(entryPath, { withFileTypes: true });
           await Promise.all(
             childEntries.map(async (child) => {
-              fs.writeFileSync(
-                '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-                '!!! map \n',
-                { flag: 'a+' }
-              );
-
               const dependencyName = `${entry.name}/${child.name}`;
               if (child.isDirectory() || child.isSymbolicLink()) {
-                fs.writeFileSync(
-                  '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-                  '!!! dir or symlink \n',
-                  { flag: 'a+' }
-                );
                 const resolution = await resolveDependency(
                   rootPath,
                   dependencyName,
                   shouldIncludeDependency
-                );
-
-                fs.writeFileSync(
-                  '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-                  '!!! resolution ' + JSON.stringify(resolution) + '\n',
-                  { flag: 'a+' }
                 );
 
                 if (resolution) resolvedDependencies.push(resolution);
@@ -136,19 +90,7 @@ export async function scanDependenciesInSearchPath(
             })
           );
         } else {
-          fs.writeFileSync(
-            '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-            '!!! other else \n',
-            { flag: 'a+' }
-          );
           const resolution = await resolveDependency(rootPath, entry.name, shouldIncludeDependency);
-
-          fs.writeFileSync(
-            '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-            '!!! resolution ' + JSON.stringify(resolution) + '\n',
-            { flag: 'a+' }
-          );
-
           if (resolution) resolvedDependencies.push(resolution);
         }
       }
@@ -169,18 +111,6 @@ export async function scanDependenciesInSearchPath(
       searchResults[resolution.name] = resolution;
     }
   }
-
-  fs.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! \n', {
-    flag: 'a+',
-  });
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! searchResults ' + JSON.stringify(searchResults) + '\n',
-    { flag: 'a+' }
-  );
-  fs.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! \n', {
-    flag: 'a+',
-  });
 
   return searchResults;
 }
