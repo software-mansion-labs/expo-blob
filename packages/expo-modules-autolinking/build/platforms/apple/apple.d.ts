@@ -1,10 +1,4 @@
 import type { ExtraDependencies, ModuleDescriptorIos, ModuleIosPodspecInfo, PackageRevision } from '../../types';
-export type LocalModulesMirror = {
-    files: string[];
-    swiftModuleClassNames: string[];
-    kotlinClasses: string[];
-};
-export declare function getMirroStateObject(projectRoot: string): LocalModulesMirror;
 export declare function getSwiftModuleNames(pods: ModuleIosPodspecInfo[], swiftModuleNames: string[] | undefined): string[];
 /** Resolves module search result with additional details required for iOS platform. */
 export declare function resolveModuleAsync(packageName: string, revision: PackageRevision, extraOutput: {

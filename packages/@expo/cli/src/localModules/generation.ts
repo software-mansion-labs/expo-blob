@@ -1,9 +1,9 @@
 import { getConfig } from '@expo/config';
+import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import Server from '@expo/metro/metro/Server';
 import type MetroServer from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
-import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
@@ -91,7 +91,6 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
     trimExtension(filePathRelativeToRoot) + '.js'
   );
   const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
-  const iosFilePath = path.resolve(iosLocalModulesPath, filePathRelativeToRoot);
   return {
     moduleTypesFilePath,
     viewTypesFilePath,
@@ -99,7 +98,6 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
     moduleExportPath,
     moduleName,
     androidPath,
-    iosFilePath,
   };
 }
 
@@ -156,7 +154,7 @@ function updateXCodeProject(projectRoot: string) {
     if (!objects.PBXFileSystemSynchronizedRootGroup) {
       objects.PBXFileSystemSynchronizedRootGroup = {};
     }
-    objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
+
     objects.PBXFileSystemSynchronizedRootGroup[newUUID] = {
       isa: 'PBXFileSystemSynchronizedRootGroup',
       explicitFileTypes: {},
@@ -165,6 +163,9 @@ function updateXCodeProject(projectRoot: string) {
       path: path.relative('./', path.resolve('../', dir)),
       sourceTree: 'SOURCE_ROOT',
     };
+
+    //@ts-ignore
+    objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
 
     const nativeTargetGroup = objects.PBXNativeTarget[mainTargetUUID];
     if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
@@ -230,7 +231,6 @@ function addNewFile(
     moduleExportPath,
     moduleName,
     androidPath,
-    iosFilePath,
   } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
 
   mirrorStateObject.files.push(absoluteFilePath);
@@ -387,8 +387,10 @@ export async function startModuleGenerationAsync({
   };
 
   const onRemoveAppFile = (absoluteFilePath: string) => {
-    const { moduleTypesFilePath, moduleExportPath, androidPath, iosFilePath } =
-      typesAndLocalModulePaths(projectRoot, absoluteFilePath);
+    const { moduleTypesFilePath, moduleExportPath, androidPath } = typesAndLocalModulePaths(
+      projectRoot,
+      absoluteFilePath
+    );
     if (absoluteFilePath.endsWith('.kt')) {
       removeFileAndEmptyDirectories(androidPath);
     } else if (

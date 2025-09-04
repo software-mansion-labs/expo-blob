@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMirroStateObject = getMirroStateObject;
 exports.getSwiftModuleNames = getSwiftModuleNames;
 exports.resolveModuleAsync = resolveModuleAsync;
 exports.resolveExtraBuildDependenciesAsync = resolveExtraBuildDependenciesAsync;
@@ -14,15 +13,10 @@ const fs_1 = __importDefault(require("fs"));
 const glob_1 = require("glob");
 const path_1 = __importDefault(require("path"));
 const fileUtils_1 = require("../../fileUtils");
+const localModules_1 = require("../../localModules/localModules");
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
 const indent = '  ';
-const mirrorStateFileName = 'mirror.json';
-function getMirroStateObject(projectRoot) {
-    const localModulesPath = path_1.default.resolve(projectRoot, './.expo/localModules/');
-    const mirrorFilePath = path_1.default.resolve(localModulesPath, mirrorStateFileName);
-    return JSON.parse(fs_1.default.readFileSync(mirrorFilePath).toString());
-}
 async function findPodspecFiles(revision) {
     const configPodspecPaths = revision.config?.applePodspecPaths();
     if (configPodspecPaths && configPodspecPaths.length) {
@@ -91,27 +85,8 @@ async function generateModulesProviderAsync(modules, targetPath, entitlementPath
     await fs_1.default.promises.writeFile(targetPath, generatedFileContent, 'utf8');
 }
 async function getLocalModulesClassNames() {
-    const appRoot = fs_1.default.realpathSync(process.cwd());
-    return getMirroStateObject(path_1.default.resolve(appRoot, '../')).swiftModuleClassNames;
-    const modulesPath = path_1.default.resolve(appRoot, 'localModules');
-    if (!fs_1.default.existsSync(modulesPath)) {
-        return [];
-    }
-    const res = [];
-    const recursivelyScanDirectories = async (dirPath) => {
-        const dir = fs_1.default.opendirSync(dirPath);
-        for await (const dirent of dir) {
-            if ((dirent.isSymbolicLink() || dirent.isFile()) && dirent.name.endsWith('.swift')) {
-                res.push(dirent.name.substring(0, dirent.name.length - '.swift'.length));
-            }
-            if (dirent.isDirectory()) {
-                const childPath = path_1.default.resolve(modulesPath, dirent.name);
-                await recursivelyScanDirectories(childPath);
-            }
-        }
-    };
-    await recursivelyScanDirectories(modulesPath);
-    return res;
+    const appRoot = path_1.default.resolve(fs_1.default.realpathSync(process.cwd()), '../');
+    return (0, localModules_1.getMirroStateObject)(appRoot).swiftModuleClassNames;
 }
 /**
  * Generates the string to put into the generated package list.

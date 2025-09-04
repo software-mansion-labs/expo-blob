@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { LocalModulesMirror } from '../platforms/apple/apple';
+import { LocalModulesMirror } from './localModules';
 
 export function generateSymlinksInDirectory(targetPath: string, appRoot: string) {
   const mirrorJsonPath = path.resolve(appRoot, '.expo/localModules/mirror.json');

@@ -3,8 +3,8 @@ import { glob } from 'glob';
 import path from 'path';
 
 import { AutolinkingOptions } from '../../commands/autolinkingOptions';
-import type { ExtraDependencies, ModuleDescriptorAndroid, PackageRevision } from '../../types';
 import { getAndroidLocalModulesClasses } from '../../localModules/androidLocalModules'
+import type { ExtraDependencies, ModuleDescriptorAndroid, PackageRevision } from '../../types';
 
 const ANDROID_PROPERTIES_FILE = 'gradle.properties';
 const ANDROID_EXTRA_BUILD_DEPS_KEY = 'android.extraMavenRepos';
