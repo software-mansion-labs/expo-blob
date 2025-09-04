@@ -35,7 +35,7 @@ function generatePackageListCommand(cli) {
             targetPath: commandArguments.target,
             namespace: commandArguments.namespace,
         });
-        (0, androidLocalModules_1.generateSymlinksInDirectory)(commandArguments.target, await autolinkingOptionsLoader.getAppRoot());
+        await (0, androidLocalModules_1.generateSymlinksInDirectory)(commandArguments.target);
     });
 }
 //# sourceMappingURL=generatePackageListCommand.js.map

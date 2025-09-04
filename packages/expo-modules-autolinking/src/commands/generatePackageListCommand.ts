@@ -65,10 +65,7 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           namespace: commandArguments.namespace,
         });
 
-        generateSymlinksInDirectory(
-          commandArguments.target,
-          await autolinkingOptionsLoader.getAppRoot()
-        );
+        await generateSymlinksInDirectory(commandArguments.target);
       }
     );
 }

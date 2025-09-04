@@ -13,7 +13,7 @@ const fs_1 = __importDefault(require("fs"));
 const glob_1 = require("glob");
 const path_1 = __importDefault(require("path"));
 const fileUtils_1 = require("../../fileUtils");
-const localModules_1 = require("../../localModules/localModules");
+const iosLocalModules_1 = require("../../localModules/iosLocalModules");
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
 const indent = '  ';
@@ -84,10 +84,6 @@ async function generateModulesProviderAsync(modules, targetPath, entitlementPath
     await fs_1.default.promises.mkdir(parentPath, { recursive: true });
     await fs_1.default.promises.writeFile(targetPath, generatedFileContent, 'utf8');
 }
-async function getLocalModulesClassNames() {
-    const appRoot = path_1.default.resolve(fs_1.default.realpathSync(process.cwd()), '../');
-    return (0, localModules_1.getMirroStateObject)(appRoot).swiftModuleClassNames;
-}
 /**
  * Generates the string to put into the generated package list.
  */
@@ -106,7 +102,7 @@ async function generatePackageListFileContentAsync(modules, className, entitleme
     const modulesClassNames = []
         .concat(...modulesToImport.map((module) => module.modules))
         .filter(Boolean)
-        .concat(await getLocalModulesClassNames());
+        .concat(await (0, iosLocalModules_1.getLocalModulesClassNames)());
     const debugOnlyModulesClassNames = []
         .concat(...debugOnlyModules.map((module) => module.modules))
         .filter(Boolean);

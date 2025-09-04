@@ -4,7 +4,7 @@ import { glob } from 'glob';
 import path from 'path';
 
 import { fileExistsAsync } from '../../fileUtils';
-import { getMirroStateObject } from '../../localModules/localModules';
+import { getLocalModulesClassNames } from '../../localModules/iosLocalModules';
 import type {
   AppleCodeSignEntitlements,
   ExtraDependencies,
@@ -109,11 +109,6 @@ export async function generateModulesProviderAsync(
   const parentPath = path.dirname(targetPath);
   await fs.promises.mkdir(parentPath, { recursive: true });
   await fs.promises.writeFile(targetPath, generatedFileContent, 'utf8');
-}
-
-async function getLocalModulesClassNames(): Promise<string[]> {
-  const appRoot = path.resolve(fs.realpathSync(process.cwd()), '../');
-  return getMirroStateObject(appRoot).swiftModuleClassNames;
 }
 
 /**

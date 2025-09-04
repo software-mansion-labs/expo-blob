@@ -8,7 +8,6 @@ import {
 import { findModulesAsync } from '../autolinking/findModules';
 import { generateModulesProviderAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
-import { ModuleDescriptor } from '../types';
 
 interface GenerateModulesProviderArguments extends AutolinkingCommonArguments {
   target: string;

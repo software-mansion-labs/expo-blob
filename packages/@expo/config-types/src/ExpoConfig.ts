@@ -315,6 +315,10 @@ export interface ExpoConfig {
             };
           };
     };
+    /**
+     * Enable support for local modules in expo-modules-autolinking and expo-cli.
+     */
+    localModules?: boolean;
   };
   /**
    * Internal properties for developer tools

@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { LocalModulesMirror } from './localModules';
 
-export function generateSymlinksInDirectory(targetPath: string, appRoot: string) {
-  const mirrorJsonPath = path.resolve(appRoot, '.expo/localModules/mirror.json');
-  const mirrorJson = JSON.parse(fs.readFileSync(mirrorJsonPath).toString()) as LocalModulesMirror;
+import { getMirrorStateObject, LocalModulesMirror } from './localModules';
+
+export async function generateSymlinksInDirectory(targetPath: string) {
+  const mirrorJson = await getMirrorStateObject();
 
   for (const file of mirrorJson.files) {
     if (!file.endsWith('.kt')) {
@@ -17,9 +17,8 @@ export function generateSymlinksInDirectory(targetPath: string, appRoot: string)
   }
 }
 
-export function getAndroidLocalModulesClasses(appRoot: string) {
-  const mirrorJsonPath = path.resolve(appRoot, '.expo/localModules/mirror.json');
-  const mirrorJson = JSON.parse(fs.readFileSync(mirrorJsonPath).toString()) as LocalModulesMirror;
+export async function getAndroidLocalModulesClasses() {
+  const mirrorJson = await getMirrorStateObject();
 
   return mirrorJson.kotlinClasses;
 }

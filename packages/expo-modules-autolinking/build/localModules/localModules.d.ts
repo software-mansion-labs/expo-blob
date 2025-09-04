@@ -3,4 +3,5 @@ export type LocalModulesMirror = {
     swiftModuleClassNames: string[];
     kotlinClasses: string[];
 };
-export declare function getMirroStateObject(projectRoot: string): LocalModulesMirror;
+export declare function getAppRoot(): Promise<string>;
+export declare function getMirrorStateObject(): Promise<LocalModulesMirror>;

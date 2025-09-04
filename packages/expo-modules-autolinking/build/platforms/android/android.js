@@ -124,8 +124,7 @@ async function resolveGradlePropertyAsync(projectNativeRoot, propertyKey) {
 async function generatePackageListFileContentAsync(modules, namespace) {
     // TODO: Instead of ignoring `expo` here, make the package class paths configurable from `expo-module.config.json`.
     const packagesClasses = await findAndroidPackagesAsync(modules.filter((module) => module.packageName !== 'expo'));
-    const modulesClasses = await findAndroidModules(modules)
-        .concat((0, androidLocalModules_1.getAndroidLocalModulesClasses)(path_1.default.resolve(fs_1.default.realpathSync(process.cwd()), '../')));
+    const modulesClasses = await findAndroidModules(modules).concat(await (0, androidLocalModules_1.getAndroidLocalModulesClasses)());
     // .concat(['local.modules.test'])
     // .concat(['local.modules.abcdefghujk']);
     return `package ${namespace};

@@ -162,8 +162,9 @@ async function generatePackageListFileContentAsync(
     modules.filter((module) => module.packageName !== 'expo')
   );
 
-  const modulesClasses = await findAndroidModules(modules)
-  .concat(getAndroidLocalModulesClasses(path.resolve(fs.realpathSync(process.cwd()), '../')));
+  const modulesClasses = await findAndroidModules(modules).concat(
+    await getAndroidLocalModulesClasses()
+  );
   // .concat(['local.modules.test'])
   // .concat(['local.modules.abcdefghujk']);
 
