@@ -234,34 +234,60 @@ function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolea
   return false;
 }
 
-export type LocalModulesMirror = {
+export type LocalModulesMirrorSerialized = {
   files: string[];
   swiftModuleClassNames: string[];
   kotlinClasses: string[];
 };
 
-export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
-  const { localModulesPath } = mirrorDirectories(projectRoot);
-  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+export type LocalModulesMirror = {
+  files: Set<string>;
+  // swiftModuleClassNames: Set<string>;
+  // kotlinClasses: Set<string>;
+};
 
-  return JSON.parse(fs.readFileSync(mirrorFilePath).toString()) as LocalModulesMirror;
-}
+// export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
+//   const { localModulesPath } = mirrorDirectories(projectRoot);
+//   const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+
+//   const localModulesObjectSerialized = JSON.parse(
+//     fs.readFileSync(mirrorFilePath).toString()
+//   ) as LocalModulesMirrorSerialized;
+
+//   const localModulesObject: LocalModulesMirror = {
+//     files: new Set<string>(),
+//     kotlinClasses: new Set<string>(),
+//     swiftModuleClassNames: new Set<string>(),
+//   };
+
+//   return localModulesObject;
+// }
 
 function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalModulesMirror) {
   const { localModulesPath } = mirrorDirectories(projectRoot);
   const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
 
   console.log('saving the mirror object');
-  fs.writeFileSync(mirrorFilePath, JSON.stringify(localModulesMirror));
+
+  const filesArray = Array.from(localModulesMirror.files);
+  const localModulesMirrorSerialized: LocalModulesMirrorSerialized = {
+    files: filesArray,
+    kotlinClasses: filesArray
+      .filter((file) => file.endsWith('.kt'))
+      .map((file) => 'local.modules.' + path.basename(file).slice(0, -'.kt'.length).toString()),
+    swiftModuleClassNames: filesArray
+      .filter((file) => file.endsWith('.swift'))
+      .map((file) => path.basename(file).slice(0, -'.swift'.length).toString()),
+  };
+
+  fs.writeFileSync(mirrorFilePath, JSON.stringify(localModulesMirrorSerialized));
 }
 
 function addNewFile(
   projectRoot: string,
   absoluteFilePath: string,
   mirrorStateObject: LocalModulesMirror = {
-    files: [],
-    swiftModuleClassNames: [],
-    kotlinClasses: [],
+    files: new Set<string>(),
   },
   filesWatched?: Set<string>
 ) {
@@ -277,12 +303,12 @@ function addNewFile(
     androidPath,
   } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
 
-  mirrorStateObject.files.push(absoluteFilePath);
+  mirrorStateObject.files.add(absoluteFilePath);
 
   if (absoluteFilePath.endsWith('.kt')) {
     fs.mkdirSync(path.dirname(androidPath), { recursive: true });
     fs.symlinkSync(absoluteFilePath, androidPath);
-    mirrorStateObject.kotlinClasses.push('local.modules.' + moduleName);
+    // mirrorStateObject.kotlinClasses.push('local.modules.' + moduleName);
   } else if (
     absoluteFilePath.endsWith('.swift') &&
     swiftFileWatched(projectRoot, absoluteFilePath)
@@ -290,8 +316,7 @@ function addNewFile(
     // we no longer do that
     // fs.mkdirSync(path.dirname(iosFilePath), { recursive: true });
     // fs.symlinkSync(absoluteFilePath, iosFilePath);
-
-    mirrorStateObject.swiftModuleClassNames.push(moduleName);
+    // mirrorStateObject.swiftModuleClassNames.push(moduleName);
   }
 
   if (filesWatched) {
@@ -310,14 +335,12 @@ function addNewFile(
   fs.writeFileSync(
     viewExportPath,
     `import { requireNativeView } from 'expo';
-import * as React from 'react';
 export default requireNativeView("${moduleName}");`
   );
 
   fs.writeFileSync(
     moduleExportPath,
     `import { requireNativeModule } from 'expo';
-import * as React from 'react';
 export default requireNativeModule("${moduleName}");`
   );
 
@@ -331,9 +354,7 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
   projectRoot: string,
   filesWatched?: Set<string>,
   mirrorStateObject: LocalModulesMirror = {
-    files: [],
-    swiftModuleClassNames: [],
-    kotlinClasses: [],
+    files: new Set<string>(),
   }
 ) {
   console.log('generate mirror directories and update xcode proejct');
@@ -425,11 +446,14 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onRemoveAppFile = (absoluteFilePath: string) => {
+  const onRemoveAppFile = (absoluteFilePath: string, mirrorStateObject: LocalModulesMirror) => {
     const { moduleTypesFilePath, moduleExportPath, androidPath } = typesAndLocalModulePaths(
       projectRoot,
       absoluteFilePath
     );
+    if (mirrorStateObject.files.has(absoluteFilePath)) {
+      mirrorStateObject.files.delete(absoluteFilePath);
+    }
     if (absoluteFilePath.endsWith('.kt')) {
       removeFileAndEmptyDirectories(androidPath);
     } else if (
@@ -453,9 +477,7 @@ export async function startModuleGenerationAsync({
     metro,
     eventTypes = ['add', 'change', 'delete'],
     mirrorStateObject = {
-      files: [],
-      swiftModuleClassNames: [],
-      kotlinClasses: [],
+      files: new Set<string>(),
     },
   }: {
     metro: MetroServer | null;
@@ -494,7 +516,7 @@ export async function startModuleGenerationAsync({
             console.log('add' + event.filePath);
           } else if (event.type === 'delete') {
             console.log('delete ' + event.filePath);
-            await onRemoveAppFile(filePath);
+            await onRemoveAppFile(filePath, mirrorStateObject);
           }
           saveMirrorStateObject(projectRoot, mirrorStateObject);
         }
