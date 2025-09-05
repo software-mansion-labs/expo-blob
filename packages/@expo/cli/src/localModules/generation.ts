@@ -263,6 +263,18 @@ export type LocalModulesMirror = {
 //   return localModulesObject;
 // }
 
+function getKotlinFileNameWithItsPackage(file: string): string {
+  const pacakgeRegex = /^package\s+/;
+  const lines = fs.readFileSync(file).toString().split('\n');
+  const packageLine = lines.findIndex((line) => pacakgeRegex.test(line));
+  if (packageLine < 0) {
+    return '';
+  }
+  const packageName = lines[packageLine].substring('package '.length);
+  console.log(packageName);
+  return packageName + '.' + trimExtension(path.basename(file));
+}
+
 function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalModulesMirror) {
   const { localModulesPath } = mirrorDirectories(projectRoot);
   const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
@@ -274,7 +286,8 @@ function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalMod
     files: filesArray,
     kotlinClasses: filesArray
       .filter((file) => file.endsWith('.kt'))
-      .map((file) => 'local.modules.' + path.basename(file).slice(0, -'.kt'.length).toString()),
+      // .map((file) => 'local.modules.' + path.basename(file).slice(0, -'.kt'.length).toString()),
+      .map((file) => getKotlinFileNameWithItsPackage(file)),
     swiftModuleClassNames: filesArray
       .filter((file) => file.endsWith('.swift'))
       .map((file) => path.basename(file).slice(0, -'.swift'.length).toString()),
