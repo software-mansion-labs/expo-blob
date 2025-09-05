@@ -12,6 +12,7 @@ import type {
   ModuleIosPodspecInfo,
   PackageRevision,
 } from '../../types';
+import { localModulesEnabled } from '../../localModules/localModules';
 
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
@@ -139,8 +140,11 @@ async function generatePackageListFileContentAsync(
 
   const modulesClassNames = ([] as string[])
     .concat(...modulesToImport.map((module) => module.modules))
-    .filter(Boolean)
-    .concat(await getLocalModulesClassNames());
+    .filter(Boolean);
+
+  if (await localModulesEnabled()) {
+    modulesClassNames.concat(await getLocalModulesClassNames());
+  }
 
   const debugOnlyModulesClassNames = ([] as string[])
     .concat(...debugOnlyModules.map((module) => module.modules))

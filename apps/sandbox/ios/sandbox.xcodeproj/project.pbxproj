@@ -17,7 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		07BBB4099E63619164C8FFE7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = sandbox/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		07BBB4099E63619164C8FFE7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = sandbox/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		088EAEED7854B14EAECBC921 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-sandbox/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* sandbox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sandbox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = sandbox/Images.xcassets; sourceTree = "<group>"; };
@@ -91,8 +91,6 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				B91F6736E3076670CB1B66E0 /* Pods */,
 				CD762F97D57BC4A8561936F4 /* ExpoModulesProviders */,
-				E394C1284C68455A841EFB53 /* app */,
-				787FDBFD93F2434D8F5C0DC1 /* src */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -113,7 +111,6 @@
 				7E4866AB0758CF9CA3020B8B /* Pods-sandbox.debug.xcconfig */,
 				2C0C8823F00154CCF60FB938 /* Pods-sandbox.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -158,10 +155,6 @@
 			productName = sandbox;
 			productReference = 13B07F961A680F5B00A75B9A /* sandbox.app */;
 			productType = "com.apple.product-type.application";
-			fileSystemSynchronizedGroups = (
-				E394C1284C68455A841EFB53 /* app */,
-				787FDBFD93F2434D8F5C0DC1 /* src */,
-			);
 		};
 /* End PBXNativeTarget section */
 
@@ -537,29 +530,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		E394C1284C68455A841EFB53 /* app */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			name = app;
-			path = ../app;
-			sourceTree = SOURCE_ROOT;
-		};
-		787FDBFD93F2434D8F5C0DC1 /* src */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			name = src;
-			path = ../src;
-			sourceTree = SOURCE_ROOT;
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

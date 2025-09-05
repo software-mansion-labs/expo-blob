@@ -175,7 +175,7 @@ export async function prebuildAsync(
     debug('Skipped pod install');
   }
 
-  const shouldGenerateLocalModules = true;
+  const shouldGenerateLocalModules = exp.experiments?.localModules === true;
   if (shouldGenerateLocalModules) {
     await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);
   }

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getMirrorStateObject, LocalModulesMirror } from './localModules';
+import { getMirrorStateObject } from './localModules';
 
 export async function generateSymlinksInDirectory(targetPath: string) {
   const mirrorJson = await getMirrorStateObject();

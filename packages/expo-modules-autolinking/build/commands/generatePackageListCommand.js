@@ -6,6 +6,7 @@ const findModules_1 = require("../autolinking/findModules");
 const generatePackageList_1 = require("../autolinking/generatePackageList");
 const resolveModules_1 = require("../autolinking/resolveModules");
 const androidLocalModules_1 = require("../localModules/androidLocalModules");
+const localModules_1 = require("../localModules/localModules");
 /** Generates a source file listing all packages to link.
  * @privateRemarks
  * This command is deprecated for apple platforms, use `generate-modules-provider` instead.
@@ -35,7 +36,9 @@ function generatePackageListCommand(cli) {
             targetPath: commandArguments.target,
             namespace: commandArguments.namespace,
         });
-        await (0, androidLocalModules_1.generateSymlinksInDirectory)(commandArguments.target);
+        if (await (0, localModules_1.localModulesEnabled)()) {
+            await (0, androidLocalModules_1.generateSymlinksInDirectory)(commandArguments.target);
+        }
     });
 }
 //# sourceMappingURL=generatePackageListCommand.js.map

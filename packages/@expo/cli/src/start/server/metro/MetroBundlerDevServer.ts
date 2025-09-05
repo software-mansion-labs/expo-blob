@@ -1331,7 +1331,11 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       projectRoot: this.projectRoot,
     });
 
-    startModuleGenerationAsync({ projectRoot, metro });
+    const { exp } = getConfig(this.projectRoot);
+    if (exp.experiments?.localModules === true) {
+      console.log('start module generation async');
+      startModuleGenerationAsync({ projectRoot, metro });
+    }
   }
 
   protected getConfigModuleIds(): string[] {

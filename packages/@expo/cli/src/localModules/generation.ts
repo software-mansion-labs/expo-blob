@@ -19,6 +19,8 @@ const swiftWatchedDirectories = ['app', 'src'];
 function mirrorDirectories(projectRoot: string): {
   dotExpoDir: string;
   localModulesPath: string;
+  localModulesModulesPath: string;
+  localModulesTypesPath: string;
   androidLocalModulesPath: string;
   iosPath: string;
   iosLocalModulesPath: string;
@@ -33,10 +35,14 @@ function mirrorDirectories(projectRoot: string): {
   const iosLocalModulesPath = path.resolve(projectRoot, 'ios/localModules');
   const xcodeProjPath = path.resolve(projectRoot, 'ios/sandbox.xcodeproj');
   const iosPath = path.resolve(projectRoot, 'ios');
+  const localModulesModulesPath = path.resolve(localModulesPath, 'modules');
+  const localModulesTypesPath = path.resolve(localModulesPath, 'types');
 
   return {
     dotExpoDir,
     localModulesPath,
+    localModulesModulesPath,
+    localModulesTypesPath,
     androidLocalModulesPath,
     iosPath,
     iosLocalModulesPath,
@@ -45,19 +51,26 @@ function mirrorDirectories(projectRoot: string): {
 }
 
 function createFreshMirrorDirectories(projectRoot: string) {
-  const { localModulesPath, androidLocalModulesPath, iosLocalModulesPath } =
-    mirrorDirectories(projectRoot);
+  const {
+    localModulesModulesPath,
+    localModulesTypesPath,
+    androidLocalModulesPath,
+    iosLocalModulesPath,
+  } = mirrorDirectories(projectRoot);
 
   // make sure the directories exist so we can remove them.
-  fs.mkdirSync(localModulesPath, { recursive: true });
+  fs.mkdirSync(localModulesModulesPath, { recursive: true });
+  fs.mkdirSync(localModulesTypesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
   fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 
-  fs.rmSync(localModulesPath, { recursive: true });
+  fs.rmSync(localModulesModulesPath, { recursive: true });
+  fs.rmSync(localModulesTypesPath, { recursive: true });
   fs.rmSync(androidLocalModulesPath, { recursive: true });
   fs.rmSync(iosLocalModulesPath, { recursive: true });
 
-  fs.mkdirSync(localModulesPath, { recursive: true });
+  fs.mkdirSync(localModulesModulesPath, { recursive: true });
+  fs.mkdirSync(localModulesTypesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
   fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 }
@@ -67,27 +80,31 @@ function trimExtension(fileName: string) {
 }
 
 function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string) {
-  const { localModulesPath, androidLocalModulesPath, iosLocalModulesPath } =
-    mirrorDirectories(projectRoot);
+  const {
+    localModulesModulesPath,
+    localModulesTypesPath,
+    androidLocalModulesPath,
+    iosLocalModulesPath,
+  } = mirrorDirectories(projectRoot);
   const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
   const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
   const moduleName = trimExtension(justFileName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
   const moduleTypesFilePath = path.resolve(
-    localModulesPath,
+    localModulesTypesPath,
     trimExtension(filePathRelativeToRoot) + '.nativeModule.d.ts'
   );
   const viewTypesFilePath = path.resolve(
-    localModulesPath,
+    localModulesTypesPath,
     trimExtension(filePathRelativeToRoot) + '.nativeView.d.ts'
   );
   const viewExportPath = path.resolve(
-    localModulesPath,
+    localModulesModulesPath,
     trimExtension(filePathRelativeToRoot) + '.native.view.js'
   );
   const moduleExportPath = path.resolve(
-    localModulesPath,
+    localModulesModulesPath,
     trimExtension(filePathRelativeToRoot) + '.js'
   );
   const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
@@ -285,16 +302,16 @@ export default requireNativeModule("${moduleName}");`
 
 export async function generateMirrorDirectoriesAndUpdateXCodeProject(
   projectRoot: string,
-  filesWatched?: Set<string>
+  filesWatched?: Set<string>,
+  mirrorStateObject: LocalModulesMirror = {
+    files: [],
+    swiftModuleClassNames: [],
+    kotlinClasses: [],
+  }
 ) {
   console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
-  const mirrorStateObject: LocalModulesMirror = {
-    files: [],
-    swiftModuleClassNames: [],
-    kotlinClasses: [],
-  };
   const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
@@ -346,15 +363,10 @@ export async function startModuleGenerationAsync({
   metro,
 }: ModuleGenerationArguments) {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-  const localModulesPath = path.resolve(dotExpoDir, './localModules/');
-  const androidLocalModulesPath = path.resolve(
-    projectRoot,
-    'android/app/src/main/java/local/modules/'
-  );
-  const iosLocalModulesPath = path.resolve(projectRoot, 'ios/localModules');
   const { exp } = getConfig(projectRoot);
   const filesWatched = new Set<string>();
 
+  console.log('inside async start metro..');
   const fileExcluded = (absolutePath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absolutePath, glob)) {
@@ -413,13 +425,20 @@ export async function startModuleGenerationAsync({
     projectRoot,
     metro,
     eventTypes = ['add', 'change', 'delete'],
+    mirrorStateObject = {
+      files: [],
+      swiftModuleClassNames: [],
+      kotlinClasses: [],
+    },
   }: {
     metro: MetroServer | null;
     projectRoot: string;
     eventTypes?: string[];
+    mirrorStateObject?: LocalModulesMirror;
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
+    console.log('before listener');
     const listener = async ({
       eventsQueue,
     }: {
@@ -431,7 +450,9 @@ export async function startModuleGenerationAsync({
         type: string;
       }[];
     }) => {
+      console.log('listener');
       for (const event of eventsQueue) {
+        console.log(event.type);
         if (
           eventTypes.includes(event.type) &&
           event.metadata?.type !== 'd' &&
@@ -440,24 +461,32 @@ export async function startModuleGenerationAsync({
           !fileExcluded(event.filePath)
         ) {
           const { filePath } = event;
+          console.log('watcher');
           if (event.type === 'add') {
-            addNewFile(projectRoot, filePath, undefined, filesWatched);
+            addNewFile(projectRoot, filePath, mirrorStateObject, filesWatched);
             console.log('add' + event.filePath);
           } else if (event.type === 'delete') {
             console.log('delete ' + event.filePath);
             await onRemoveAppFile(filePath);
           }
+          saveMirrorStateObject(projectRoot, mirrorStateObject);
         }
       }
     };
 
     watcher?.addListener('change', listener);
-    watcher?.addListener('add', listener);
-    watcher?.addListener('remove', listener);
+    // watcher?.addListener('add', listener);
+    // watcher?.addListener('remove', listener);
 
-    await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot, filesWatched);
+    await generateMirrorDirectoriesAndUpdateXCodeProject(
+      projectRoot,
+      filesWatched,
+      mirrorStateObject
+    );
+    console.log('end123');
   };
 
+  console.log('before metro watch');
   metroWatchKotlinAndSwiftFiles({
     projectRoot,
     metro,

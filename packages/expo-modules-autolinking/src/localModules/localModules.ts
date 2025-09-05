@@ -18,6 +18,13 @@ const findPackageJsonPathAsync = async (): Promise<string> => {
   return result;
 };
 
+export async function localModulesEnabled(): Promise<boolean> {
+  const appJsonPath = await findPackageJsonPathAsync();
+  return (
+    JSON.parse(fs.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true
+  );
+}
+
 export async function getAppRoot(): Promise<string> {
   return path.dirname(await findPackageJsonPathAsync());
 }

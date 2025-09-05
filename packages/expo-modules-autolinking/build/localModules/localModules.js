@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.localModulesEnabled = localModulesEnabled;
 exports.getAppRoot = getAppRoot;
 exports.getMirrorStateObject = getMirrorStateObject;
 const find_up_1 = __importDefault(require("find-up"));
@@ -17,6 +18,10 @@ const findPackageJsonPathAsync = async () => {
     }
     return result;
 };
+async function localModulesEnabled() {
+    const appJsonPath = await findPackageJsonPathAsync();
+    return (JSON.parse(fs_1.default.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true);
+}
 async function getAppRoot() {
     return path_1.default.dirname(await findPackageJsonPathAsync());
 }

@@ -5,7 +5,7 @@ const { getDefaultConfig } = require('expo/metro-config');
 const config = getDefaultConfig(__dirname);
 
 const path = require('path');
-const localModulesPath = path.resolve(__dirname, './.expo/localModules');
+const localModulesModulesPath = path.resolve(__dirname, './.expo/localModules/modules');
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.endsWith('.nativeModule')) {
@@ -15,7 +15,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     );
 
     const modulePath = path.resolve(
-      localModulesPath,
+      localModulesModulesPath,
       relativePathToOriginModule,
       moduleName.substring(0, moduleName.lastIndexOf('.')) + '.js'
     );
@@ -31,7 +31,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     );
 
     const modulePath = path.resolve(
-      localModulesPath,
+      localModulesModulesPath,
       relativePathToOriginModule,
       moduleName.substring(0, moduleName.lastIndexOf('.')) + '.native.view.js'
     );
