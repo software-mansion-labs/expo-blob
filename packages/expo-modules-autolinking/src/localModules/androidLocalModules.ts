@@ -1,19 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getMirrorStateObject } from './localModules';
+import { getAppRoot, getMirrorStateObject } from './localModules';
 
 export async function generateSymlinksInDirectory(targetPath: string) {
   const mirrorJson = await getMirrorStateObject();
+  const appRoot = await getAppRoot();
 
   for (const file of mirrorJson.files) {
     if (!file.endsWith('.kt')) {
       continue;
     }
-    if (fs.existsSync(path.resolve(path.dirname(targetPath), path.basename(file)))) {
+    const symlinkPath = path.resolve(path.dirname(targetPath), path.relative(appRoot, file));
+    if (fs.existsSync(symlinkPath)) {
       continue;
     }
-    fs.symlinkSync(file, path.resolve(path.dirname(targetPath), path.basename(file)));
+    fs.mkdirSync(path.dirname(symlinkPath), { recursive: true });
+    fs.symlinkSync(file, symlinkPath);
   }
 }
 
