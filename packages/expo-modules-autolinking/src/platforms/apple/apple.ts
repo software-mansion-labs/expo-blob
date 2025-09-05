@@ -138,12 +138,22 @@ async function generatePackageListFileContentAsync(
     .concat(...debugOnlyModules.map((module) => module.swiftModuleNames))
     .filter(Boolean);
 
-  const modulesClassNames = ([] as string[])
+  let modulesClassNames = ([] as string[])
     .concat(...modulesToImport.map((module) => module.modules))
     .filter(Boolean);
 
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    `${await localModulesEnabled()}\n`,
+    { flag: 'a+' }
+  );
   if (await localModulesEnabled()) {
-    modulesClassNames.concat(await getLocalModulesClassNames());
+    fs.writeFileSync(
+      '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+      `${JSON.stringify(await getLocalModulesClassNames())}\n`,
+      { flag: 'a+' }
+    );
+    modulesClassNames = modulesClassNames.concat(await getLocalModulesClassNames());
   }
 
   const debugOnlyModulesClassNames = ([] as string[])

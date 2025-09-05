@@ -11,6 +11,11 @@ export type LocalModulesMirror = {
 // copied from autolinkingOptions, maybe export it somewhere
 const findPackageJsonPathAsync = async (): Promise<string> => {
   const cwd = process.cwd();
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    '!!! cwd: ' + cwd + '\n',
+    { flag: 'a+' }
+  );
   const result = await findUp('package.json', { cwd });
   if (!result) {
     throw new Error(`Couldn't find "package.json" up from path "${cwd}"`);
@@ -18,8 +23,22 @@ const findPackageJsonPathAsync = async (): Promise<string> => {
   return result;
 };
 
+export async function localModulesMirrorExists(): Promise<boolean> {
+  const appRoot = await getAppRoot();
+  const localModulesPath = path.resolve(appRoot, './.expo/localModules/');
+  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
+  return fs.existsSync(mirrorFilePath);
+}
+
 export async function localModulesEnabled(): Promise<boolean> {
-  const appJsonPath = await findPackageJsonPathAsync();
+  const appJsonPath = path.resolve(path.dirname(await findPackageJsonPathAsync()), 'app.json');
+  const obj = JSON.parse(fs.readFileSync(appJsonPath).toString());
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    // `!!! ${JSON.stringify(obj?.expo)} ${JSON.stringify(obj?.expo?.experiments)} ${obj?.expo?.experiments?.localModules} \n`,
+    `${JSON.parse(fs.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true}`,
+    { flag: 'a+' }
+  );
   return (
     JSON.parse(fs.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true
   );

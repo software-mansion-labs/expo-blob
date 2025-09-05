@@ -7,6 +7,7 @@ import { XcodeConfiguration } from './XcodeBuild.types';
 import { Command } from '../../../bin/cli';
 import { assertWithOptionsArgs, printHelp } from '../../utils/args';
 import { logCmdError } from '../../utils/errors';
+import { generateMirrorDirectoriesAndUpdateXCodeProject, localModulesEnabled } from '../../localModules/generation';
 
 export const expoRunIos: Command = async (argv) => {
   const rawArgsMap: arg.Spec = {
@@ -67,6 +68,22 @@ export const expoRunIos: Command = async (argv) => {
     '--device': Boolean,
     '-d': '--device',
   }).catch(logCmdError);
+
+  // GREPME
+  const fs = require('fs');
+  fs.writeFileSync(
+      '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+      '!!! GREPME \n',
+      { flag: 'a+' }
+    );
+  if (localModulesEnabled()) {
+    fs.writeFileSync(
+      '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+      '!!! generate mirrors \n',
+      { flag: 'a+' }
+    );
+    await generateMirrorDirectoriesAndUpdateXCodeProject(parsed.projectRoot);
+  }
 
   const { runIosAsync } = await import('./runIosAsync.js');
   return runIosAsync(path.resolve(parsed.projectRoot), {

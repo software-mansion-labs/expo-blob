@@ -100,11 +100,13 @@ async function generatePackageListFileContentAsync(modules, className, entitleme
     const debugOnlySwiftModules = []
         .concat(...debugOnlyModules.map((module) => module.swiftModuleNames))
         .filter(Boolean);
-    const modulesClassNames = []
+    let modulesClassNames = []
         .concat(...modulesToImport.map((module) => module.modules))
         .filter(Boolean);
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', `${await (0, localModules_1.localModulesEnabled)()}\n`, { flag: 'a+' });
     if (await (0, localModules_1.localModulesEnabled)()) {
-        modulesClassNames.concat(await (0, iosLocalModules_1.getLocalModulesClassNames)());
+        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', `${JSON.stringify(await (0, iosLocalModules_1.getLocalModulesClassNames)())}\n`, { flag: 'a+' });
+        modulesClassNames = modulesClassNames.concat(await (0, iosLocalModules_1.getLocalModulesClassNames)());
     }
     const debugOnlyModulesClassNames = []
         .concat(...debugOnlyModules.map((module) => module.modules))

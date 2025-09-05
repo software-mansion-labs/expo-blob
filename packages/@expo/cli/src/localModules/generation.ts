@@ -7,6 +7,7 @@ import path from 'path';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
+import { findUpProjectRootOrAssert } from '../utils/findUp';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -15,6 +16,34 @@ export interface ModuleGenerationArguments {
 
 const nativeExtensions = ['.kt', '.swift'];
 const swiftWatchedDirectories = ['app', 'src'];
+const mirrorStateFileName = 'mirror.json';
+
+export function getAppRoot(): string {
+  return path.dirname(findPackageJsonPathAsync());
+}
+
+const findPackageJsonPathAsync = (): string => {
+  const cwd = process.cwd();
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    '!!! cwd: ' + cwd + '\n',
+    { flag: 'a+' }
+  );
+  const result = findUpProjectRootOrAssert(cwd);
+  fs.writeFileSync(
+    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
+    '!!! result: ' + result + '\n',
+    { flag: 'a+' }
+  );
+  return path.resolve(result, 'package.json');
+};
+
+export function localModulesEnabled(): boolean {
+  const appJsonPath = path.resolve(path.dirname(findPackageJsonPathAsync()), 'app.json');
+  return (
+    JSON.parse(fs.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true
+  );
+}
 
 function mirrorDirectories(projectRoot: string): {
   dotExpoDir: string;
@@ -210,8 +239,6 @@ export type LocalModulesMirror = {
   swiftModuleClassNames: string[];
   kotlinClasses: string[];
 };
-
-const mirrorStateFileName = 'mirror.json';
 
 export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
   const { localModulesPath } = mirrorDirectories(projectRoot);

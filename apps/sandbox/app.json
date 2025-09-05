@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "localModules": true
     },
     "updates": {
       "fallbackToCacheTimeout": 0

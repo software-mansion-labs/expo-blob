@@ -163,9 +163,9 @@ async function generatePackageListFileContentAsync(
     modules.filter((module) => module.packageName !== 'expo')
   );
 
-  const modulesClasses = await findAndroidModules(modules);
+  let modulesClasses = await findAndroidModules(modules);
   if (await localModulesEnabled()) {
-    modulesClasses.concat(await getAndroidLocalModulesClasses());
+    modulesClasses = modulesClasses.concat(await getAndroidLocalModulesClasses());
   }
 
   return `package ${namespace};

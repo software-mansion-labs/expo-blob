@@ -8,6 +8,7 @@ import {
 import { findModulesAsync } from '../autolinking/findModules';
 import { generateModulesProviderAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
+import { localModulesEnabled, localModulesMirrorExists } from '../localModules/localModules';
 
 interface GenerateModulesProviderArguments extends AutolinkingCommonArguments {
   target: string;
