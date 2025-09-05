@@ -383,10 +383,11 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
     const dir = fs.opendirSync(absoluteDirPath);
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
+      console.log('visiting ' + absoluteDirentPath);
       if (dirent.isFile() && /\.(kt|swift)$/.test(dirent.name)) {
         addNewFile(projectRoot, absoluteDirentPath, mirrorStateObject, filesWatched);
       } else if (dirent.isDirectory()) {
-        generateExportsAndTypesForDirectory(absoluteDirentPath);
+        await generateExportsAndTypesForDirectory(absoluteDirentPath);
       }
     }
   };
