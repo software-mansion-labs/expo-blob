@@ -142,17 +142,7 @@ async function generatePackageListFileContentAsync(
     .concat(...modulesToImport.map((module) => module.modules))
     .filter(Boolean);
 
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    `${await localModulesEnabled()}\n`,
-    { flag: 'a+' }
-  );
   if (await localModulesEnabled()) {
-    fs.writeFileSync(
-      '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-      `${JSON.stringify(await getLocalModulesClassNames())}\n`,
-      { flag: 'a+' }
-    );
     modulesClassNames = modulesClassNames.concat(await getLocalModulesClassNames());
   }
 

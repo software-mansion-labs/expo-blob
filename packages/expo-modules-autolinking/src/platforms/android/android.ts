@@ -175,7 +175,6 @@ import java.util.List;
 import expo.modules.core.interfaces.Package;
 import expo.modules.kotlin.modules.Module;
 import expo.modules.kotlin.ModulesProvider;
-import android.util.Log;
 
 public class ExpoModulesPackageList implements ModulesProvider {
   private static class LazyHolder {
@@ -188,7 +187,7 @@ ${packagesClasses.map((packageClass) => `      new ${packageClass}()`).join(',\n
     );
   }
 
-  public static List<Package> getPackageList() {    
+  public static List<Package> getPackageList() {
     return LazyHolder.packagesList;
   }
 
