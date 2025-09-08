@@ -49,6 +49,9 @@
     },
     "android": {
       "package": "com.anonymous.sandbox"
+    },
+    "localModules": {
+      "watchedDirs": ["src", "app"]
     }
   }
 }

@@ -15,7 +15,6 @@ export interface ModuleGenerationArguments {
 }
 
 const nativeExtensions = ['.kt', '.swift'];
-const swiftWatchedDirectories = ['app', 'src'];
 const mirrorStateFileName = 'mirror.json';
 
 export function getAppRoot(): string {
@@ -186,6 +185,7 @@ function updateXCodeProject(projectRoot: string) {
     return false;
   };
 
+  const swiftWatchedDirectories = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
   for (const dir of swiftWatchedDirectories) {
     if (dirEntryExists(dir)) {
       continue;
@@ -224,8 +224,9 @@ function updateXCodeProject(projectRoot: string) {
 }
 
 function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolean {
+  const swiftWatchedDirectories = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
+  const realRoot = fs.realpathSync(projectRoot);
   for (const dir of swiftWatchedDirectories) {
-    const realRoot = fs.realpathSync(projectRoot);
     const dirPathAbsolute = path.resolve(realRoot, dir);
     if (filePathAbsolute.startsWith(dirPathAbsolute)) {
       return true;

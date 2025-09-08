@@ -332,6 +332,13 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
+
+  /**
+   * Configuration for local modules
+   */
+  localModules?: {
+    watchedDirs: [string];
+  };
 }
 /**
  * Configuration for loading and splash screen for standalone apps.
