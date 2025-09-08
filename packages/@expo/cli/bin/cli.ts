@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import Debug from 'debug';
 import { boolish } from 'getenv';
 
-
 // Setup before requiring `debug`.
 if (boolish('EXPO_DEBUG', false)) {
   Debug.enable('expo:*');

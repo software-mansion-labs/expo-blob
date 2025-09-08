@@ -67,7 +67,6 @@ export function getRouterDirectory(projectRoot: string): string {
 }
 
 export function isApiRouteConvention(name: string): boolean {
-  console.log('router ts is api route convention');
   return /\+api\.[tj]sx?$/.test(name);
 }
 
