@@ -27,9 +27,7 @@ export default function requireContext(
         return;
       }
 
-      if (!regularExpression.test(relativePath) && !/\.kt?$/.test(relativePath)) {
-        return;
-      }
+      if (!regularExpression.test(relativePath)) return;
 
       files[relativePath] = true;
     });
