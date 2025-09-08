@@ -69,7 +69,6 @@ export const expoRunIos: Command = async (argv) => {
     '-d': '--device',
   }).catch(logCmdError);
 
-  // GREPME
   const fs = require('fs');
   fs.writeFileSync(
       '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',

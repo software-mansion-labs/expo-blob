@@ -68,7 +68,6 @@ export const expoRunAndroid: Command = async (argv) => {
   }).catch(logCmdError);
 
 
-  // GREPME
   if (localModulesEnabled()) {
     await generateMirrorDirectoriesAndUpdateXCodeProject(parsed.projectRoot);
   }
