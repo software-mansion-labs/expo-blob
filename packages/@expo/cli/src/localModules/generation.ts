@@ -122,19 +122,19 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
   const moduleTypesFilePath = path.resolve(
     localModulesTypesPath,
-    trimExtension(filePathRelativeToRoot) + '.nativeModule.d.ts'
+    trimExtension(filePathRelativeToRoot) + '.module.d.ts'
   );
   const viewTypesFilePath = path.resolve(
     localModulesTypesPath,
-    trimExtension(filePathRelativeToRoot) + '.nativeView.d.ts'
+    trimExtension(filePathRelativeToRoot) + '.view.d.ts'
   );
   const viewExportPath = path.resolve(
     localModulesModulesPath,
-    trimExtension(filePathRelativeToRoot) + '.native.view.js'
+    trimExtension(filePathRelativeToRoot) + '.view.js'
   );
   const moduleExportPath = path.resolve(
     localModulesModulesPath,
-    trimExtension(filePathRelativeToRoot) + '.js'
+    trimExtension(filePathRelativeToRoot) + '.module.js'
   );
   const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
   return {

@@ -8,7 +8,7 @@ const path = require('path');
 const localModulesModulesPath = path.resolve(__dirname, './.expo/localModules/modules');
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.endsWith('.nativeModule')) {
+  if (moduleName.endsWith('.module')) {
     const relativePathToOriginModule = path.relative(
       __dirname,
       path.dirname(context.originModulePath)
@@ -17,14 +17,14 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const modulePath = path.resolve(
       localModulesModulesPath,
       relativePathToOriginModule,
-      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.js'
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js'
     );
 
     return {
       filePath: modulePath,
       type: 'sourceFile',
     };
-  } else if (moduleName.endsWith('.nativeView')) {
+  } else if (moduleName.endsWith('.view')) {
     const relativePathToOriginModule = path.relative(
       __dirname,
       path.dirname(context.originModulePath)
@@ -33,7 +33,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const modulePath = path.resolve(
       localModulesModulesPath,
       relativePathToOriginModule,
-      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.native.view.js'
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js'
     );
 
     return {
