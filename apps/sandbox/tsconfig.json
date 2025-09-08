@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "rootDirs": ["./", "./.expo/localModules/types"]
+  },
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "./app/**/*",
+    ".expo/localModules/types/**/*.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}
