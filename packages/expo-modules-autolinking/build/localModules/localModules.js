@@ -7,6 +7,7 @@ exports.localModulesMirrorExists = localModulesMirrorExists;
 exports.localModulesEnabled = localModulesEnabled;
 exports.getAppRoot = getAppRoot;
 exports.getMirrorStateObject = getMirrorStateObject;
+exports.getLocalModulesKotlinFilesPaths = getLocalModulesKotlinFilesPaths;
 const find_up_1 = __importDefault(require("find-up"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -43,5 +44,15 @@ async function getMirrorStateObject() {
     const localModulesPath = path_1.default.resolve(appRoot, './.expo/localModules/');
     const mirrorFilePath = path_1.default.resolve(localModulesPath, mirrorStateFileName);
     return JSON.parse(fs_1.default.readFileSync(mirrorFilePath).toString());
+}
+async function getLocalModulesKotlinFilesPaths() {
+    const mirror = await getMirrorStateObject();
+    const ret = [];
+    for (const file of mirror.files) {
+        if (file && file.endsWith('.kt')) {
+            ret.push({ path: file });
+        }
+    }
+    return ret;
 }
 //# sourceMappingURL=localModules.js.map

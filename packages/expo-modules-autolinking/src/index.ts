@@ -6,6 +6,7 @@ import { reactNativeConfigCommand } from './commands/reactNativeConfigCommand';
 import { resolveCommand } from './commands/resolveCommand';
 import { searchCommand } from './commands/searchCommand';
 import { verifyCommand } from './commands/verifyCommand';
+import { resolveLocalModulesCommand } from './commands/resolveLocalModulesCommand';
 
 async function main(args: string[]) {
   const cli = commander
@@ -15,6 +16,7 @@ async function main(args: string[]) {
   verifyCommand(cli);
   searchCommand(cli);
   resolveCommand(cli);
+  resolveLocalModulesCommand(cli);
   generatePackageListCommand(cli);
   generateModulesProviderCommand(cli);
   reactNativeConfigCommand(cli);
