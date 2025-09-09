@@ -9,9 +9,6 @@ import { findModulesAsync } from '../autolinking/findModules';
 import { generatePackageListAsync } from '../autolinking/generatePackageList';
 import { resolveModulesAsync } from '../autolinking/resolveModules';
 import type { ModuleDescriptor } from '../types';
-import fs from 'fs';
-import { generateSymlinksInDirectory } from '../localModules/androidLocalModules';
-import { localModulesEnabled } from '../localModules/localModules';
 
 interface GeneratePackageListArguments extends AutolinkingCommonArguments {
   target: string;
@@ -66,9 +63,9 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           namespace: commandArguments.namespace,
         });
 
-        if (await localModulesEnabled()) {
-          await generateSymlinksInDirectory(commandArguments.target);
-        }
+        // if (await localModulesEnabled()) {
+        //   await generateSymlinksInDirectory(commandArguments.target);
+        // }
       }
     );
 }

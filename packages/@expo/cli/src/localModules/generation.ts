@@ -23,17 +23,7 @@ export function getAppRoot(): string {
 
 const findPackageJsonPathAsync = (): string => {
   const cwd = process.cwd();
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! cwd: ' + cwd + '\n',
-    { flag: 'a+' }
-  );
   const result = findUpProjectRootOrAssert(cwd);
-  fs.writeFileSync(
-    '/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt',
-    '!!! result: ' + result + '\n',
-    { flag: 'a+' }
-  );
   return path.resolve(result, 'package.json');
 };
 
@@ -160,7 +150,7 @@ function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
-function updateXCodeProject(projectRoot: string) {
+export function updateXCodeProject(projectRoot: string) {
   const pbxProject = getPbxproj(projectRoot);
   const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
   const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
@@ -371,6 +361,7 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
     files: new Set<string>(),
   }
 ) {
+  return; // GREPME TODO DELETE
   console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
@@ -393,7 +384,7 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
     }
   };
   await generateExportsAndTypesForDirectory(projectRoot);
-  updateXCodeProject(projectRoot);
+  // updateXCodeProject(projectRoot);
   saveMirrorStateObject(projectRoot, mirrorStateObject);
 }
 
@@ -425,6 +416,7 @@ export async function startModuleGenerationAsync({
   projectRoot,
   metro,
 }: ModuleGenerationArguments) {
+  return; // GREPME TODO DELETE
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const { exp } = getConfig(projectRoot);
   const filesWatched = new Set<string>();

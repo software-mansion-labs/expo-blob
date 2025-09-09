@@ -1,5 +1,5 @@
 import { getMirrorStateObject } from './localModules';
 
-export async function getLocalModulesClassNames(): Promise<string[]> {
+export async function getIosLocalModulesClassNames(): Promise<string[]> {
   return (await getMirrorStateObject()).swiftModuleClassNames;
 }

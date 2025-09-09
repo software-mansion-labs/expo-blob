@@ -3,9 +3,7 @@ import { glob } from 'glob';
 import path from 'path';
 
 import { AutolinkingOptions } from '../../commands/autolinkingOptions';
-import { getAndroidLocalModulesClasses } from '../../localModules/androidLocalModules'
 import type { ExtraDependencies, ModuleDescriptorAndroid, PackageRevision } from '../../types';
-import { localModulesEnabled } from '../../localModules/localModules';
 
 const ANDROID_PROPERTIES_FILE = 'gradle.properties';
 const ANDROID_EXTRA_BUILD_DEPS_KEY = 'android.extraMavenRepos';
@@ -163,10 +161,7 @@ async function generatePackageListFileContentAsync(
     modules.filter((module) => module.packageName !== 'expo')
   );
 
-  let modulesClasses = await findAndroidModules(modules);
-  if (await localModulesEnabled()) {
-    modulesClasses = modulesClasses.concat(await getAndroidLocalModulesClasses());
-  }
+  const modulesClasses = await findAndroidModules(modules);
 
   return `package ${namespace};
 

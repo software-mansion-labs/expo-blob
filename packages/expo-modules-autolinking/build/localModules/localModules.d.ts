@@ -3,10 +3,6 @@ export type LocalModulesMirror = {
     swiftModuleClassNames: string[];
     kotlinClasses: string[];
 };
-export declare function localModulesMirrorExists(): Promise<boolean>;
 export declare function localModulesEnabled(): Promise<boolean>;
 export declare function getAppRoot(): Promise<string>;
 export declare function getMirrorStateObject(): Promise<LocalModulesMirror>;
-export declare function getLocalModulesKotlinFilesPaths(): Promise<{
-    path: string;
-}[]>;

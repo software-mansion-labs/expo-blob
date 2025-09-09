@@ -5,7 +5,7 @@ import {
   createAutolinkingOptionsLoader,
   registerAutolinkingArguments,
 } from './autolinkingOptions';
-import { getLocalModulesKotlinFilesPaths } from '../localModules/localModules';
+import { getLocalModulesKotlinFilesPaths } from '../localModules/androidLocalModules';
 import type {
   ModuleDescriptor,
   CommonNativeModuleDescriptor,

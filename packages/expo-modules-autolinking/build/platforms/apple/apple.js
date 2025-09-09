@@ -104,7 +104,7 @@ async function generatePackageListFileContentAsync(modules, className, entitleme
         .concat(...modulesToImport.map((module) => module.modules))
         .filter(Boolean);
     if (await (0, localModules_1.localModulesEnabled)()) {
-        modulesClassNames = modulesClassNames.concat(await (0, iosLocalModules_1.getLocalModulesClassNames)());
+        modulesClassNames = modulesClassNames.concat(await (0, iosLocalModules_1.getIosLocalModulesClassNames)());
     }
     const debugOnlyModulesClassNames = []
         .concat(...debugOnlyModules.map((module) => module.modules))

@@ -7,7 +7,6 @@ import { Command } from '../../../bin/cli';
 import * as Log from '../../log';
 import { assertWithOptionsArgs } from '../../utils/args';
 import { logCmdError } from '../../utils/errors';
-import { generateMirrorDirectoriesAndUpdateXCodeProject, localModulesEnabled } from '../../localModules/generation';
 
 export const expoRunAndroid: Command = async (argv) => {
   const rawArgsMap: arg.Spec = {
@@ -66,11 +65,6 @@ export const expoRunAndroid: Command = async (argv) => {
     '--device': Boolean,
     '-d': '--device',
   }).catch(logCmdError);
-
-
-  if (localModulesEnabled()) {
-    await generateMirrorDirectoriesAndUpdateXCodeProject(parsed.projectRoot);
-  }
 
   const { runAndroidAsync } = await import('./runAndroidAsync.js');
 

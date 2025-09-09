@@ -4,7 +4,8 @@ import { glob } from 'glob';
 import path from 'path';
 
 import { fileExistsAsync } from '../../fileUtils';
-import { getLocalModulesClassNames } from '../../localModules/iosLocalModules';
+import { getIosLocalModulesClassNames } from '../../localModules/iosLocalModules';
+import { localModulesEnabled } from '../../localModules/localModules';
 import type {
   AppleCodeSignEntitlements,
   ExtraDependencies,
@@ -12,7 +13,6 @@ import type {
   ModuleIosPodspecInfo,
   PackageRevision,
 } from '../../types';
-import { localModulesEnabled } from '../../localModules/localModules';
 
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
@@ -143,7 +143,7 @@ async function generatePackageListFileContentAsync(
     .filter(Boolean);
 
   if (await localModulesEnabled()) {
-    modulesClassNames = modulesClassNames.concat(await getLocalModulesClassNames());
+    modulesClassNames = modulesClassNames.concat(await getIosLocalModulesClassNames());
   }
 
   const debugOnlyModulesClassNames = ([] as string[])

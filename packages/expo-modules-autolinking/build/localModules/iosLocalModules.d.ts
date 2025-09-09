@@ -1,1 +1,1 @@
-export declare function getLocalModulesClassNames(): Promise<string[]>;
+export declare function getIosLocalModulesClassNames(): Promise<string[]>;

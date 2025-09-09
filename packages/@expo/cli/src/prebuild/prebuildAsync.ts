@@ -15,7 +15,7 @@ import { clearNodeModulesAsync } from '../utils/nodeModules';
 import { logNewSection } from '../utils/ora';
 import { profile } from '../utils/profile';
 import { confirmAsync } from '../utils/prompts';
-import { generateMirrorDirectoriesAndUpdateXCodeProject } from '../localModules/generation';
+import { updateXCodeProject } from '../localModules/generation';
 
 const debug = require('debug')('expo:prebuild') as typeof console.log;
 
@@ -174,10 +174,9 @@ export async function prebuildAsync(
   } else {
     debug('Skipped pod install');
   }
-
-  const shouldGenerateLocalModules = exp.experiments?.localModules === true;
-  if (shouldGenerateLocalModules) {
-    await generateMirrorDirectoriesAndUpdateXCodeProject(projectRoot);
+  const localModulesEnabled = exp.experiments?.localModules === true;
+  if (options.platforms.includes('ios') && localModulesEnabled) {
+    await updateXCodeProject(projectRoot);
   }
 
   return {

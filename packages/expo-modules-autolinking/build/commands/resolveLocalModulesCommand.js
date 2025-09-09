@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolveLocalModulesCommand = resolveLocalModulesCommand;
 const autolinkingOptions_1 = require("./autolinkingOptions");
-const localModules_1 = require("../localModules/localModules");
+const androidLocalModules_1 = require("../localModules/androidLocalModules");
 function hasCoreFeatures(module) {
     return module.coreFeatures !== undefined;
 }
@@ -18,7 +18,7 @@ function resolveLocalModulesCommand(cli) {
         const autolinkingOptionsLoader = (0, autolinkingOptions_1.createAutolinkingOptionsLoader)({
             ...commandArguments,
         });
-        const localModules = await (0, localModules_1.getLocalModulesKotlinFilesPaths)();
+        const localModules = await (0, androidLocalModules_1.getLocalModulesKotlinFilesPaths)();
         if (commandArguments.json) {
             console.log(JSON.stringify({
                 modules: localModules,
