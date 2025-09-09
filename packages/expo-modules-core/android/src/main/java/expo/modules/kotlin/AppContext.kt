@@ -110,6 +110,8 @@ class AppContext(
       hostingRuntimeContext.registry.register(ErrorManagerModule())
       hostingRuntimeContext.registry.register(NativeModulesProxyModule())
       hostingRuntimeContext.registry.register(modulesProvider)
+      val localModulesList = Class.forName("local.modules.ExpoLocalModulesList").getConstructor().newInstance() as ModulesProvider
+      hostingRuntimeContext.registry.register(localModulesList)
 
       logger.info("✅ AppContext was initialized")
     }
