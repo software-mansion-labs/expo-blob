@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -26,11 +26,16 @@
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = sandbox/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		EFA763135B547D8FD62D2FCE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = sandbox/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		EFA763135B547D8FD62D2FCE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = sandbox/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = sandbox/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* sandbox-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "sandbox-Bridging-Header.h"; path = "sandbox/sandbox-Bridging-Header.h"; sourceTree = "<group>"; };
 		F6F1FA76AF20D4952D6F40DC /* Pods-sandbox.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-sandbox.debug.xcconfig"; path = "Target Support Files/Pods-sandbox/Pods-sandbox.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		511F6D3E0BBF4482B40BBCA2 /* app */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = app; path = ../app; sourceTree = SOURCE_ROOT; };
+		CA240E4118234B36BD56B6B8 /* src */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = src; path = ../src; sourceTree = SOURCE_ROOT; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
@@ -89,7 +94,6 @@
 				F6F1FA76AF20D4952D6F40DC /* Pods-sandbox.debug.xcconfig */,
 				1C667F93A0EF9AF907F6F9FD /* Pods-sandbox.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -154,14 +158,14 @@
 			);
 			dependencies = (
 			);
-			name = sandbox;
-			productName = sandbox;
-			productReference = 13B07F961A680F5B00A75B9A /* sandbox.app */;
-			productType = "com.apple.product-type.application";
 			fileSystemSynchronizedGroups = (
 				511F6D3E0BBF4482B40BBCA2 /* app */,
 				CA240E4118234B36BD56B6B8 /* src */,
 			);
+			name = sandbox;
+			productName = sandbox;
+			productReference = 13B07F961A680F5B00A75B9A /* sandbox.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -537,29 +541,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		511F6D3E0BBF4482B40BBCA2 /* app */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			name = app;
-			path = ../app;
-			sourceTree = SOURCE_ROOT;
-		};
-		CA240E4118234B36BD56B6B8 /* src */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			name = src;
-			path = ../src;
-			sourceTree = SOURCE_ROOT;
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

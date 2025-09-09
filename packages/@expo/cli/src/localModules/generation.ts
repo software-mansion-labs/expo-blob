@@ -15,7 +15,6 @@ export interface ModuleGenerationArguments {
 }
 
 const nativeExtensions = ['.kt', '.swift'];
-const mirrorStateFileName = 'mirror.json';
 
 export function getAppRoot(): string {
   return path.dirname(findPackageJsonPathAsync());
@@ -35,14 +34,9 @@ export function localModulesEnabled(): boolean {
 }
 
 function mirrorDirectories(projectRoot: string): {
-  dotExpoDir: string;
-  localModulesPath: string;
   localModulesModulesPath: string;
   localModulesTypesPath: string;
   androidLocalModulesPath: string;
-  iosPath: string;
-  iosLocalModulesPath: string;
-  xcodeProjPath: string;
 } {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const localModulesPath = path.resolve(dotExpoDir, './localModules/');
@@ -50,47 +44,32 @@ function mirrorDirectories(projectRoot: string): {
     projectRoot,
     'android/app/src/main/java/local/modules/'
   );
-  const iosLocalModulesPath = path.resolve(projectRoot, 'ios/localModules');
-  const xcodeProjPath = path.resolve(projectRoot, 'ios/sandbox.xcodeproj');
-  const iosPath = path.resolve(projectRoot, 'ios');
   const localModulesModulesPath = path.resolve(localModulesPath, 'modules');
   const localModulesTypesPath = path.resolve(localModulesPath, 'types');
 
   return {
-    dotExpoDir,
-    localModulesPath,
     localModulesModulesPath,
     localModulesTypesPath,
     androidLocalModulesPath,
-    iosPath,
-    iosLocalModulesPath,
-    xcodeProjPath,
   };
 }
 
 function createFreshMirrorDirectories(projectRoot: string) {
-  const {
-    localModulesModulesPath,
-    localModulesTypesPath,
-    androidLocalModulesPath,
-    iosLocalModulesPath,
-  } = mirrorDirectories(projectRoot);
+  const { localModulesModulesPath, localModulesTypesPath, androidLocalModulesPath } =
+    mirrorDirectories(projectRoot);
 
   // make sure the directories exist so we can remove them.
   fs.mkdirSync(localModulesModulesPath, { recursive: true });
   fs.mkdirSync(localModulesTypesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
-  fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 
   fs.rmSync(localModulesModulesPath, { recursive: true });
   fs.rmSync(localModulesTypesPath, { recursive: true });
   fs.rmSync(androidLocalModulesPath, { recursive: true });
-  fs.rmSync(iosLocalModulesPath, { recursive: true });
 
   fs.mkdirSync(localModulesModulesPath, { recursive: true });
   fs.mkdirSync(localModulesTypesPath, { recursive: true });
   fs.mkdirSync(androidLocalModulesPath, { recursive: true });
-  fs.mkdirSync(iosLocalModulesPath, { recursive: true });
 }
 
 function trimExtension(fileName: string) {
@@ -98,12 +77,8 @@ function trimExtension(fileName: string) {
 }
 
 function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string) {
-  const {
-    localModulesModulesPath,
-    localModulesTypesPath,
-    androidLocalModulesPath,
-    iosLocalModulesPath,
-  } = mirrorDirectories(projectRoot);
+  const { localModulesModulesPath, localModulesTypesPath, androidLocalModulesPath } =
+    mirrorDirectories(projectRoot);
   const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
   const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
   const moduleName = trimExtension(justFileName);
@@ -213,10 +188,10 @@ export function updateXCodeProject(projectRoot: string) {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
-function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolean {
-  const swiftWatchedDirectories = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
+function fileSupposedToBeWatched(projectRoot: string, filePathAbsolute: string): boolean {
+  const watchedDirs = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
   const realRoot = fs.realpathSync(projectRoot);
-  for (const dir of swiftWatchedDirectories) {
+  for (const dir of watchedDirs) {
     const dirPathAbsolute = path.resolve(realRoot, dir);
     if (filePathAbsolute.startsWith(dirPathAbsolute)) {
       return true;
@@ -225,111 +200,15 @@ function swiftFileWatched(projectRoot: string, filePathAbsolute: string): boolea
   return false;
 }
 
-export type LocalModulesMirrorSerialized = {
-  files: string[];
-  swiftModuleClassNames: string[];
-  kotlinClasses: string[];
-};
+function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
+  const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
+    typesAndLocalModulePaths(projectRoot, absoluteFilePath);
 
-export type LocalModulesMirror = {
-  files: Set<string>;
-  // swiftModuleClassNames: Set<string>;
-  // kotlinClasses: Set<string>;
-};
-
-// export function getMirroStateObject(projectRoot: string): LocalModulesMirror {
-//   const { localModulesPath } = mirrorDirectories(projectRoot);
-//   const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
-
-//   const localModulesObjectSerialized = JSON.parse(
-//     fs.readFileSync(mirrorFilePath).toString()
-//   ) as LocalModulesMirrorSerialized;
-
-//   const localModulesObject: LocalModulesMirror = {
-//     files: new Set<string>(),
-//     kotlinClasses: new Set<string>(),
-//     swiftModuleClassNames: new Set<string>(),
-//   };
-
-//   return localModulesObject;
-// }
-
-function getKotlinFileNameWithItsPackage(file: string): string {
-  const pacakgeRegex = /^package\s+/;
-  const lines = fs.readFileSync(file).toString().split('\n');
-  const packageLine = lines.findIndex((line) => pacakgeRegex.test(line));
-  if (packageLine < 0) {
-    return '';
+  if (filesWatched && fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
+    filesWatched.add(absoluteFilePath);
+    return;
   }
-  const packageName = lines[packageLine].substring('package '.length);
-  console.log(packageName);
-  return packageName + '.' + trimExtension(path.basename(file));
-}
-
-function saveMirrorStateObject(projectRoot: string, localModulesMirror: LocalModulesMirror) {
-  const { localModulesPath } = mirrorDirectories(projectRoot);
-  const mirrorFilePath = path.resolve(localModulesPath, mirrorStateFileName);
-
-  console.log('saving the mirror object');
-
-  const filesArray = Array.from(localModulesMirror.files);
-  const localModulesMirrorSerialized: LocalModulesMirrorSerialized = {
-    files: filesArray,
-    kotlinClasses: filesArray
-      .filter((file) => file.endsWith('.kt'))
-      // .map((file) => 'local.modules.' + path.basename(file).slice(0, -'.kt'.length).toString()),
-      .map((file) => getKotlinFileNameWithItsPackage(file)),
-    swiftModuleClassNames: filesArray
-      .filter((file) => file.endsWith('.swift'))
-      .map((file) => path.basename(file).slice(0, -'.swift'.length).toString()),
-  };
-
-  fs.writeFileSync(mirrorFilePath, JSON.stringify(localModulesMirrorSerialized));
-}
-
-function addNewFile(
-  projectRoot: string,
-  absoluteFilePath: string,
-  mirrorStateObject: LocalModulesMirror = {
-    files: new Set<string>(),
-  },
-  filesWatched?: Set<string>
-) {
-  // if (localModulesMirror === null) {
-  //   localModulesMirror = [];
-  // }
-  const {
-    moduleTypesFilePath,
-    viewTypesFilePath,
-    viewExportPath,
-    moduleExportPath,
-    moduleName,
-    androidPath,
-  } = typesAndLocalModulePaths(projectRoot, absoluteFilePath);
-
-  mirrorStateObject.files.add(absoluteFilePath);
-
-  if (absoluteFilePath.endsWith('.kt')) {
-    fs.mkdirSync(path.dirname(androidPath), { recursive: true });
-    fs.symlinkSync(absoluteFilePath, androidPath);
-    // mirrorStateObject.kotlinClasses.push('local.modules.' + moduleName);
-  } else if (
-    absoluteFilePath.endsWith('.swift') &&
-    swiftFileWatched(projectRoot, absoluteFilePath)
-  ) {
-    // we no longer do that
-    // fs.mkdirSync(path.dirname(iosFilePath), { recursive: true });
-    // fs.symlinkSync(absoluteFilePath, iosFilePath);
-    // mirrorStateObject.swiftModuleClassNames.push(moduleName);
-  }
-
   if (filesWatched) {
-    console.log('add filesWatched');
-    if (fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
-      console.log('file watched with different extension');
-      filesWatched.add(absoluteFilePath);
-      return;
-    }
     filesWatched.add(absoluteFilePath);
   }
 
@@ -348,20 +227,11 @@ export default requireNativeView("${moduleName}");`
 export default requireNativeModule("${moduleName}");`
   );
 
-  // fs.writeFile(newTypesFilePath, `declare module "*/${justFileName}" {}`);
   fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
   fs.writeFileSync(viewTypesFilePath, 'const _default: any\nexport default _default');
-  console.log('asynchronously added file', moduleTypesFilePath, 'with module name', moduleName);
 }
 
-export async function generateMirrorDirectoriesAndUpdateXCodeProject(
-  projectRoot: string,
-  filesWatched?: Set<string>,
-  mirrorStateObject: LocalModulesMirror = {
-    files: new Set<string>(),
-  }
-) {
-  return; // GREPME TODO DELETE
+async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set<string>) {
   console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
@@ -376,16 +246,18 @@ export async function generateMirrorDirectoriesAndUpdateXCodeProject(
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       console.log('visiting ' + absoluteDirentPath);
-      if (dirent.isFile() && /\.(kt|swift)$/.test(dirent.name)) {
-        addNewFile(projectRoot, absoluteDirentPath, mirrorStateObject, filesWatched);
+      if (
+        dirent.isFile() &&
+        /\.(kt|swift)$/.test(dirent.name) &&
+        fileSupposedToBeWatched(projectRoot, absoluteDirentPath)
+      ) {
+        addNewFile(projectRoot, absoluteDirentPath, filesWatched);
       } else if (dirent.isDirectory()) {
         await generateExportsAndTypesForDirectory(absoluteDirentPath);
       }
     }
   };
   await generateExportsAndTypesForDirectory(projectRoot);
-  // updateXCodeProject(projectRoot);
-  saveMirrorStateObject(projectRoot, mirrorStateObject);
 }
 
 function excludePathsGlobs(projectRoot: string): string[] {
@@ -416,7 +288,6 @@ export async function startModuleGenerationAsync({
   projectRoot,
   metro,
 }: ModuleGenerationArguments) {
-  return; // GREPME TODO DELETE
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const { exp } = getConfig(projectRoot);
   const filesWatched = new Set<string>();
@@ -453,29 +324,16 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onRemoveAppFile = (absoluteFilePath: string, mirrorStateObject: LocalModulesMirror) => {
-    const { moduleTypesFilePath, moduleExportPath, androidPath } = typesAndLocalModulePaths(
-      projectRoot,
-      absoluteFilePath
-    );
-    if (mirrorStateObject.files.has(absoluteFilePath)) {
-      mirrorStateObject.files.delete(absoluteFilePath);
-    }
-    if (absoluteFilePath.endsWith('.kt')) {
-      removeFileAndEmptyDirectories(androidPath);
-    } else if (
-      absoluteFilePath.endsWith('.swift') &&
-      swiftFileWatched(projectRoot, absoluteFilePath)
-    ) {
-      // we don't do that anymore
-      // removeFileAndEmptyDirectories(iosFilePath);
-    }
+  const onRemoveAppFile = (absoluteFilePath: string) => {
+    const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
+      typesAndLocalModulePaths(projectRoot, absoluteFilePath);
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
-      console.log('file is not watched under different extension');
       removeFileAndEmptyDirectories(moduleTypesFilePath);
       removeFileAndEmptyDirectories(moduleExportPath);
+      removeFileAndEmptyDirectories(viewExportPath);
+      removeFileAndEmptyDirectories(viewTypesFilePath);
     }
   };
 
@@ -483,14 +341,10 @@ export async function startModuleGenerationAsync({
     projectRoot,
     metro,
     eventTypes = ['add', 'change', 'delete'],
-    mirrorStateObject = {
-      files: new Set<string>(),
-    },
   }: {
     metro: MetroServer | null;
     projectRoot: string;
     eventTypes?: string[];
-    mirrorStateObject?: LocalModulesMirror;
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
@@ -514,32 +368,25 @@ export async function startModuleGenerationAsync({
           event.metadata?.type !== 'd' &&
           !/node_modules/.test(event.filePath) &&
           /\.(kt|swift)$/.test(event.filePath) &&
-          !fileExcluded(event.filePath)
+          !fileExcluded(event.filePath) &&
+          fileSupposedToBeWatched(projectRoot, event.filePath)
         ) {
           const { filePath } = event;
           console.log('watcher');
           if (event.type === 'add') {
-            addNewFile(projectRoot, filePath, mirrorStateObject, filesWatched);
+            addNewFile(projectRoot, filePath, filesWatched);
             console.log('add' + event.filePath);
           } else if (event.type === 'delete') {
             console.log('delete ' + event.filePath);
-            await onRemoveAppFile(filePath, mirrorStateObject);
+            await onRemoveAppFile(filePath);
           }
-          saveMirrorStateObject(projectRoot, mirrorStateObject);
         }
       }
     };
 
     watcher?.addListener('change', listener);
-    // watcher?.addListener('add', listener);
-    // watcher?.addListener('remove', listener);
 
-    await generateMirrorDirectoriesAndUpdateXCodeProject(
-      projectRoot,
-      filesWatched,
-      mirrorStateObject
-    );
-    console.log('end123');
+    await generateMirrorDirectories(projectRoot, filesWatched);
   };
 
   console.log('before metro watch');
