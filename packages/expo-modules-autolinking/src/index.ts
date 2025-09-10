@@ -2,11 +2,14 @@ import commander from 'commander';
 
 import { generateModulesProviderCommand } from './commands/generateModulesProviderCommand';
 import { generatePackageListCommand } from './commands/generatePackageListCommand';
+import {
+  prepareLocalModulesAndroidDirectory,
+  resolveLocalModulesCommand,
+} from './commands/localModulesCommand';
 import { reactNativeConfigCommand } from './commands/reactNativeConfigCommand';
 import { resolveCommand } from './commands/resolveCommand';
 import { searchCommand } from './commands/searchCommand';
 import { verifyCommand } from './commands/verifyCommand';
-import { resolveLocalModulesCommand } from './commands/resolveLocalModulesCommand';
 
 async function main(args: string[]) {
   const cli = commander
@@ -17,6 +20,7 @@ async function main(args: string[]) {
   searchCommand(cli);
   resolveCommand(cli);
   resolveLocalModulesCommand(cli);
+  prepareLocalModulesAndroidDirectory(cli);
   generatePackageListCommand(cli);
   generateModulesProviderCommand(cli);
   reactNativeConfigCommand(cli);

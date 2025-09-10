@@ -1,6 +1,13 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLocalModulesKotlinFilesPaths = getLocalModulesKotlinFilesPaths;
+exports.createSymlinksToKotlinFiles = createSymlinksToKotlinFiles;
+exports.generateLocalModulesListFile = generateLocalModulesListFile;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const localModules_1 = require("./localModules");
 async function getLocalModulesKotlinFilesPaths() {
     const mirror = await (0, localModules_1.getMirrorStateObject)();
@@ -11,5 +18,44 @@ async function getLocalModulesKotlinFilesPaths() {
         }
     }
     return ret;
+}
+async function createSymlinksToKotlinFiles(mirrorPath) {
+    const localModulesObject = await (0, localModules_1.getMirrorStateObject)();
+    const appRoot = await (0, localModules_1.getAppRoot)();
+    for (const filePath of localModulesObject.files) {
+        if (!filePath.endsWith('.kt')) {
+            continue;
+        }
+        const filePathRelativeToRoot = path_1.default.relative(appRoot, filePath);
+        const targetPath = path_1.default.resolve(mirrorPath, filePathRelativeToRoot);
+        fs_1.default.mkdirSync(path_1.default.dirname(targetPath), { recursive: true });
+        fs_1.default.symlinkSync(filePath, targetPath);
+    }
+}
+async function generateLocalModulesListFile(mirrorPath) {
+    const localModulesObject = await (0, localModules_1.getMirrorStateObject)();
+    const fileContent = `
+package local.modules;
+
+import java.util.Arrays;
+import java.util.List;
+
+import expo.modules.kotlin.ModulesProvider;
+import expo.modules.kotlin.modules.Module;
+
+public class ExpoLocalModulesList implements ModulesProvider {
+    private static class LazyHolder {
+        static final List<Class<? extends Module>> modulesList = Arrays.<Class<? extends Module>>asList(
+          ${localModulesObject.kotlinClasses.map((moduleClass) => `      ${moduleClass}.class`).join(',\n')}
+        );
+    }
+
+    @Override
+    public List<Class<? extends Module>> getModulesList() {
+        return local.modules.ExpoLocalModulesList.LazyHolder.modulesList;
+    }
+}
+`;
+    fs_1.default.writeFileSync(path_1.default.resolve(mirrorPath, 'ExpoLocalModulesList.java'), fileContent);
 }
 //# sourceMappingURL=androidLocalModules.js.map
