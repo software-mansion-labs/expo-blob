@@ -31,8 +31,7 @@ function resolveLocalModulesCommand(cli) {
     });
 }
 function prepareLocalModulesAndroidDirectory(cli) {
-    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules mirrorPath')).action(async (p, commandArguments) => {
-        const mirrorPath = commandArguments.args[0];
+    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath>')).action(async (mirrorPath, commandArguments) => {
         if (!mirrorPath) {
             console.log('No mirror path provieded!');
             return;

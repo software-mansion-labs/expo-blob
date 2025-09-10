@@ -27,7 +27,6 @@ const withExpoSerializers_1 = require("./serializer/withExpoSerializers");
 const postcss_1 = require("./transform-worker/postcss");
 const filePath_1 = require("./utils/filePath");
 const setOnReadonly_1 = require("./utils/setOnReadonly");
-const fs_1 = __importDefault(require("fs"));
 const debug = require('debug')('expo:metro:config');
 let hasWarnedAboutExotic = false;
 // Patch Metro's graph to support always parsing certain modules. This enables
@@ -161,9 +160,6 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     sourceExts.push('cjs');
     sourceExts.push('kt');
     sourceExts.push('swift');
-    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! extensions', {
-        flag: 'a+',
-    });
     const reanimatedVersion = getPkgVersion(projectRoot, 'react-native-reanimated');
     let sassVersion = null;
     if (isCSSEnabled) {
@@ -197,13 +193,9 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     const cacheStore = new file_store_1.FileStore({
         root: path_1.default.join(os_1.default.tmpdir(), 'metro-cache'),
     });
-    console.log('!!! begore setting resolver');
-    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! before resolver', { flag: 'a+' });
     const serverRoot = (0, paths_1.getMetroServerRoot)(projectRoot);
     const expoConfig = (0, config_1.getConfig)(projectRoot);
     const resolveLocalModulesWithRoot = (context, moduleName, platform) => {
-        console.log('!!!' + projectRoot);
-        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! projectroot: ' + projectRoot, { flag: 'a+' });
         return resolveLocalModules(projectRoot, context, moduleName, platform);
     };
     // Merge in the default config from Metro here, even though loadConfig uses it as defaults.

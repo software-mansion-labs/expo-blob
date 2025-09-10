@@ -1,3 +1,4 @@
+
 package local.modules;
 
 import java.util.Arrays;
@@ -9,8 +10,8 @@ import expo.modules.kotlin.modules.Module;
 public class ExpoLocalModulesList implements ModulesProvider {
     private static class LazyHolder {
         static final List<Class<? extends Module>> modulesList = Arrays.<Class<? extends Module>>asList(
-                local.modules.app.testView.class,
-                src.nested.simpleModule.class
+                src.nested.simpleModule.class,
+      local.modules.app.testView.class
         );
     }
 

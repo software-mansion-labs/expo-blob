@@ -9,6 +9,7 @@ import {
   getLocalModulesKotlinFilesPaths,
 } from '../localModules/androidLocalModules';
 import { getAppRoot, getMirrorStateObject } from '../localModules/localModules';
+import { cwd } from 'process';
 
 interface ResolveArguments extends AutolinkingCommonArguments {
   json?: boolean | null;
@@ -47,25 +48,24 @@ export function resolveLocalModulesCommand(cli: commander.CommanderStatic) {
 }
 
 export function prepareLocalModulesAndroidDirectory(cli: commander.CommanderStatic) {
-  return registerAutolinkingArguments(cli.command('mirror-kotlin-local-modules mirrorPath')).action(
-    async (p: string | null, commandArguments: ResolveArguments) => {
-      const mirrorPath = commandArguments.args[0];
-      if (!mirrorPath) {
-        console.log('No mirror path provieded!');
-        return;
-      }
-      if (!/.android./.test(mirrorPath)) {
-        console.log('the mirror path is not inside any android directory!');
-        return;
-      }
-      if (!path.isAbsolute(mirrorPath)) {
-        console.log('Need to provide the absolute path to the local modules andorid directory!');
-        return;
-      }
-
-      fs.rmSync(mirrorPath, { recursive: true, force: true });
-      await createSymlinksToKotlinFiles(mirrorPath);
-      await generateLocalModulesListFile(mirrorPath);
+  return registerAutolinkingArguments(
+    cli.command('mirror-kotlin-local-modules <mirrorPath>')
+  ).action(async (mirrorPath: string, commandArguments: ResolveArguments) => {
+    if (!mirrorPath) {
+      console.log('No mirror path provieded!');
+      return;
     }
-  );
+    if (!/.android./.test(mirrorPath)) {
+      console.log('the mirror path is not inside any android directory!');
+      return;
+    }
+    if (!path.isAbsolute(mirrorPath)) {
+      console.log('Need to provide the absolute path to the local modules andorid directory!');
+      return;
+    }
+
+    fs.rmSync(mirrorPath, { recursive: true, force: true });
+    await createSymlinksToKotlinFiles(mirrorPath);
+    await generateLocalModulesListFile(mirrorPath);
+  });
 }

@@ -36,40 +36,31 @@ export function localModulesEnabled(): boolean {
 function mirrorDirectories(projectRoot: string): {
   localModulesModulesPath: string;
   localModulesTypesPath: string;
-  androidLocalModulesPath: string;
 } {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const localModulesPath = path.resolve(dotExpoDir, './localModules/');
-  const androidLocalModulesPath = path.resolve(
-    projectRoot,
-    'android/app/src/main/java/local/modules/'
-  );
+
   const localModulesModulesPath = path.resolve(localModulesPath, 'modules');
   const localModulesTypesPath = path.resolve(localModulesPath, 'types');
 
   return {
     localModulesModulesPath,
     localModulesTypesPath,
-    androidLocalModulesPath,
   };
 }
 
 function createFreshMirrorDirectories(projectRoot: string) {
-  const { localModulesModulesPath, localModulesTypesPath, androidLocalModulesPath } =
-    mirrorDirectories(projectRoot);
+  const { localModulesModulesPath, localModulesTypesPath } = mirrorDirectories(projectRoot);
 
   // make sure the directories exist so we can remove them.
   fs.mkdirSync(localModulesModulesPath, { recursive: true });
   fs.mkdirSync(localModulesTypesPath, { recursive: true });
-  fs.mkdirSync(androidLocalModulesPath, { recursive: true });
 
   fs.rmSync(localModulesModulesPath, { recursive: true });
   fs.rmSync(localModulesTypesPath, { recursive: true });
-  fs.rmSync(androidLocalModulesPath, { recursive: true });
 
   fs.mkdirSync(localModulesModulesPath, { recursive: true });
   fs.mkdirSync(localModulesTypesPath, { recursive: true });
-  fs.mkdirSync(androidLocalModulesPath, { recursive: true });
 }
 
 function trimExtension(fileName: string) {
@@ -77,8 +68,7 @@ function trimExtension(fileName: string) {
 }
 
 function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string) {
-  const { localModulesModulesPath, localModulesTypesPath, androidLocalModulesPath } =
-    mirrorDirectories(projectRoot);
+  const { localModulesModulesPath, localModulesTypesPath } = mirrorDirectories(projectRoot);
   const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
   const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
   const moduleName = trimExtension(justFileName);
@@ -100,14 +90,12 @@ function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string)
     localModulesModulesPath,
     trimExtension(filePathRelativeToRoot) + '.module.js'
   );
-  const androidPath = path.resolve(androidLocalModulesPath, filePathRelativeToRoot);
   return {
     moduleTypesFilePath,
     viewTypesFilePath,
     viewExportPath,
     moduleExportPath,
     moduleName,
-    androidPath,
   };
 }
 
@@ -310,7 +298,6 @@ export async function startModuleGenerationAsync({
   );
 
   const removeFileAndEmptyDirectories = (absoluteFilePath: string) => {
-    console.log('remove File: ' + absoluteFilePath);
     if (fs.lstatSync(absoluteFilePath).isSymbolicLink()) {
       fs.unlinkSync(absoluteFilePath);
     } else {
