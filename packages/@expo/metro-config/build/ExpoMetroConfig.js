@@ -27,6 +27,7 @@ const withExpoSerializers_1 = require("./serializer/withExpoSerializers");
 const postcss_1 = require("./transform-worker/postcss");
 const filePath_1 = require("./utils/filePath");
 const setOnReadonly_1 = require("./utils/setOnReadonly");
+const fs_1 = __importDefault(require("fs"));
 const debug = require('debug')('expo:metro:config');
 let hasWarnedAboutExotic = false;
 // Patch Metro's graph to support always parsing certain modules. This enables
@@ -84,6 +85,27 @@ function memoize(fn) {
         return result;
     });
 }
+function resolveLocalModules(projectRoot, context, moduleName, platform) {
+    const localModulesModulesPath = path_1.default.resolve(projectRoot, './.expo/localModules/modules');
+    if (moduleName.endsWith('.module')) {
+        const relativePathToOriginModule = path_1.default.relative(projectRoot, path_1.default.dirname(context.originModulePath));
+        const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js');
+        return {
+            filePath: modulePath,
+            type: 'sourceFile',
+        };
+    }
+    else if (moduleName.endsWith('.view')) {
+        const relativePathToOriginModule = path_1.default.relative(projectRoot, path_1.default.dirname(context.originModulePath));
+        const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js');
+        return {
+            filePath: modulePath,
+            type: 'sourceFile',
+        };
+    }
+    const resolution = context.resolveRequest(context, moduleName, platform);
+    return resolution;
+}
 function createStableModuleIdFactory(root) {
     const getModulePath = (modulePath, scope) => {
         // NOTE: Metro allows this but it can lead to confusing errors when dynamic requires cannot be resolved, e.g. `module 456 cannot be found`.
@@ -139,6 +161,9 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     sourceExts.push('cjs');
     sourceExts.push('kt');
     sourceExts.push('swift');
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! extensions', {
+        flag: 'a+',
+    });
     const reanimatedVersion = getPkgVersion(projectRoot, 'react-native-reanimated');
     let sassVersion = null;
     if (isCSSEnabled) {
@@ -172,7 +197,15 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     const cacheStore = new file_store_1.FileStore({
         root: path_1.default.join(os_1.default.tmpdir(), 'metro-cache'),
     });
+    console.log('!!! begore setting resolver');
+    fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! before resolver', { flag: 'a+' });
     const serverRoot = (0, paths_1.getMetroServerRoot)(projectRoot);
+    const expoConfig = (0, config_1.getConfig)(projectRoot);
+    const resolveLocalModulesWithRoot = (context, moduleName, platform) => {
+        console.log('!!!' + projectRoot);
+        fs_1.default.writeFileSync('/Users/hubertb/Projects/expo-blob/apps/sandbox/debug.txt', '!!! projectroot: ' + projectRoot, { flag: 'a+' });
+        return resolveLocalModules(projectRoot, context, moduleName, platform);
+    };
     // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
     // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
     const metroConfig = mergeConfig(metroDefaultValues, {
@@ -195,6 +228,7 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
                 .filter((assetExt) => !sourceExts.includes(assetExt)),
             sourceExts,
             nodeModulesPaths,
+            resolveRequest: expoConfig.exp.experiments?.localModules === true ? resolveLocalModulesWithRoot : undefined,
         },
         cacheStores: [cacheStore],
         watcher: {

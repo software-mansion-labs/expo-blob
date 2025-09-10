@@ -1,5 +1,5 @@
 // Copyright 2023-present 650 Industries (Expo). All rights reserved.
-import { getPackageJson } from '@expo/config';
+import { getConfig, getPackageJson } from '@expo/config';
 import { getBareExtensions, getMetroServerRoot } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import type { Reporter } from '@expo/metro/metro';
@@ -12,6 +12,7 @@ import type {
 } from '@expo/metro/metro/DeltaBundler/types.flow';
 import { stableHash } from '@expo/metro/metro-cache';
 import type { ConfigT as MetroConfig, InputConfigT } from '@expo/metro/metro-config';
+import { CustomResolutionContext, Resolution } from '@expo/metro/metro-resolver/types';
 import chalk from 'chalk';
 import os from 'os';
 import path from 'path';
@@ -140,6 +141,51 @@ function memoize<T extends (...args: any[]) => any>(fn: T): T {
   }) as T;
 }
 
+function resolveLocalModules(
+  projectRoot: string,
+  context: CustomResolutionContext,
+  moduleName: string,
+  platform: string | null
+): Resolution {
+  const localModulesModulesPath = path.resolve(projectRoot, './.expo/localModules/modules');
+  if (moduleName.endsWith('.module')) {
+    const relativePathToOriginModule = path.relative(
+      projectRoot,
+      path.dirname(context.originModulePath)
+    );
+
+    const modulePath = path.resolve(
+      localModulesModulesPath,
+      relativePathToOriginModule,
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js'
+    );
+
+    return {
+      filePath: modulePath,
+      type: 'sourceFile',
+    };
+  } else if (moduleName.endsWith('.view')) {
+    const relativePathToOriginModule = path.relative(
+      projectRoot,
+      path.dirname(context.originModulePath)
+    );
+
+    const modulePath = path.resolve(
+      localModulesModulesPath,
+      relativePathToOriginModule,
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js'
+    );
+
+    return {
+      filePath: modulePath,
+      type: 'sourceFile',
+    };
+  }
+
+  const resolution = context.resolveRequest(context, moduleName, platform);
+  return resolution;
+}
+
 export function createStableModuleIdFactory(
   root: string
 ): (path: string, context?: { platform: string; environment?: string }) => number {
@@ -256,6 +302,14 @@ export function getDefaultConfig(
   });
 
   const serverRoot = getMetroServerRoot(projectRoot);
+  const expoConfig = getConfig(projectRoot);
+  const resolveLocalModulesWithRoot = (
+    context: CustomResolutionContext,
+    moduleName: string,
+    platform: string | null
+  ) => {
+    return resolveLocalModules(projectRoot, context, moduleName, platform);
+  };
 
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
@@ -280,6 +334,8 @@ export function getDefaultConfig(
         .filter((assetExt: string) => !sourceExts.includes(assetExt)),
       sourceExts,
       nodeModulesPaths,
+      resolveRequest:
+        expoConfig.exp.experiments?.localModules === true ? resolveLocalModulesWithRoot : undefined,
     },
     cacheStores: [cacheStore],
     watcher: {
