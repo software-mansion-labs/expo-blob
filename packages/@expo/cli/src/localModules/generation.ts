@@ -220,7 +220,6 @@ export default requireNativeModule("${moduleName}");`
 }
 
 async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set<string>) {
-  console.log('generate mirror directories and update xcode proejct');
   createFreshMirrorDirectories(projectRoot);
 
   const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
@@ -233,7 +232,6 @@ async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set
     const dir = fs.opendirSync(absoluteDirPath);
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
-      console.log('visiting ' + absoluteDirentPath);
       if (
         dirent.isFile() &&
         /\.(kt|swift)$/.test(dirent.name) &&
@@ -280,7 +278,6 @@ export async function startModuleGenerationAsync({
   const { exp } = getConfig(projectRoot);
   const filesWatched = new Set<string>();
 
-  console.log('inside async start metro..');
   const fileExcluded = (absolutePath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absolutePath, glob)) {
@@ -305,7 +302,6 @@ export async function startModuleGenerationAsync({
     }
     let dirNow: string = path.dirname(absoluteFilePath);
     while (fs.readdirSync(dirNow).length === 0 && dirNow !== dotExpoDir) {
-      console.log('remove dir: ' + dirNow);
       fs.rmdirSync(dirNow);
       dirNow = path.dirname(dirNow);
     }
@@ -335,7 +331,6 @@ export async function startModuleGenerationAsync({
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
-    console.log('before listener');
     const listener = async ({
       eventsQueue,
     }: {
@@ -347,9 +342,7 @@ export async function startModuleGenerationAsync({
         type: string;
       }[];
     }) => {
-      console.log('listener');
       for (const event of eventsQueue) {
-        console.log(event.type);
         if (
           eventTypes.includes(event.type) &&
           event.metadata?.type !== 'd' &&
@@ -359,12 +352,9 @@ export async function startModuleGenerationAsync({
           fileSupposedToBeWatched(projectRoot, event.filePath)
         ) {
           const { filePath } = event;
-          console.log('watcher');
           if (event.type === 'add') {
             addNewFile(projectRoot, filePath, filesWatched);
-            console.log('add' + event.filePath);
           } else if (event.type === 'delete') {
-            console.log('delete ' + event.filePath);
             await onRemoveAppFile(filePath);
           }
         }
@@ -376,7 +366,6 @@ export async function startModuleGenerationAsync({
     await generateMirrorDirectories(projectRoot, filesWatched);
   };
 
-  console.log('before metro watch');
   metroWatchKotlinAndSwiftFiles({
     projectRoot,
     metro,

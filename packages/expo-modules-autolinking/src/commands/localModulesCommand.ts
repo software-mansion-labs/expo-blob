@@ -22,15 +22,15 @@ export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) 
     ) => {
       const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
       if (!mirrorPath) {
-        console.log('No mirror path provieded!');
+        console.log('No mirror path provided!');
         return;
       }
       if (!/.android./.test(mirrorPath)) {
-        console.log('the mirror path is not inside any android directory!');
+        console.log('The mirror path is not inside any android directory!');
         return;
       }
       if (!path.isAbsolute(mirrorPath)) {
-        console.log('Need to provide the absolute path to the local modules andorid directory!');
+        console.log('Need to provide the absolute path to the local modules android directory!');
         return;
       }
 
