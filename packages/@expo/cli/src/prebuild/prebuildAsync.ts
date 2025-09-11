@@ -8,6 +8,7 @@ import { ensureConfigAsync } from './ensureConfigAsync';
 import { assertPlatforms, ensureValidPlatforms, resolveTemplateOption } from './resolveOptions';
 import { updateFromTemplateAsync } from './updateFromTemplate';
 import { installAsync } from '../install/installAsync';
+import { updateXCodeProject } from '../localModules/generation';
 import { Log } from '../log';
 import { env } from '../utils/env';
 import { setNodeEnv } from '../utils/nodeEnv';
@@ -15,7 +16,6 @@ import { clearNodeModulesAsync } from '../utils/nodeModules';
 import { logNewSection } from '../utils/ora';
 import { profile } from '../utils/profile';
 import { confirmAsync } from '../utils/prompts';
-import { updateXCodeProject } from '../localModules/generation';
 
 const debug = require('debug')('expo:prebuild') as typeof console.log;
 
