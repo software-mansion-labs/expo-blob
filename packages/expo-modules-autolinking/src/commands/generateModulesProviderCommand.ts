@@ -17,7 +17,9 @@ interface GenerateModulesProviderArguments extends AutolinkingCommonArguments {
 
 /** Generates a source file listing all packages to link in the runtime */
 export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
-  return registerAutolinkingArguments(cli.command('generate-modules-provider [searchPaths...]'))
+  return registerAutolinkingArguments(
+    cli.command('generate-modules-provider <serializedWatchedDirs> [searchPaths...]')
+  )
     .option(
       '-t, --target <path>',
       'Path to the target file, where the package list should be written to.'
@@ -28,7 +30,11 @@ export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
       'Names of the packages to include in the generated modules provider.'
     )
     .action(
-      async (searchPaths: string[] | null, commandArguments: GenerateModulesProviderArguments) => {
+      async (
+        serializedWatchedDirs: string,
+        searchPaths: string[] | null,
+        commandArguments: GenerateModulesProviderArguments
+      ) => {
         const platform = commandArguments.platform ?? 'apple';
         const autolinkingOptionsLoader = createAutolinkingOptionsLoader({
           ...commandArguments,
@@ -49,12 +55,17 @@ export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
         const filteredModules = expoModulesResolveResults.filter((module) =>
           includeModules.has(module.packageName)
         );
+        const watchedDirs = JSON.parse(serializedWatchedDirs).watchedDirs;
 
-        await generateModulesProviderAsync(filteredModules, {
-          platform,
-          targetPath: commandArguments.target,
-          entitlementPath: commandArguments.entitlement ?? null,
-        });
+        await generateModulesProviderAsync(
+          filteredModules,
+          {
+            platform,
+            targetPath: commandArguments.target,
+            entitlementPath: commandArguments.entitlement ?? null,
+          },
+          watchedDirs
+        );
       }
     );
 }

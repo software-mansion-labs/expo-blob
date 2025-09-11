@@ -18,23 +18,6 @@ const findPackageJsonPathAsync = async (): Promise<string> => {
   return result;
 };
 
-type AppJson = {
-  expo: {
-    experiments?: {
-      localModules?: boolean;
-    };
-    localModules?: {
-      watchedDirs?: [string];
-    };
-  };
-};
-
-async function getAppJson(): Promise<AppJson> {
-  const appJsonPath = path.resolve(path.dirname(await findPackageJsonPathAsync()), 'app.json');
-  const appJson: AppJson = JSON.parse(fs.readFileSync(appJsonPath).toString());
-  return appJson;
-}
-
 export async function localModulesEnabled(): Promise<boolean> {
   const appJsonPath = path.resolve(path.dirname(await findPackageJsonPathAsync()), 'app.json');
   const obj = JSON.parse(fs.readFileSync(appJsonPath).toString());
@@ -67,9 +50,8 @@ function getSwiftModuleClassName(absoluteFilePath: string): string {
   return trimExtension(path.basename(absoluteFilePath));
 }
 
-export async function getMirrorStateObject(): Promise<LocalModulesMirror> {
+export async function getMirrorStateObject(watchedDirs: string[]): Promise<LocalModulesMirror> {
   const appRoot = await getAppRoot();
-  const appJson = await getAppJson();
   const localModulesMirror: LocalModulesMirror = {
     kotlinClasses: [],
     swiftModuleClassNames: [],
@@ -99,7 +81,7 @@ export async function getMirrorStateObject(): Promise<LocalModulesMirror> {
     }
   };
 
-  for (const dir of appJson.expo.localModules?.watchedDirs ?? []) {
+  for (const dir of watchedDirs ?? []) {
     await recursivelyScanDirectory(path.resolve(appRoot, dir));
   }
   return localModulesMirror;

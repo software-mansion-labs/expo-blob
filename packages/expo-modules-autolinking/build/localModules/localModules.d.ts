@@ -5,4 +5,4 @@ export type LocalModulesMirror = {
 };
 export declare function localModulesEnabled(): Promise<boolean>;
 export declare function getAppRoot(): Promise<string>;
-export declare function getMirrorStateObject(): Promise<LocalModulesMirror>;
+export declare function getMirrorStateObject(watchedDirs: string[]): Promise<LocalModulesMirror>;

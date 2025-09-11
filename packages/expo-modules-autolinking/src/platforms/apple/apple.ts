@@ -98,14 +98,16 @@ export async function resolveExtraBuildDependenciesAsync(
 export async function generateModulesProviderAsync(
   modules: ModuleDescriptorIos[],
   targetPath: string,
-  entitlementPath: string | null
+  entitlementPath: string | null,
+  watchedDirs: string[]
 ): Promise<void> {
   const className = path.basename(targetPath, path.extname(targetPath));
   const entitlements = await parseEntitlementsAsync(entitlementPath);
   const generatedFileContent = await generatePackageListFileContentAsync(
     modules,
     className,
-    entitlements
+    entitlements,
+    watchedDirs
   );
   const parentPath = path.dirname(targetPath);
   await fs.promises.mkdir(parentPath, { recursive: true });
@@ -118,7 +120,8 @@ export async function generateModulesProviderAsync(
 async function generatePackageListFileContentAsync(
   modules: ModuleDescriptorIos[],
   className: string,
-  entitlements: AppleCodeSignEntitlements
+  entitlements: AppleCodeSignEntitlements,
+  watchedDirs: string[]
 ): Promise<string> {
   const iosModules = modules.filter(
     (module) =>
@@ -143,7 +146,7 @@ async function generatePackageListFileContentAsync(
     .filter(Boolean);
 
   if (await localModulesEnabled()) {
-    modulesClassNames = modulesClassNames.concat(await getIosLocalModulesClassNames());
+    modulesClassNames = modulesClassNames.concat(await getIosLocalModulesClassNames(watchedDirs));
   }
 
   const debugOnlyModulesClassNames = ([] as string[])

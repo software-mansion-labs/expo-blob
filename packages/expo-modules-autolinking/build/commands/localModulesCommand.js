@@ -3,35 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveLocalModulesCommand = resolveLocalModulesCommand;
-exports.prepareLocalModulesAndroidDirectory = prepareLocalModulesAndroidDirectory;
+exports.mirrorKotlinLocalModulesCommand = mirrorKotlinLocalModulesCommand;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const autolinkingOptions_1 = require("./autolinkingOptions");
 const androidLocalModules_1 = require("../localModules/androidLocalModules");
-function resolveLocalModulesCommand(cli) {
-    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('resolveLocalModules'))
-        .option('-j, --json', 'Output results in the plain JSON format.', () => true, false)
-        .action(async (commandArguments) => {
-        const platform = commandArguments.platform ?? 'android';
-        if (platform !== 'android') {
-            console.log('resolve local modules only supported for android.');
-        }
-        const localModules = await (0, androidLocalModules_1.getLocalModulesKotlinFilesPaths)();
-        if (commandArguments.json) {
-            console.log(JSON.stringify({
-                modules: localModules,
-            }));
-        }
-        else {
-            console.log(require('util').inspect({
-                modules: localModules,
-            }, false, null, true));
-        }
-    });
-}
-function prepareLocalModulesAndroidDirectory(cli) {
-    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath>')).action(async (mirrorPath, commandArguments) => {
+function mirrorKotlinLocalModulesCommand(cli) {
+    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <watchedDirs...>')).action(async (mirrorPath, watchedDirs, commandArguments) => {
         if (!mirrorPath) {
             console.log('No mirror path provieded!');
             return;
@@ -45,8 +23,8 @@ function prepareLocalModulesAndroidDirectory(cli) {
             return;
         }
         fs_1.default.rmSync(mirrorPath, { recursive: true, force: true });
-        await (0, androidLocalModules_1.createSymlinksToKotlinFiles)(mirrorPath);
-        await (0, androidLocalModules_1.generateLocalModulesListFile)(mirrorPath);
+        await (0, androidLocalModules_1.createSymlinksToKotlinFiles)(mirrorPath, watchedDirs);
+        await (0, androidLocalModules_1.generateLocalModulesListFile)(mirrorPath, watchedDirs);
     });
 }
 //# sourceMappingURL=localModulesCommand.js.map

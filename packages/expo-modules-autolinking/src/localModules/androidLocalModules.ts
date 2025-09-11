@@ -3,19 +3,8 @@ import path from 'path';
 
 import { getAppRoot, getMirrorStateObject } from './localModules';
 
-export async function getLocalModulesKotlinFilesPaths(): Promise<{ path: string }[]> {
-  const mirror = await getMirrorStateObject();
-  const ret: { path: string }[] = [];
-  for (const file of mirror.files) {
-    if (file && file.endsWith('.kt')) {
-      ret.push({ path: file });
-    }
-  }
-  return ret;
-}
-
-export async function createSymlinksToKotlinFiles(mirrorPath: string) {
-  const localModulesObject = await getMirrorStateObject();
+export async function createSymlinksToKotlinFiles(mirrorPath: string, watchedDirs: string[]) {
+  const localModulesObject = await getMirrorStateObject(watchedDirs);
   const appRoot = await getAppRoot();
 
   for (const filePath of localModulesObject.files) {
@@ -30,8 +19,8 @@ export async function createSymlinksToKotlinFiles(mirrorPath: string) {
   }
 }
 
-export async function generateLocalModulesListFile(mirrorPath: string) {
-  const localModulesObject = await getMirrorStateObject();
+export async function generateLocalModulesListFile(mirrorPath: string, watchedDirs: string[]) {
+  const localModulesObject = await getMirrorStateObject(watchedDirs);
   const fileContent = `
 package local.modules;
 

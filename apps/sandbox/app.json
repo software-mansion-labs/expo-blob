@@ -41,7 +41,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      ["expo-modules-autolinking", {}]
     ],
     "web": {
       "bundler": "metro",

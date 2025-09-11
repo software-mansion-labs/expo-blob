@@ -18,11 +18,6 @@ const findPackageJsonPathAsync = async () => {
     }
     return result;
 };
-async function getAppJson() {
-    const appJsonPath = path_1.default.resolve(path_1.default.dirname(await findPackageJsonPathAsync()), 'app.json');
-    const appJson = JSON.parse(fs_1.default.readFileSync(appJsonPath).toString());
-    return appJson;
-}
 async function localModulesEnabled() {
     const appJsonPath = path_1.default.resolve(path_1.default.dirname(await findPackageJsonPathAsync()), 'app.json');
     const obj = JSON.parse(fs_1.default.readFileSync(appJsonPath).toString());
@@ -48,9 +43,8 @@ function getKotlinFileNameWithItsPackage(absoluteFilePath) {
 function getSwiftModuleClassName(absoluteFilePath) {
     return trimExtension(path_1.default.basename(absoluteFilePath));
 }
-async function getMirrorStateObject() {
+async function getMirrorStateObject(watchedDirs) {
     const appRoot = await getAppRoot();
-    const appJson = await getAppJson();
     const localModulesMirror = {
         kotlinClasses: [],
         swiftModuleClassNames: [],
@@ -78,7 +72,7 @@ async function getMirrorStateObject() {
             }
         }
     };
-    for (const dir of appJson.expo.localModules?.watchedDirs ?? []) {
+    for (const dir of watchedDirs ?? []) {
         await recursivelyScanDirectory(path_1.default.resolve(appRoot, dir));
     }
     return localModulesMirror;

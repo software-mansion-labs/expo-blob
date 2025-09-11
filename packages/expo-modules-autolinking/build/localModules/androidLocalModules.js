@@ -3,24 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLocalModulesKotlinFilesPaths = getLocalModulesKotlinFilesPaths;
 exports.createSymlinksToKotlinFiles = createSymlinksToKotlinFiles;
 exports.generateLocalModulesListFile = generateLocalModulesListFile;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const localModules_1 = require("./localModules");
-async function getLocalModulesKotlinFilesPaths() {
-    const mirror = await (0, localModules_1.getMirrorStateObject)();
-    const ret = [];
-    for (const file of mirror.files) {
-        if (file && file.endsWith('.kt')) {
-            ret.push({ path: file });
-        }
-    }
-    return ret;
-}
-async function createSymlinksToKotlinFiles(mirrorPath) {
-    const localModulesObject = await (0, localModules_1.getMirrorStateObject)();
+async function createSymlinksToKotlinFiles(mirrorPath, watchedDirs) {
+    const localModulesObject = await (0, localModules_1.getMirrorStateObject)(watchedDirs);
     const appRoot = await (0, localModules_1.getAppRoot)();
     for (const filePath of localModulesObject.files) {
         if (!filePath.endsWith('.kt')) {
@@ -32,8 +21,8 @@ async function createSymlinksToKotlinFiles(mirrorPath) {
         fs_1.default.symlinkSync(filePath, targetPath);
     }
 }
-async function generateLocalModulesListFile(mirrorPath) {
-    const localModulesObject = await (0, localModules_1.getMirrorStateObject)();
+async function generateLocalModulesListFile(mirrorPath, watchedDirs) {
+    const localModulesObject = await (0, localModules_1.getMirrorStateObject)(watchedDirs);
     const fileContent = `
 package local.modules;
 

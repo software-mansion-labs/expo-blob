@@ -18,8 +18,7 @@ async function main(args) {
     (0, verifyCommand_1.verifyCommand)(cli);
     (0, searchCommand_1.searchCommand)(cli);
     (0, resolveCommand_1.resolveCommand)(cli);
-    (0, localModulesCommand_1.resolveLocalModulesCommand)(cli);
-    (0, localModulesCommand_1.prepareLocalModulesAndroidDirectory)(cli);
+    (0, localModulesCommand_1.mirrorKotlinLocalModulesCommand)(cli);
     (0, generatePackageListCommand_1.generatePackageListCommand)(cli);
     (0, generateModulesProviderCommand_1.generateModulesProviderCommand)(cli);
     (0, reactNativeConfigCommand_1.reactNativeConfigCommand)(cli);
