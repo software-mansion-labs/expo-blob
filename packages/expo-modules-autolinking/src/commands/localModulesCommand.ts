@@ -13,9 +13,14 @@ interface ResolveArguments extends AutolinkingCommonArguments {
 
 export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) {
   return registerAutolinkingArguments(
-    cli.command('mirror-kotlin-local-modules <mirrorPath> <watchedDirs...>')
+    cli.command('mirror-kotlin-local-modules <mirrorPath> <watchedDirsSerialized>')
   ).action(
-    async (mirrorPath: string, watchedDirs: string[], commandArguments: ResolveArguments) => {
+    async (
+      mirrorPath: string,
+      watchedDirsSerialized: string,
+      commandArguments: ResolveArguments
+    ) => {
+      const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
       if (!mirrorPath) {
         console.log('No mirror path provieded!');
         return;
