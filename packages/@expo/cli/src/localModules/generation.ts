@@ -7,7 +7,6 @@ import path from 'path';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
-import { findUpProjectRootOrAssert } from '../utils/findUp';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -16,24 +15,7 @@ export interface ModuleGenerationArguments {
 
 const nativeExtensions = ['.kt', '.swift'];
 
-export function getAppRoot(): string {
-  return path.dirname(findPackageJsonPathAsync());
-}
-
-const findPackageJsonPathAsync = (): string => {
-  const cwd = process.cwd();
-  const result = findUpProjectRootOrAssert(cwd);
-  return path.resolve(result, 'package.json');
-};
-
-export function localModulesEnabled(): boolean {
-  const appJsonPath = path.resolve(path.dirname(findPackageJsonPathAsync()), 'app.json');
-  return (
-    JSON.parse(fs.readFileSync(appJsonPath).toString())?.expo?.experiments?.localModules === true
-  );
-}
-
-function mirrorDirectories(projectRoot: string): {
+function getMirrorDirectories(projectRoot: string): {
   localModulesModulesPath: string;
   localModulesTypesPath: string;
 } {
@@ -50,27 +32,27 @@ function mirrorDirectories(projectRoot: string): {
 }
 
 function createFreshMirrorDirectories(projectRoot: string) {
-  const { localModulesModulesPath, localModulesTypesPath } = mirrorDirectories(projectRoot);
+  const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
 
   // make sure the directories exist so we can remove them.
-  fs.mkdirSync(localModulesModulesPath, { recursive: true });
-  fs.mkdirSync(localModulesTypesPath, { recursive: true });
-
-  fs.rmSync(localModulesModulesPath, { recursive: true });
-  fs.rmSync(localModulesTypesPath, { recursive: true });
-
-  fs.mkdirSync(localModulesModulesPath, { recursive: true });
-  fs.mkdirSync(localModulesTypesPath, { recursive: true });
+  if (!fs.existsSync(localModulesModulesPath)) {
+    fs.mkdirSync(localModulesModulesPath, { recursive: true });
+  }
+  if (!fs.existsSync(localModulesTypesPath)) {
+    fs.mkdirSync(localModulesTypesPath, { recursive: true });
+  }
 }
 
 function trimExtension(fileName: string) {
   return fileName.substring(0, fileName.lastIndexOf('.'));
 }
 
-function typesAndLocalModulePaths(projectRoot: string, absoluteFilePath: string) {
-  const { localModulesModulesPath, localModulesTypesPath } = mirrorDirectories(projectRoot);
-  const splitPath = absoluteFilePath.toString().split('/') ?? ['EmptyModule.kt'];
-  const justFileName = splitPath?.at(-1) ?? 'EmptyModule.kt';
+function typesAndLocalModulePathsForFile(projectRoot: string, absoluteFilePath: string) {
+  const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
+  const splitPath = absoluteFilePath.toString().split('/');
+  const justFileName = splitPath.at(-1);
+  if (!justFileName)
+    throw new Error("In local modules we shouldn't watch files other than .kt and .swift");
   const moduleName = trimExtension(justFileName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
@@ -190,7 +172,7 @@ function fileSupposedToBeWatched(projectRoot: string, filePathAbsolute: string):
 
 function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
-    typesAndLocalModulePaths(projectRoot, absoluteFilePath);
+    typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
 
   if (filesWatched && fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
     filesWatched.add(absoluteFilePath);
@@ -309,7 +291,7 @@ export async function startModuleGenerationAsync({
 
   const onRemoveAppFile = (absoluteFilePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
-      typesAndLocalModulePaths(projectRoot, absoluteFilePath);
+      typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
