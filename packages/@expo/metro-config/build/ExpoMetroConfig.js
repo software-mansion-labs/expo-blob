@@ -198,6 +198,8 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     const resolveLocalModulesWithRoot = (context, moduleName, platform) => {
         return resolveLocalModules(projectRoot, context, moduleName, platform);
     };
+    const contextResolveRequest = (context, moduleName, platform) => context.resolveRequest(context, moduleName, platform);
+    const defaultResolveRequest = metroDefaultValues.resolver.resolveRequest ?? contextResolveRequest;
     // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
     // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
     const metroConfig = mergeConfig(metroDefaultValues, {
@@ -220,7 +222,9 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
                 .filter((assetExt) => !sourceExts.includes(assetExt)),
             sourceExts,
             nodeModulesPaths,
-            resolveRequest: expoConfig.exp.experiments?.localModules === true ? resolveLocalModulesWithRoot : undefined,
+            resolveRequest: expoConfig.exp.experiments?.localModules === true
+                ? resolveLocalModulesWithRoot
+                : defaultResolveRequest,
         },
         cacheStores: [cacheStore],
         watcher: {
