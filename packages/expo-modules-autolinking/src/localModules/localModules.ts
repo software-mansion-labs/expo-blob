@@ -42,7 +42,6 @@ function getKotlinFileNameWithItsPackage(absoluteFilePath: string): string {
     return '';
   }
   const packageName = lines[packageLine].substring('package '.length);
-  console.log(packageName);
   return packageName + '.' + trimExtension(path.basename(absoluteFilePath));
 }
 

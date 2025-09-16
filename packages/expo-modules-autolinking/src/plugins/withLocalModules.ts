@@ -4,8 +4,6 @@ const { createBuildGradlePropsConfigPlugin } = AndroidConfig.BuildProperties;
 const { createBuildPodfilePropsConfigPlugin } = IOSConfig.BuildProperties;
 
 export const withLocalModules = (config: ExpoConfig, props: any) => {
-  // console.log(config);
-
   config = createBuildGradlePropsConfigPlugin(
     [
       {

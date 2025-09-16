@@ -131,9 +131,11 @@ class AppContext(
   }
 
   private fun registerLocalModulesList() {
-    val localModulesList = Class.forName("local.modules.ExpoLocalModulesList").getConstructor()
-      .newInstance() as ModulesProvider
-    hostingRuntimeContext.registry.register(localModulesList)
+    try{
+      val localModulesList = Class.forName("local.modules.ExpoLocalModulesList").getConstructor()
+        .newInstance() as ModulesProvider
+      hostingRuntimeContext.registry.register(localModulesList)
+    } catch(e: Error) {}
   }
 
   /**

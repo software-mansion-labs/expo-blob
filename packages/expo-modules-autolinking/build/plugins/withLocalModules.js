@@ -5,7 +5,6 @@ const config_plugins_1 = require("expo/config-plugins");
 const { createBuildGradlePropsConfigPlugin } = config_plugins_1.AndroidConfig.BuildProperties;
 const { createBuildPodfilePropsConfigPlugin } = config_plugins_1.IOSConfig.BuildProperties;
 const withLocalModules = (config, props) => {
-    // console.log(config);
     config = createBuildGradlePropsConfigPlugin([
         {
             propName: 'expo.localModules.enabled',

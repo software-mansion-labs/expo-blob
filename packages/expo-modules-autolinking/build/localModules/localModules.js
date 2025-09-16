@@ -37,7 +37,6 @@ function getKotlinFileNameWithItsPackage(absoluteFilePath) {
         return '';
     }
     const packageName = lines[packageLine].substring('package '.length);
-    console.log(packageName);
     return packageName + '.' + trimExtension(path_1.default.basename(absoluteFilePath));
 }
 function getSwiftModuleClassName(absoluteFilePath) {
