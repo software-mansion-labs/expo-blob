@@ -21,7 +21,7 @@ async function createSymlinksToKotlinFiles(mirrorPath, watchedDirs) {
         fs_1.default.symlinkSync(filePath, targetPath);
     }
 }
-async function generateLocalModulesListFile(mirrorPath, watchedDirs) {
+async function generateLocalModulesListFile(localModulesListPath, watchedDirs) {
     const localModulesObject = await (0, localModules_1.getMirrorStateObject)(watchedDirs);
     const fileContent = `
 package local.modules;
@@ -41,6 +41,7 @@ public class ExpoLocalModulesList implements ModulesProvider {
   }
 }
 `;
-    fs_1.default.writeFileSync(path_1.default.resolve(mirrorPath, 'ExpoLocalModulesList.java'), fileContent);
+    fs_1.default.mkdirSync(localModulesListPath, { recursive: true });
+    fs_1.default.writeFileSync(path_1.default.resolve(localModulesListPath, 'ExpoLocalModulesList.java'), fileContent);
 }
 //# sourceMappingURL=androidLocalModules.js.map

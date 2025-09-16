@@ -25,7 +25,7 @@ function mirrorKotlinLocalModulesCommand(cli) {
         }
         fs_1.default.rmSync(mirrorPath, { recursive: true, force: true });
         await (0, androidLocalModules_1.createSymlinksToKotlinFiles)(mirrorPath, watchedDirs);
-        await (0, androidLocalModules_1.generateLocalModulesListFile)(mirrorPath, watchedDirs);
+        await (0, androidLocalModules_1.generateLocalModulesListFile)(localModulesListPath, watchedDirs);
     });
 }
 //# sourceMappingURL=localModulesCommand.js.map

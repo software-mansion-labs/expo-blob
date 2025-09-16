@@ -19,7 +19,10 @@ export async function createSymlinksToKotlinFiles(mirrorPath: string, watchedDir
   }
 }
 
-export async function generateLocalModulesListFile(mirrorPath: string, watchedDirs: string[]) {
+export async function generateLocalModulesListFile(
+  localModulesListPath: string,
+  watchedDirs: string[]
+) {
   const localModulesObject = await getMirrorStateObject(watchedDirs);
   const fileContent = `
 package local.modules;
@@ -40,5 +43,6 @@ public class ExpoLocalModulesList implements ModulesProvider {
 }
 `;
 
-  fs.writeFileSync(path.resolve(mirrorPath, 'ExpoLocalModulesList.java'), fileContent);
+  fs.mkdirSync(localModulesListPath, { recursive: true });
+  fs.writeFileSync(path.resolve(localModulesListPath, 'ExpoLocalModulesList.java'), fileContent);
 }

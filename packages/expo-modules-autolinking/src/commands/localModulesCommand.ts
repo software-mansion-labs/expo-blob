@@ -41,7 +41,7 @@ export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) 
 
       fs.rmSync(mirrorPath, { recursive: true, force: true });
       await createSymlinksToKotlinFiles(mirrorPath, watchedDirs);
-      await generateLocalModulesListFile(mirrorPath, watchedDirs);
+      await generateLocalModulesListFile(localModulesListPath, watchedDirs);
     }
   );
 }

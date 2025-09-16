@@ -130,6 +130,13 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
+    sourceSets {
+        main {
+            java {
+                srcDirs += [file('build/local/modules/').absolutePath]
+            }
+        }
+    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -182,6 +189,10 @@ dependencies {
 }
 
 gradle.projectsEvaluated {
+    println "mirror-kotlin-local-modules " +
+            file('src/main/java/local/modules/').absolutePath + " " +
+            file('build/local/modules/').absolutePath + " " +
+            project.properties["expo.localModules.watchedDirs"]
     if (project.properties["expo.localModules.enabled"] == "true") {
         providers.exec {
             workingDir(projectRoot)
@@ -192,7 +203,7 @@ gradle.projectsEvaluated {
                     "require(require.resolve('expo-modules-autolinking', { paths: [require.resolve('expo/package.json')] }))(process.argv.slice(1))",
                     "mirror-kotlin-local-modules",
                     file('src/main/java/local/modules/').absolutePath,
-                    file('src/main/java/local/modules/').absolutePath,
+                    file('build/local/modules/').absolutePath,
                     project.properties["expo.localModules.watchedDirs"]
             )
         }.standardOutput.asText.get()
