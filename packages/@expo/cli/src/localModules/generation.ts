@@ -49,11 +49,11 @@ function trimExtension(fileName: string) {
 
 function typesAndLocalModulePathsForFile(projectRoot: string, absoluteFilePath: string) {
   const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
-  const splitPath = absoluteFilePath.toString().split('/');
-  const justFileName = splitPath.at(-1);
-  if (!justFileName)
+  const splitPath = absoluteFilePath.split('/');
+  const fileName = splitPath.at(-1);
+  if (!fileName)
     throw new Error("In local modules we shouldn't watch files other than .kt and .swift");
-  const moduleName = trimExtension(justFileName);
+  const moduleName = trimExtension(fileName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
   const moduleTypesFilePath = path.resolve(

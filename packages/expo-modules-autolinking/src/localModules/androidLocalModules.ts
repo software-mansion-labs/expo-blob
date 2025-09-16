@@ -31,16 +31,12 @@ import expo.modules.kotlin.ModulesProvider;
 import expo.modules.kotlin.modules.Module;
 
 public class ExpoLocalModulesList implements ModulesProvider {
-    private static class LazyHolder {
-        static final List<Class<? extends Module>> modulesList = Arrays.<Class<? extends Module>>asList(
-          ${localModulesObject.kotlinClasses.map((moduleClass) => `      ${moduleClass}.class`).join(',\n')}
-        );
-    }
-
-    @Override
-    public List<Class<? extends Module>> getModulesList() {
-        return local.modules.ExpoLocalModulesList.LazyHolder.modulesList;
-    }
+  @Override
+  public List<Class<? extends Module>> getModulesList() {
+    return Arrays.<Class<? extends Module>>asList(
+      ${localModulesObject.kotlinClasses.map((moduleClass) => `      ${moduleClass}.class`).join(',\n')}
+    );
+  }
 }
 `;
 

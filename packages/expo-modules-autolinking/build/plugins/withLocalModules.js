@@ -8,11 +8,11 @@ const withLocalModules = (config, props) => {
     // console.log(config);
     config = createBuildGradlePropsConfigPlugin([
         {
-            propName: 'localModules.enabled',
+            propName: 'expo.localModules.enabled',
             propValueGetter: (conf) => (conf.experiments?.localModules === true).toString(),
         },
         {
-            propName: 'localModules.watchedDirs',
+            propName: 'expo.localModules.watchedDirs',
             propValueGetter: (conf) => {
                 if (conf.experiments?.localModules !== true) {
                     return JSON.stringify({ watchedDirs: [] });
@@ -23,11 +23,11 @@ const withLocalModules = (config, props) => {
     ], 'withAndroidLocalModules')(config);
     config = createBuildPodfilePropsConfigPlugin([
         {
-            propName: 'localModules.enabled',
+            propName: 'expo.localModules.enabled',
             propValueGetter: (conf) => (conf.experiments?.localModules === true).toString(),
         },
         {
-            propName: 'localModules.watchedDirs',
+            propName: 'expo.localModules.watchedDirs',
             propValueGetter: (conf) => {
                 if (conf.experiments?.localModules !== true) {
                     return JSON.stringify({ watchedDirs: [] });

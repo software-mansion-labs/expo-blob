@@ -185,7 +185,7 @@ module Expo
       exclude = @options.fetch(:exclude, [])
       args = []
 
-      args.concat([ENV['LOCAL_MODULES_WATCHED_DIRS']])
+      args.concat([ENV['EXPO_LOCAL_MODULES_WATCHED_DIRS']])
 
       if !search_paths.nil? && !search_paths.empty?
         args.concat(search_paths)
@@ -229,7 +229,7 @@ module Expo
     public def generate_modules_provider_command_args(target_path)
       node_command_args('generate-modules-provider').concat(
         [
-          ENV['LOCAL_MODULES_WATCHED_DIRS'],
+          ENV['EXPO_LOCAL_MODULES_WATCHED_DIRS'],
           '--target',
           target_path,
           '--packages'

@@ -120,7 +120,7 @@ class AppContext(
       registry.register(modulesProvider)
 
       // Register local modules
-      registerLocalModulesListIfExists()
+      registerLocalModulesList()
 
       logger.info("✅ AppContext was initialized")
     }
@@ -130,14 +130,10 @@ class AppContext(
     hostingRuntimeContext.registry.postOnCreate()
   }
 
-  fun registerLocalModulesListIfExists() {
-    try {
-      val localModulesList = Class.forName("local.modules.ExpoLocalModulesList").getConstructor()
-        .newInstance() as ModulesProvider
-      hostingRuntimeContext.registry.register(localModulesList)
-    } catch (e : Error) {
-      logger.error("Tried registering LocalModulesList but it doesn't exist: ", e.cause)
-    }
+  private fun registerLocalModulesList() {
+    val localModulesList = Class.forName("local.modules.ExpoLocalModulesList").getConstructor()
+      .newInstance() as ModulesProvider
+    hostingRuntimeContext.registry.register(localModulesList)
   }
 
   /**
