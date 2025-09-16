@@ -8,8 +8,6 @@ import {
   mergeResolutionResults,
 } from '../dependencies';
 import { PackageRevision, SearchResults, SupportedPlatform } from '../types';
-import path from 'path';
-import fs from 'fs';
 
 export async function resolveExpoModule(
   resolution: DependencyResolution,
@@ -20,7 +18,6 @@ export async function resolveExpoModule(
     return null;
   }
   const expoModuleConfig = await discoverExpoModuleConfigAsync(resolution.path);
-
   if (expoModuleConfig && expoModuleConfig.supportsPlatform(platform)) {
     return {
       name: resolution.name,
@@ -44,30 +41,6 @@ interface FindModulesParams {
   autolinkingOptions: AutolinkingOptions & { platform: SupportedPlatform };
 }
 
-async function localModulesSearchPaths(appRoot: string): Promise<string[]> {
-  const modulesPath = path.resolve(appRoot, 'ios/localModules');
-  if (!fs.existsSync(modulesPath)) {
-    return [];
-  }
-  const res: string[] = [];
-
-  const recursivelyScanDirectories = async (dirPath: string) => {
-    res.push(dirPath);
-    const dir = fs.opendirSync(dirPath);
-    for await (const dirent of dir) {
-      if (!dirent.isDirectory()) {
-        continue;
-      }
-      const childPath = path.resolve(modulesPath, dirent.name);
-      await recursivelyScanDirectories(childPath);
-    }
-  };
-
-  await recursivelyScanDirectories(modulesPath);
-
-  return res;
-}
-
 /** Searches for modules to link based on given config. */
 export async function findModulesAsync({
   appRoot,
@@ -76,11 +49,10 @@ export async function findModulesAsync({
   const excludeNames = new Set(autolinkingOptions.exclude);
 
   // custom native modules should be resolved first so that they can override other modules
-  const originalSearchPaths = autolinkingOptions.nativeModulesDir
+  const searchPaths = autolinkingOptions.nativeModulesDir
     ? [autolinkingOptions.nativeModulesDir, ...autolinkingOptions.searchPaths]
     : autolinkingOptions.searchPaths;
 
-  const searchPaths = [...(await localModulesSearchPaths(appRoot)), ...originalSearchPaths];
   return filterMapResolutionResult(
     mergeResolutionResults(
       await Promise.all([

@@ -1,14 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolveExpoModule = resolveExpoModule;
 exports.findModulesAsync = findModulesAsync;
 const ExpoModuleConfig_1 = require("../ExpoModuleConfig");
 const dependencies_1 = require("../dependencies");
-const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
 async function resolveExpoModule(resolution, platform, excludeNames) {
     if (excludeNames.has(resolution.name)) {
         return null;
@@ -31,34 +26,13 @@ async function resolveExpoModule(resolution, platform, excludeNames) {
         return null;
     }
 }
-async function localModulesSearchPaths(appRoot) {
-    const modulesPath = path_1.default.resolve(appRoot, 'ios/localModules');
-    if (!fs_1.default.existsSync(modulesPath)) {
-        return [];
-    }
-    const res = [];
-    const recursivelyScanDirectories = async (dirPath) => {
-        res.push(dirPath);
-        const dir = fs_1.default.opendirSync(dirPath);
-        for await (const dirent of dir) {
-            if (!dirent.isDirectory()) {
-                continue;
-            }
-            const childPath = path_1.default.resolve(modulesPath, dirent.name);
-            await recursivelyScanDirectories(childPath);
-        }
-    };
-    await recursivelyScanDirectories(modulesPath);
-    return res;
-}
 /** Searches for modules to link based on given config. */
 async function findModulesAsync({ appRoot, autolinkingOptions, }) {
     const excludeNames = new Set(autolinkingOptions.exclude);
     // custom native modules should be resolved first so that they can override other modules
-    const originalSearchPaths = autolinkingOptions.nativeModulesDir
+    const searchPaths = autolinkingOptions.nativeModulesDir
         ? [autolinkingOptions.nativeModulesDir, ...autolinkingOptions.searchPaths]
         : autolinkingOptions.searchPaths;
-    const searchPaths = [...(await localModulesSearchPaths(appRoot)), ...originalSearchPaths];
     return (0, dependencies_1.filterMapResolutionResult)((0, dependencies_1.mergeResolutionResults)(await Promise.all([
         ...searchPaths.map((searchPath) => (0, dependencies_1.scanDependenciesInSearchPath)(searchPath)),
         (0, dependencies_1.scanDependenciesRecursively)(appRoot),
