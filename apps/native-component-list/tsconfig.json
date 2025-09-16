@@ -10,7 +10,13 @@
       "benchmarking": ["../bare-expo/modules/benchmarking"]
     },
     "types": ["jest"],
-    "typeRoots": ["./ts-declarations", "./node_modules/@types", "../../node_modules/@types"],
+    "typeRoots": [
+      "./ts-declarations",
+      "./node_modules/@types",
+      "../../node_modules/@types",
+      "../bare-expo/.expo/localModules/types/localModulesExamples"
+    ],
+    "rootDirs": ["./", "../bare-expo/.expo/localModules/types/localModulesExamples"],
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "strictFunctionTypes": true,

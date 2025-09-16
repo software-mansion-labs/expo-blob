@@ -115,6 +115,7 @@
 				D65327D7A22EEC0BE12398D9 /* Pods */,
 				D7E4C46ADA2E9064B798F356 /* ExpoModulesProviders */,
 				AC3B6E5EB4FE4A6AACD31066 /* Resources */,
+				B2A9B8F878CB47028DBCA57B /* localModulesExamples */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -222,6 +223,9 @@
 			productName = BareExpo;
 			productReference = 13B07F961A680F5B00A75B9A /* BareExpo.app */;
 			productType = "com.apple.product-type.application";
+			fileSystemSynchronizedGroups = (
+				B2A9B8F878CB47028DBCA57B /* localModulesExamples */,
+			);
 		};
 /* End PBXNativeTarget section */
 
@@ -870,6 +874,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B2A9B8F878CB47028DBCA57B /* localModulesExamples */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			name = localModulesExamples;
+			path = ../localModulesExamples;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

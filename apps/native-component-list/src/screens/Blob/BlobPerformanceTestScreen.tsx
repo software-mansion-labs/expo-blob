@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 import HeadingText from '../../components/HeadingText';
 import MonoText from '../../components/MonoText';
 import { Page } from '../../components/Page';
+import LocalModulesDemo from '../../../../bare-expo/localModulesExamples/LocalModulesDemoComponent';
 
 type PerformanceTestData = {
   key: string;
@@ -211,23 +212,24 @@ export default function BlobArrayBufferScreen() {
   };
 
   return (
-    <Page>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View>
-          <HeadingText>Performance tests:</HeadingText>
-          <View style={styles.exmaplesContainer}>
-            {performanceTest.map((example) => (
-              <ArrayBufferExampleItem
-                key={example.key}
-                example={example}
-                result={results[example.key]}
-                onEvaluate={evaluatePerformanceTest}
-              />
-            ))}
-          </View>
-        </View>
-      </ScrollView>
-    </Page>
+    // <Page>
+    //   <ScrollView contentContainerStyle={styles.scrollContainer}>
+    //     <View>
+    //       <HeadingText>Performance tests:</HeadingText>
+    //       <View style={styles.exmaplesContainer}>
+    //         {performanceTest.map((example) => (
+    //           <ArrayBufferExampleItem
+    //             key={example.key}
+    //             example={example}
+    //             result={results[example.key]}
+    //             onEvaluate={evaluatePerformanceTest}
+    //           />
+    //         ))}
+    //       </View>
+    //     </View>
+    //   </ScrollView>
+    // </Page>
+    <LocalModulesDemo />
   );
 }
 

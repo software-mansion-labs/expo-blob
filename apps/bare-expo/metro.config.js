@@ -33,7 +33,44 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const newModuleName = moduleName.replace('react-native', 'react-native-macos');
     return context.resolveRequest(context, newModuleName, platform);
   }
-  return context.resolveRequest(context, moduleName, platform);
+
+  const localModulesModulesPath = path.resolve(__dirname, './.expo/localModules/modules');
+  if (moduleName.endsWith('.module')) {
+    const relativePathToOriginModule = path.relative(
+      __dirname,
+      path.dirname(context.originModulePath)
+    );
+
+    const modulePath = path.resolve(
+      localModulesModulesPath,
+      relativePathToOriginModule,
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js'
+    );
+
+    return {
+      filePath: modulePath,
+      type: 'sourceFile',
+    };
+  } else if (moduleName.endsWith('.view')) {
+    const relativePathToOriginModule = path.relative(
+      __dirname,
+      path.dirname(context.originModulePath)
+    );
+
+    const modulePath = path.resolve(
+      localModulesModulesPath,
+      relativePathToOriginModule,
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js'
+    );
+
+    return {
+      filePath: modulePath,
+      type: 'sourceFile',
+    };
+  }
+
+  const resolution = context.resolveRequest(context, moduleName, platform);
+  return resolution;
 };
 
 // When testing on MacOS we need to include the `react-native-macos/Libraries/Core/InitializeCore` as prepended global module

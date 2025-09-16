@@ -92,6 +92,12 @@
       ],
       "./plugins/withAndroidNetworkSecurityConfig",
       "./plugins/withBenchmarkModules"
-    ]
+    ],
+    "experiments": {
+      "localModules": true
+    },
+    "localModules": {
+      "watchedDirs": ["localModulesExamples"]
+    }
   }
 }
