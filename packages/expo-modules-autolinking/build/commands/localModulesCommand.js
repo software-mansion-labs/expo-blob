@@ -9,18 +9,18 @@ const path_1 = __importDefault(require("path"));
 const autolinkingOptions_1 = require("./autolinkingOptions");
 const androidLocalModules_1 = require("../localModules/androidLocalModules");
 function mirrorKotlinLocalModulesCommand(cli) {
-    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <watchedDirsSerialized>')).action(async (mirrorPath, watchedDirsSerialized, commandArguments) => {
+    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>')).action(async (mirrorPath, localModulesListPath, watchedDirsSerialized, commandArguments) => {
         const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
-        if (!mirrorPath) {
-            console.log('No mirror path provided!');
+        if (!mirrorPath || !localModulesListPath) {
+            console.log('Need to provide mirrorPath and localModulesListPath!');
             return;
         }
-        if (!/.android./.test(mirrorPath)) {
-            console.log('The mirror path is not inside any android directory!');
+        if (!/.android./.test(mirrorPath) || !/.android./.test(localModulesListPath)) {
+            console.log('Generation path is not inside any android directory!');
             return;
         }
-        if (!path_1.default.isAbsolute(mirrorPath)) {
-            console.log('Need to provide the absolute path to the local modules android directory!');
+        if (!path_1.default.isAbsolute(mirrorPath) || !path_1.default.isAbsolute(localModulesListPath)) {
+            console.log('Need to provide the absolute path to both the local modules src mirror and generated mirror directory!');
             return;
         }
         fs_1.default.rmSync(mirrorPath, { recursive: true, force: true });

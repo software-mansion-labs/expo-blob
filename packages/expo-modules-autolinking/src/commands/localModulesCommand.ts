@@ -13,24 +13,29 @@ interface ResolveArguments extends AutolinkingCommonArguments {
 
 export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) {
   return registerAutolinkingArguments(
-    cli.command('mirror-kotlin-local-modules <mirrorPath> <watchedDirsSerialized>')
+    cli.command(
+      'mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>'
+    )
   ).action(
     async (
       mirrorPath: string,
+      localModulesListPath: string,
       watchedDirsSerialized: string,
       commandArguments: ResolveArguments
     ) => {
       const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
-      if (!mirrorPath) {
-        console.log('No mirror path provided!');
+      if (!mirrorPath || !localModulesListPath) {
+        console.log('Need to provide mirrorPath and localModulesListPath!');
         return;
       }
-      if (!/.android./.test(mirrorPath)) {
-        console.log('The mirror path is not inside any android directory!');
+      if (!/.android./.test(mirrorPath) || !/.android./.test(localModulesListPath)) {
+        console.log('Generation path is not inside any android directory!');
         return;
       }
-      if (!path.isAbsolute(mirrorPath)) {
-        console.log('Need to provide the absolute path to the local modules android directory!');
+      if (!path.isAbsolute(mirrorPath) || !path.isAbsolute(localModulesListPath)) {
+        console.log(
+          'Need to provide the absolute path to both the local modules src mirror and generated mirror directory!'
+        );
         return;
       }
 
