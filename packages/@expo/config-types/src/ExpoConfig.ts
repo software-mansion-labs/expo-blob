@@ -71,7 +71,7 @@ export interface ExpoConfig {
    */
   icon?: string;
   /**
-   * Configuration for remote (push) notifications.
+   * @deprecated in favor of expo-notifications config plugin. Configuration for remote (push) notifications.
    */
   notification?: {
     /**
@@ -138,6 +138,11 @@ export interface ExpoConfig {
      * Specifies the background color of the navigation bar.
      */
     backgroundColor?: string;
+    /**
+     * Determines whether the operating system should keep the navigation bar translucent to provide contrast between the navigation buttons and app content.
+     * Defaults to true.
+     */
+    enforceContrast?: boolean;
   };
   /**
    * Settings that apply specifically to running this app in a development client
@@ -245,6 +250,17 @@ export interface ExpoConfig {
    * A Boolean value that indicates whether the app should use the new architecture. Defaults to true.
    */
   newArchEnabled?: boolean;
+  /**
+   * Enable downloading cached builds from remote.
+   */
+  buildCacheProvider?:
+    | 'eas'
+    | {
+        plugin: string;
+        options?: {
+          [k: string]: any;
+        };
+      };
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -253,9 +269,24 @@ export interface ExpoConfig {
    */
   experiments?: {
     /**
+     * Apply Expo Autolinking's search results to Metro's module resolution. This forces your project's dependencies on `react`, `react-dom`, and `react-native`, and the autolinked versions of any Expo and React Native modules to be resolved when bundling your app. This prevents version misalignment and is useful for monorepos and to prevent conflicts.
+     */
+    autolinkingModuleResolution?: boolean;
+    /**
      * Export a website relative to a subpath of a domain. The path will be prepended as-is to links to all bundled resources. Prefix the path with a `/` (recommended) to load all resources relative to the server root. If the path **does not** start with a `/` then resources will be loaded relative to the code that requests them, this could lead to unexpected behavior. Example '/subpath'. Defaults to '' (empty string).
      */
     baseUrl?: string;
+    /**
+     * @deprecated This field is not longer marked as experimental and will be removed in a future release, use the `buildCacheProvider` field instead.
+     */
+    buildCacheProvider?:
+      | 'eas'
+      | {
+          plugin: string;
+          options?: {
+            [k: string]: any;
+          };
+        };
     /**
      * If true, indicates that this project does not support tablets or handsets, and only supports Apple TV and Android TV
      */
@@ -288,33 +319,6 @@ export interface ExpoConfig {
      * Experimentally enable React Server Functions support in Expo CLI and Expo Router.
      */
     reactServerFunctions?: boolean;
-    /**
-     * Experimentally enable downloading cached builds from a provider.
-     */
-    buildCacheProvider?:
-      | 'eas'
-      | {
-          plugin: string;
-          options?: {
-            [k: string]: any;
-          };
-        };
-    /**
-     * @deprecated This field will be removed in a future release, use the `buildCacheProvider` field instead.
-     */
-    remoteBuildCache?: {
-      /**
-       * Service provider for remote builds.
-       */
-      provider?:
-        | 'eas'
-        | {
-            plugin: string;
-            options?: {
-              [k: string]: any;
-            };
-          };
-    };
     /**
      * Enable support for local modules in expo-modules-autolinking and expo-cli.
      */

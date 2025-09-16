@@ -10,6 +10,54 @@
 
 ### 💡 Others
 
+## 54.0.11 — 2025-09-12
+
+### 🐛 Bug fixes
+
+- Add missing trailing `/` to `transformIgnorePatterns` resolving pnpm isolated modules paths. ([#39605](https://github.com/expo/expo/pull/39605) by [@byCedric](https://github.com/byCedric))
+
+## 54.0.10 — 2025-09-10
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.9 — 2025-09-10
+
+### 💡 Others
+
+- Remove dependency on `find-up` ([#39470](https://github.com/expo/expo/pull/39470) by [@kitten](https://github.com/kitten))
+
+## 54.0.8 — 2025-09-04
+
+### 💡 Others
+
+- Change `ExpoLiquidGlassConstants` to `ExpoGlassEffect` in expoModules mocks ([#39349](https://github.com/expo/expo/pull/39349) by [@Ubax](https://github.com/Ubax))
+
+## 54.0.7 — 2025-09-02
+
+### 💡 Others
+
+- Add `ExpoLiquidGlassConstants` to expoModules mocks ([#39333](https://github.com/expo/expo/pull/39333) by [@Ubax](https://github.com/Ubax))
+
+## 54.0.6 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.5 — 2025-08-28
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.4 — 2025-08-26
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.3 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.2 — 2025-08-21
+
+_This version does not introduce any user-facing changes._
+
 ## 54.0.1 — 2025-08-16
 
 _This version does not introduce any user-facing changes._

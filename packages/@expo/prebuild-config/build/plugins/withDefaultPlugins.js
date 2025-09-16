@@ -57,6 +57,13 @@ function _ReactNative78CompatPlugin() {
   };
   return data;
 }
+function _withEdgeToEdge() {
+  const data = _interopRequireDefault(require("./unversioned/edge-to-edge/withEdgeToEdge"));
+  _withEdgeToEdge = function () {
+    return data;
+  };
+  return data;
+}
 function _expoAdsAdmob() {
   const data = _interopRequireDefault(require("./unversioned/expo-ads-admob/expo-ads-admob"));
   _expoAdsAdmob = function () {
@@ -120,9 +127,9 @@ function _expoUpdates() {
   };
   return data;
 }
-function _withEdgeToEdge() {
-  const data = _interopRequireDefault(require("./unversioned/react-native-edge-to-edge/withEdgeToEdge"));
-  _withEdgeToEdge = function () {
+function _newArchPlistHotfix() {
+  const data = _interopRequireDefault(require("./unversioned/new-arch-plist-hotfix/new-arch-plist-hotfix"));
+  _newArchPlistHotfix = function () {
     return data;
   };
   return data;
@@ -159,7 +166,9 @@ const withIosExpoPlugins = (config, {
   // XcodeProject
   _configPlugins().IOSConfig.DeviceFamily.withDeviceFamily, _configPlugins().IOSConfig.Bitcode.withBitcode, _configPlugins().IOSConfig.Locales.withLocales, _configPlugins().IOSConfig.DevelopmentTeam.withDevelopmentTeam,
   // Dangerous
-  _withIosIcons().withIosIcons, _configPlugins().IOSConfig.PrivacyInfo.withPrivacyInfo]);
+  _withIosIcons().withIosIcons, _configPlugins().IOSConfig.PrivacyInfo.withPrivacyInfo,
+  // Temporary hotfix
+  _newArchPlistHotfix().default]);
 };
 
 /**

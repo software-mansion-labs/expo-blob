@@ -1,3 +1,5 @@
+import { AudioQuality, IOSOutputFormat } from './RecordingConstants';
+
 // @docsMissing
 export type AudioSource =
   | string
@@ -26,8 +28,27 @@ export type AudioSource =
  */
 export type AudioPlayerOptions = {
   /**
-   * How often (in milliseconds) to emit playback status updates.
-   * @default 500
+   * How often (in milliseconds) to emit playback status updates. Defaults to 500ms.
+   *
+   * @example
+   * ```tsx
+   * import { useAudioPlayer } from 'expo-audio';
+   *
+   * export default function App() {
+   *   const player = useAudioPlayer(source);
+   *
+   *   // High-frequency updates for smooth progress bars
+   *   const player = useAudioPlayer(source, { updateInterval: 100 });
+   *
+   *   // Standard updates (default behavior)
+   *   const player = useAudioPlayer(source, { updateInterval: 500 });
+   *
+   *   // Low-frequency updates for better performance
+   *   const player = useAudioPlayer(source, { updateInterval: 1000 });
+   * }
+   * ```
+   *
+   * @default 500ms
    *
    * @platform ios
    * @platform android
@@ -70,6 +91,19 @@ export type AudioPlayerOptions = {
    * @default undefined
    */
   crossOrigin?: 'anonymous' | 'use-credentials';
+  /**
+   * If set to `true`, the audio session will not be deactivated when this player pauses or finishes playback.
+   * This prevents interrupting other audio sources (like videos) when the audio ends.
+   *
+   * Useful for sound effects that should not interfere with ongoing video playback or other audio.
+   * The audio session for this player will not be deactivated automatically when the player finishes playback.
+   *
+   * > **Note:** If needed, you can manually deactivate the audio session using `setIsAudioActiveAsync(false)`.
+   *
+   * @platform ios
+   * @default false
+   */
+  keepAudioSessionActive?: boolean;
 };
 
 /**
@@ -211,72 +245,6 @@ export type AndroidOutputFormat =
  * @platform android
  */
 export type AndroidAudioEncoder = 'default' | 'amr_nb' | 'amr_wb' | 'aac' | 'he_aac' | 'aac_eld';
-
-/**
- * Audio output format options for iOS recording.
- *
- * Comprehensive enum of audio formats supported by iOS for recording.
- * Each format has different characteristics in terms of quality, file size, and compatibility.
- * Some formats like LINEARPCM offer the highest quality but larger file sizes,
- * while compressed formats like AAC provide good quality with smaller files.
- *
- * @platform ios
- */
-export enum IOSOutputFormat {
-  LINEARPCM = 'lpcm',
-  AC3 = 'ac-3',
-  '60958AC3' = 'cac3',
-  APPLEIMA4 = 'ima4',
-  MPEG4AAC = 'aac ',
-  MPEG4CELP = 'celp',
-  MPEG4HVXC = 'hvxc',
-  MPEG4TWINVQ = 'twvq',
-  MACE3 = 'MAC3',
-  MACE6 = 'MAC6',
-  ULAW = 'ulaw',
-  ALAW = 'alaw',
-  QDESIGN = 'QDMC',
-  QDESIGN2 = 'QDM2',
-  QUALCOMM = 'Qclp',
-  MPEGLAYER1 = '.mp1',
-  MPEGLAYER2 = '.mp2',
-  MPEGLAYER3 = '.mp3',
-  APPLELOSSLESS = 'alac',
-  MPEG4AAC_HE = 'aach',
-  MPEG4AAC_LD = 'aacl',
-  MPEG4AAC_ELD = 'aace',
-  MPEG4AAC_ELD_SBR = 'aacf',
-  MPEG4AAC_ELD_V2 = 'aacg',
-  MPEG4AAC_HE_V2 = 'aacp',
-  MPEG4AAC_SPATIAL = 'aacs',
-  AMR = 'samr',
-  AMR_WB = 'sawb',
-  AUDIBLE = 'AUDB',
-  ILBC = 'ilbc',
-  DVIINTELIMA = 0x6d730011,
-  MICROSOFTGSM = 0x6d730031,
-  AES3 = 'aes3',
-  ENHANCEDAC3 = 'ec-3',
-}
-
-/**
- * Audio quality levels for recording.
- *
- * Predefined quality levels that balance file size and audio fidelity.
- * Higher quality levels produce better sound but larger files and require more processing power.
- */
-export enum AudioQuality {
-  /** Minimum quality: smallest file size, lowest fidelity. */
-  MIN = 0,
-  /** Low quality: good for voice recordings where file size matters. */
-  LOW = 0x20,
-  /** Medium quality: balanced option for most use cases. */
-  MEDIUM = 0x40,
-  /** High quality: good fidelity, larger file size. */
-  HIGH = 0x60,
-  /** Maximum quality: best fidelity, largest file size. */
-  MAX = 0x7f,
-}
 
 /**
  * Bit rate strategies for audio encoding.

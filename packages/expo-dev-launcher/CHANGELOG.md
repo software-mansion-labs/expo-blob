@@ -10,6 +10,45 @@
 
 ### 💡 Others
 
+## 6.0.11 — 2025-09-11
+
+### 🐛 Bug fixes
+
+- [Android] Fix incorrect text color in the error dialog. ([#39550](https://github.com/expo/expo/pull/39550) by [@lukmccall](https://github.com/lukmccall))
+- [iOS] Fix UI on iPad. ([#39549](https://github.com/expo/expo/pull/39549) by [@alanjhughes](https://github.com/alanjhughes))
+
+## 6.0.10 — 2025-09-08
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.9 — 2025-09-03
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.8 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.7 — 2025-08-28
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.6 — 2025-08-27
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.5 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.4 — 2025-08-21
+
+_This version does not introduce any user-facing changes._
+
+## 6.0.3 — 2025-08-18
+
+### 💡 Others
+
 - [ios] Wrap system color references for dev client. ([#38912](https://github.com/expo/expo/pull/38912) by [@douglowder](https://github.com/douglowder))
 
 ## 6.0.2 — 2025-08-16

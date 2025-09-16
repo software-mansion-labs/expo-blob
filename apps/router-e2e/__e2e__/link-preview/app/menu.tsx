@@ -1,6 +1,6 @@
 import { Link, usePathname } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Text, ScrollView } from 'react-native';
+import { Text, ScrollView, Pressable } from 'react-native';
 
 import { useTimer } from '../utils/useTimer';
 
@@ -30,7 +30,9 @@ const Menus = () => {
   }, [submenu]);
 
   return (
-    <ScrollView style={{ backgroundColor: '#fff' }} contentInsetAdjustmentBehavior="automatic">
+    <ScrollView
+      style={{ backgroundColor: '#fff', paddingHorizontal: 16 }}
+      contentInsetAdjustmentBehavior="automatic">
       <Text>Misc</Text>
       <Text>Current Path: {pathname}</Text>
       <Text style={{ marginBottom: 16 }}>Time: {time}</Text>
@@ -179,6 +181,50 @@ const Menus = () => {
               }}
             />
           </Link.Menu>
+        </Link.Menu>
+      </Link>
+      <Link href="/one" style={{ backgroundColor: 'green' }}>
+        <Link.Trigger>
+          <Pressable style={{ backgroundColor: '#7C90A0', height: 150, width: '100%' }}>
+            <Text style={{ color: 'blue' }}>Custom Trigger</Text>
+          </Pressable>
+        </Link.Trigger>
+        <Link.Menu title="Actions" icon="ellipsis">
+          <Link.MenuAction
+            title="Share"
+            icon="square.and.arrow.up"
+            onPress={() => {
+              console.log('Share Pressed');
+            }}
+          />
+        </Link.Menu>
+      </Link>
+      <Link href="https://expo.dev">
+        <Link.Trigger>Link.Menu no preview: https://expo.dev</Link.Trigger>
+        <Link.Menu title="Actions" icon="ellipsis">
+          <Link.MenuAction
+            title="Share"
+            icon="square.and.arrow.up"
+            onPress={() => {
+              console.log('Share Pressed');
+            }}
+          />
+          <Link.MenuAction
+            title="Copy"
+            icon="doc.on.doc"
+            disabled
+            onPress={() => {
+              console.log('Copy Pressed');
+            }}
+          />
+          <Link.MenuAction
+            title="Delete"
+            icon="trash"
+            destructive
+            onPress={() => {
+              console.log('Delete Pressed');
+            }}
+          />
         </Link.Menu>
       </Link>
     </ScrollView>

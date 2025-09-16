@@ -10,6 +10,117 @@
 
 ### 💡 Others
 
+## 54.0.7 — 2025-09-13
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.6 — 2025-09-13
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.5 — 2025-09-12
+
+### 🐛 Bug fixes
+
+- Use `$$EXPO_INITIAL_PROPS` to determine if running inside a dom component. ([#39590](https://github.com/expo/expo/pull/39590) by [@EvanBacon](https://github.com/EvanBacon))
+
+## 54.0.4 — 2025-09-12
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.3 — 2025-09-12
+
+### 🛠 Breaking changes
+
+- [iOS] appended removal info (SDK-55) to the deprecation message of the `EXAppDelegateWrapper` interface. ([#39574](https://github.com/expo/expo/pull/39574) by [@chrfalch](https://github.com/chrfalch))
+
+## 54.0.2 — 2025-09-11
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.1 — 2025-09-10
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0 — 2025-09-10
+
+### 💡 Others
+
+- Replace public constructor argument syntax in `async-require/errors` ([#39496](https://github.com/expo/expo/pull/39496) by [@kitten](https://github.com/kitten))
+
+## 54.0.0-preview.16 — 2025-09-08
+
+### 🐛 Bug fixes
+
+- [Android] allow `expo/fetch` sending a `POST`, `PATCH` or `PUT` request without a body. ([#39363](https://github.com/expo/expo/pull/39363) by [@julian-dueck](https://github.com/julian-dueck))
+
+## 54.0.0-preview.15 — 2025-09-04
+
+### 💡 Others
+
+- Move `isLiquidGlassAvailable` function to `ExpoGlassEffect` ([#39349](https://github.com/expo/expo/pull/39349) by [@Ubax](https://github.com/Ubax))
+
+## 54.0.0-preview.14 — 2025-09-03
+
+### 💡 Others
+
+- load isLiquidGlassAvailable lazily ([#39361](https://github.com/expo/expo/pull/39361) by [@Ubax](https://github.com/Ubax))
+
+## 54.0.0-preview.13 — 2025-09-02
+
+### 🎉 New features
+
+- Add support for React Native Factory when extending ExpoAppDelegate on macOS. ([#35061](https://github.com/expo/expo/pull/35061) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add `isLiquidGlassAvailable` function ([#39319](https://github.com/expo/expo/pull/39319) by [@Ubax](https://github.com/Ubax))
+
+## 54.0.0-preview.12 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.11 — 2025-08-28
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.10 — 2025-08-27
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.9 — 2025-08-26
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.8 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.7 — 2025-08-25
+
+### 🎉 New features
+
+- Add `structuredClone` built-in to native platforms. ([#37503](https://github.com/expo/expo/pull/37503) by [@EvanBacon](https://github.com/EvanBacon))
+
+### 🐛 Bug fixes
+
+- Temporarily bring back dependency on `expo-file-system`. ([#38792](https://github.com/expo/expo/pull/38792) by [@aleqsio](https://github.com/aleqsio))
+
+## 54.0.0-preview.6 — 2025-08-21
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.5 — 2025-08-21
+
+### 🛠 Breaking changes
+
+- Enable [React Native Strict TypeScript API typings](https://reactnative.dev/docs/strict-typescript-api) by default. This is not a breaking change unless you've used internal APIs in your TypeScript code. ([#39018](https://github.com/expo/expo/pull/39018) by [@kitten](https://github.com/kitten))
+
+## 54.0.0-preview.4 — 2025-08-19
+
+_This version does not introduce any user-facing changes._
+
+## 54.0.0-preview.3 — 2025-08-18
+
+_This version does not introduce any user-facing changes._
+
 ## 54.0.0-preview.2 — 2025-08-16
 
 _This version does not introduce any user-facing changes._
@@ -32,6 +143,7 @@ _This version does not introduce any user-facing changes._
 ### 🐛 Bug fixes
 
 - [iOS] Fix missing CDP headers when using static frameworks. ([#37448](https://github.com/expo/expo/pull/37448) by [@alanjhughes](https://github.com/alanjhughes))
+- [Android] Fix React Native's `enableEdgeToEdge` Gradle property being ignored. ([#38734](https://github.com/expo/expo/pull/38734) by [@behenate](https://github.com/behenate))
 
 ### 💡 Others
 
@@ -46,6 +158,7 @@ _This version does not introduce any user-facing changes._
 - Switch Metro imports to `@expo/metro` wrapper package ([#38166](https://github.com/expo/expo/pull/38166) by [@kitten](https://github.com/kitten))
 - Moved **src/devtools** code to the `@expo/devtools` package. ([#38438](https://github.com/expo/expo/pull/38438) by [@kudo](https://github.com/kudo))
 - Remove (newly added) peer dependencies on `react-refresh` and `metro-runtime` ([#38562](https://github.com/expo/expo/pull/38562) by [@kitten](https://github.com/kitten))
+- Remove `react-native-edge-to-edge` dependency. ([#38767](https://github.com/expo/expo/pull/38767) by [@behenate](https://github.com/behenate))
 
 ### ⚠️ Notices
 

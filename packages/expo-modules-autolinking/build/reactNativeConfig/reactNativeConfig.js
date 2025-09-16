@@ -6,12 +6,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolveReactNativeModule = resolveReactNativeModule;
 exports.createReactNativeConfigAsync = createReactNativeConfigAsync;
 exports.resolveAppProjectConfigAsync = resolveAppProjectConfigAsync;
+const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const androidResolver_1 = require("./androidResolver");
 const config_1 = require("./config");
 const iosResolver_1 = require("./iosResolver");
 const ExpoModuleConfig_1 = require("../ExpoModuleConfig");
 const dependencies_1 = require("../dependencies");
+const isMissingFBReactNativeSpecCodegenOutput = async (reactNativePath) => {
+    const generatedDir = path_1.default.resolve(reactNativePath, 'React/FBReactNativeSpec');
+    try {
+        const stat = await fs_1.default.promises.lstat(generatedDir);
+        return !stat.isDirectory();
+    }
+    catch {
+        return true;
+    }
+};
 async function resolveReactNativeModule(resolution, projectConfig, platform, excludeNames) {
     if (excludeNames.has(resolution.name)) {
         return null;
@@ -78,6 +89,28 @@ async function createReactNativeConfigAsync({ appRoot, sourceDir, autolinkingOpt
         (0, dependencies_1.scanDependenciesRecursively)(appRoot, { limitDepth }),
     ]));
     const dependencies = await (0, dependencies_1.filterMapResolutionResult)(resolutions, (resolution) => resolveReactNativeModule(resolution, projectConfig, autolinkingOptions.platform, excludeNames));
+    // See: https://github.com/facebook/react-native/pull/53690
+    // When we're building react-native from source without these generated files, we need to force them to be generated
+    // Every published react-native version (or out-of-tree version) should have these files, but building from the raw repo won't (e.g. Expo Go)
+    const reactNativeResolution = resolutions['react-native'];
+    if (reactNativeResolution &&
+        autolinkingOptions.platform === 'ios' &&
+        (await isMissingFBReactNativeSpecCodegenOutput(reactNativeResolution.path))) {
+        dependencies['react-native'] = {
+            root: reactNativeResolution.path,
+            name: 'react-native',
+            platforms: {
+                ios: {
+                    // This will trigger a warning in list_native_modules but will trigger the artifacts
+                    // codegen codepath as expected
+                    podspecPath: '',
+                    version: reactNativeResolution.version,
+                    configurations: [],
+                    scriptPhases: [],
+                },
+            },
+        };
+    }
     return {
         root: appRoot,
         reactNativePath: resolutions['react-native']?.path,
@@ -88,7 +121,7 @@ async function createReactNativeConfigAsync({ appRoot, sourceDir, autolinkingOpt
 async function resolveAppProjectConfigAsync(projectRoot, platform, sourceDir) {
     // TODO(@kitten): use the commandRoot here to find these files in non <projectRoot>/<platform> folders
     if (platform === 'android') {
-        const androidDir = path_1.default.join(projectRoot, 'android');
+        const androidDir = sourceDir ?? path_1.default.join(projectRoot, 'android');
         const { gradle, manifest } = await (0, androidResolver_1.findGradleAndManifestAsync)({ androidDir, isLibrary: false });
         if (gradle == null || manifest == null) {
             return {};
