@@ -232,7 +232,6 @@ export default function BlobArrayBufferScreen() {
         </View>
       </ScrollView>
     </Page>
-    // <LocalModulesDemo />
   );
 }
 
