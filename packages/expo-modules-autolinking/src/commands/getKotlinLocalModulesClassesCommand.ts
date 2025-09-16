@@ -7,7 +7,7 @@ export function getKotlinLocalModulesClassesCommand(cli: commander.CommanderStat
   return registerAutolinkingArguments(
     cli.command('get-kotlin-local-modules-classes <watchedDirs>')
   ).action(async (watchedDirsSerialized: string, commandArguments) => {
-    const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
+    const watchedDirs = JSON.parse(watchedDirsSerialized);
     console.log(
       JSON.stringify({ kotlinClasses: (await getMirrorStateObject(watchedDirs)).kotlinClasses })
     );

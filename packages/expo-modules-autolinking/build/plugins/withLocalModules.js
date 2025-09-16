@@ -14,9 +14,9 @@ const withLocalModules = (config, props) => {
             propName: 'expo.localModules.watchedDirs',
             propValueGetter: (conf) => {
                 if (conf.experiments?.localModules !== true) {
-                    return JSON.stringify({ watchedDirs: [] });
+                    return JSON.stringify([]);
                 }
-                return JSON.stringify({ watchedDirs: conf.localModules?.watchedDirs ?? [] });
+                return JSON.stringify(conf.localModules?.watchedDirs ?? []);
             },
         },
     ], 'withAndroidLocalModules')(config);
@@ -29,9 +29,9 @@ const withLocalModules = (config, props) => {
             propName: 'expo.localModules.watchedDirs',
             propValueGetter: (conf) => {
                 if (conf.experiments?.localModules !== true) {
-                    return JSON.stringify({ watchedDirs: [] });
+                    return JSON.stringify([]);
                 }
-                return JSON.stringify({ watchedDirs: conf.localModules?.watchedDirs ?? [] });
+                return JSON.stringify(conf.localModules?.watchedDirs ?? []);
             },
         },
     ], 'withIosLocalModules')(config);

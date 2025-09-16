@@ -23,7 +23,7 @@ export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) 
       watchedDirsSerialized: string,
       commandArguments: ResolveArguments
     ) => {
-      const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
+      const watchedDirs = JSON.parse(watchedDirsSerialized);
       if (!mirrorPath || !localModulesListPath) {
         console.log('Need to provide mirrorPath and localModulesListPath!');
         return;

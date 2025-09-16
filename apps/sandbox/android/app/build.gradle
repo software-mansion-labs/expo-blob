@@ -189,10 +189,6 @@ dependencies {
 }
 
 gradle.projectsEvaluated {
-    println "mirror-kotlin-local-modules " +
-            file('src/main/java/local/modules/').absolutePath + " " +
-            file('build/local/modules/').absolutePath + " " +
-            project.properties["expo.localModules.watchedDirs"]
     if (project.properties["expo.localModules.enabled"] == "true") {
         providers.exec {
             workingDir(projectRoot)

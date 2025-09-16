@@ -55,7 +55,7 @@ export function generateModulesProviderCommand(cli: commander.CommanderStatic) {
         const filteredModules = expoModulesResolveResults.filter((module) =>
           includeModules.has(module.packageName)
         );
-        const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
+        const watchedDirs = JSON.parse(watchedDirsSerialized);
 
         await generateModulesProviderAsync(
           filteredModules,

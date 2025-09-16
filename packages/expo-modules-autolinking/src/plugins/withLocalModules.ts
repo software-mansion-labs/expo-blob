@@ -14,9 +14,9 @@ export const withLocalModules = (config: ExpoConfig, props: any) => {
         propName: 'expo.localModules.watchedDirs',
         propValueGetter: (conf) => {
           if (conf.experiments?.localModules !== true) {
-            return JSON.stringify({ watchedDirs: [] });
+            return JSON.stringify([]);
           }
-          return JSON.stringify({ watchedDirs: conf.localModules?.watchedDirs ?? [] });
+          return JSON.stringify(conf.localModules?.watchedDirs ?? []);
         },
       },
     ],
@@ -33,9 +33,9 @@ export const withLocalModules = (config: ExpoConfig, props: any) => {
         propName: 'expo.localModules.watchedDirs',
         propValueGetter: (conf) => {
           if (conf.experiments?.localModules !== true) {
-            return JSON.stringify({ watchedDirs: [] });
+            return JSON.stringify([]);
           }
-          return JSON.stringify({ watchedDirs: conf.localModules?.watchedDirs ?? [] });
+          return JSON.stringify(conf.localModules?.watchedDirs ?? []);
         },
       },
     ],

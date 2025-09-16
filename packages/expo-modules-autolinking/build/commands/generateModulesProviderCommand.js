@@ -25,7 +25,7 @@ function generateModulesProviderCommand(cli) {
         const expoModulesResolveResults = await (0, resolveModules_1.resolveModulesAsync)(expoModulesSearchResults, autolinkingOptions);
         const includeModules = new Set(commandArguments.packages ?? []);
         const filteredModules = expoModulesResolveResults.filter((module) => includeModules.has(module.packageName));
-        const watchedDirs = JSON.parse(watchedDirsSerialized).watchedDirs;
+        const watchedDirs = JSON.parse(watchedDirsSerialized);
         await (0, generatePackageList_1.generateModulesProviderAsync)(filteredModules, {
             platform,
             targetPath: commandArguments.target,
