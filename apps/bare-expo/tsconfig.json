@@ -7,6 +7,6 @@
       "ThemeProvider": ["../common/ThemeProvider"],
       "benchmarking": ["./modules/benchmarking"]
     },
-    "rootDirs": ["./", ".expo/localModules/types"]
+    "rootDirs": ["./"]
   }
 }
