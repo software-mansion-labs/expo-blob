@@ -1333,7 +1333,6 @@ export class MetroBundlerDevServer extends BundlerDevServer {
 
     const { exp } = getConfig(this.projectRoot);
     if (exp.experiments?.localModules === true) {
-      console.log('start module generation async');
       startModuleGenerationAsync({ projectRoot, metro });
     }
   }
