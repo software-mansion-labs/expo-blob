@@ -3,6 +3,6 @@
   "newArchEnabled": "true",
   "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
   "expo.localModules.enabled": "true",
-  "expo.localModules.watchedDirs": "{\"watchedDirs\":[\"localModulesExamples\"]}",
+  "expo.localModules.watchedDirs": "[\"localModulesExamples\"]",
   "ios.buildReactNativeFromSource": "false"
 }
