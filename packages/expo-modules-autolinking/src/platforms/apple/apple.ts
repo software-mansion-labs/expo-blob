@@ -5,7 +5,6 @@ import path from 'path';
 
 import { fileExistsAsync } from '../../fileUtils';
 import { getIosLocalModulesClassNames } from '../../localModules/iosLocalModules';
-import { localModulesEnabled } from '../../localModules/localModules';
 import type {
   AppleCodeSignEntitlements,
   ExtraDependencies,
@@ -145,9 +144,7 @@ async function generatePackageListFileContentAsync(
     .concat(...modulesToImport.map((module) => module.modules))
     .filter(Boolean);
 
-  if (await localModulesEnabled()) {
-    modulesClassNames = modulesClassNames.concat(await getIosLocalModulesClassNames(watchedDirs));
-  }
+  modulesClassNames = modulesClassNames.concat(await getIosLocalModulesClassNames(watchedDirs));
 
   const debugOnlyModulesClassNames = ([] as string[])
     .concat(...debugOnlyModules.map((module) => module.modules))

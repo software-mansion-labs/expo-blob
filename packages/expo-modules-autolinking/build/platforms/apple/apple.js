@@ -14,7 +14,6 @@ const glob_1 = require("glob");
 const path_1 = __importDefault(require("path"));
 const fileUtils_1 = require("../../fileUtils");
 const iosLocalModules_1 = require("../../localModules/iosLocalModules");
-const localModules_1 = require("../../localModules/localModules");
 const APPLE_PROPERTIES_FILE = 'Podfile.properties.json';
 const APPLE_EXTRA_BUILD_DEPS_KEY = 'apple.extraPods';
 const indent = '  ';
@@ -103,9 +102,7 @@ async function generatePackageListFileContentAsync(modules, className, entitleme
     let modulesClassNames = []
         .concat(...modulesToImport.map((module) => module.modules))
         .filter(Boolean);
-    if (await (0, localModules_1.localModulesEnabled)()) {
-        modulesClassNames = modulesClassNames.concat(await (0, iosLocalModules_1.getIosLocalModulesClassNames)(watchedDirs));
-    }
+    modulesClassNames = modulesClassNames.concat(await (0, iosLocalModules_1.getIosLocalModulesClassNames)(watchedDirs));
     const debugOnlyModulesClassNames = []
         .concat(...debugOnlyModules.map((module) => module.modules))
         .filter(Boolean);

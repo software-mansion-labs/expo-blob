@@ -62,10 +62,6 @@ export function generatePackageListCommand(cli: commander.CommanderStatic) {
           targetPath: commandArguments.target,
           namespace: commandArguments.namespace,
         });
-
-        // if (await localModulesEnabled()) {
-        //   await generateSymlinksInDirectory(commandArguments.target);
-        // }
       }
     );
 }

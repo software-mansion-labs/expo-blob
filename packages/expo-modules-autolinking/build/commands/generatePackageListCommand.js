@@ -34,9 +34,6 @@ function generatePackageListCommand(cli) {
             targetPath: commandArguments.target,
             namespace: commandArguments.namespace,
         });
-        // if (await localModulesEnabled()) {
-        //   await generateSymlinksInDirectory(commandArguments.target);
-        // }
     });
 }
 //# sourceMappingURL=generatePackageListCommand.js.map

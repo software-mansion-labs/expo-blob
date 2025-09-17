@@ -198,8 +198,13 @@ export default requireNativeView("${moduleName}");`
 export default requireNativeModule("${moduleName}");`
   );
 
-  fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
-  fs.writeFileSync(viewTypesFilePath, 'const _default: any\nexport default _default');
+  fs.writeFileSync(
+    moduleTypesFilePath,
+    `import React from "react"
+const _default: React.JSX.ElementType
+export default _default`
+  );
+  fs.writeFileSync(viewTypesFilePath, 'const _default: JSX.Element\nexport default _default');
 }
 
 async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set<string>) {
