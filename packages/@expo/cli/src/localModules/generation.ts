@@ -99,6 +99,7 @@ export function updateXCodeProject(projectRoot: string) {
   const pbxProject = getPbxproj(projectRoot);
   const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
   const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
+  const iosFolderPath = path.resolve(projectRoot, 'ios');
 
   const objects = pbxProject.hash.project.objects;
 
@@ -111,7 +112,7 @@ export function updateXCodeProject(projectRoot: string) {
         continue;
       }
       if (
-        path.relative('./', path.resolve('../', dir)) ===
+        path.relative(iosFolderPath, path.resolve(projectRoot, dir)) ===
         objects.PBXFileSystemSynchronizedRootGroup[key].path
       ) {
         return true;
@@ -141,7 +142,7 @@ export function updateXCodeProject(projectRoot: string) {
       explicitFileTypes: {},
       explicitFolders: [],
       name: dir,
-      path: path.relative('./', path.resolve('../', dir)),
+      path: path.relative(iosFolderPath, path.resolve(projectRoot, dir)),
       sourceTree: 'SOURCE_ROOT',
     };
 
