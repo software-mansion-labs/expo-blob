@@ -141,6 +141,13 @@ function _reactNativeMaps() {
   };
   return data;
 }
+function _withLocalModules() {
+  const data = _interopRequireDefault(require("./unversioned/expo-local-modules/withLocalModules"));
+  _withLocalModules = function () {
+    return data;
+  };
+  return data;
+}
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 /**
  * These are the versioned first-party plugins with some of the future third-party plugins mixed in for legacy support.
@@ -207,12 +214,12 @@ const withAndroidExpoPlugins = (config, props) => {
 
 // Must keep in sync with `withVersionedExpoSDKPlugins`
 exports.withAndroidExpoPlugins = withAndroidExpoPlugins;
-const versionedExpoSDKPackages = ['react-native-maps', 'expo-ads-admob', 'expo-apple-authentication', 'expo-contacts', 'expo-notifications', 'expo-updates', 'expo-navigation-bar', 'expo-document-picker', 'expo-splash-screen', 'expo-system-ui'];
+const versionedExpoSDKPackages = ['react-native-maps', 'expo-ads-admob', 'expo-apple-authentication', 'expo-contacts', 'expo-notifications', 'expo-updates', 'expo-navigation-bar', 'expo-document-picker', 'expo-splash-screen', 'expo-system-ui', 'expo-local-modules'];
 const withVersionedExpoSDKPlugins = config => {
   return (0, _configPlugins().withPlugins)(config, [_reactNativeMaps().default, _expoAdsAdmob().default, _expoAppleAuthentication().default, _expoContacts().default, _expoNotifications().default, _expoUpdates().default, _expoDocumentPicker().default,
   // System UI must come before splash screen as they overlap
   // and splash screen will warn about conflicting rules.
-  _expoSystemUi().default, _expoSplashScreen().default, _expoNavigationBar().default]);
+  _expoSystemUi().default, _expoSplashScreen().default, _expoNavigationBar().default, _withLocalModules().default]);
 };
 exports.withVersionedExpoSDKPlugins = withVersionedExpoSDKPlugins;
 function getAutoPlugins() {

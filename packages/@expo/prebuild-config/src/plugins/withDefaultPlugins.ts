@@ -29,6 +29,7 @@ import withSystemUI from './unversioned/expo-system-ui/expo-system-ui';
 import withUpdates from './unversioned/expo-updates';
 import withNewArchPlistHotfix from './unversioned/new-arch-plist-hotfix/new-arch-plist-hotfix';
 import withMaps from './unversioned/react-native-maps';
+import withLocalModules from './unversioned/expo-local-modules/withLocalModules';
 
 const debug = Debug('expo:prebuild-config');
 
@@ -144,6 +145,7 @@ const versionedExpoSDKPackages: string[] = [
   'expo-document-picker',
   'expo-splash-screen',
   'expo-system-ui',
+  'expo-local-modules',
 ];
 
 export const withVersionedExpoSDKPlugins: ConfigPlugin = (config) => {
@@ -160,6 +162,7 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin = (config) => {
     withSystemUI,
     withSplashScreen,
     withNavigationBar,
+    withLocalModules,
   ]);
 };
 
