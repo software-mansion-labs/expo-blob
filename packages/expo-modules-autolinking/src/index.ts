@@ -2,7 +2,6 @@ import commander from 'commander';
 
 import { generateModulesProviderCommand } from './commands/generateModulesProviderCommand';
 import { generatePackageListCommand } from './commands/generatePackageListCommand';
-import { getKotlinLocalModulesClassesCommand } from './commands/getKotlinLocalModulesClassesCommand';
 import { mirrorKotlinLocalModulesCommand } from './commands/localModulesCommand';
 import { reactNativeConfigCommand } from './commands/reactNativeConfigCommand';
 import { resolveCommand } from './commands/resolveCommand';
@@ -17,7 +16,6 @@ async function main(args: string[]) {
   verifyCommand(cli);
   searchCommand(cli);
   resolveCommand(cli);
-  getKotlinLocalModulesClassesCommand(cli);
   mirrorKotlinLocalModulesCommand(cli);
   generatePackageListCommand(cli);
   generateModulesProviderCommand(cli);
