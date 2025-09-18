@@ -2,7 +2,7 @@ import commander from 'commander';
 
 import { generateModulesProviderCommand } from './commands/generateModulesProviderCommand';
 import { generatePackageListCommand } from './commands/generatePackageListCommand';
-import { mirrorKotlinLocalModulesCommand } from './commands/localModulesCommand';
+import { mirrorKotlinLocalModulesCommand } from './commands/mirrorKotlinLocalModulesCommand';
 import { reactNativeConfigCommand } from './commands/reactNativeConfigCommand';
 import { resolveCommand } from './commands/resolveCommand';
 import { searchCommand } from './commands/searchCommand';

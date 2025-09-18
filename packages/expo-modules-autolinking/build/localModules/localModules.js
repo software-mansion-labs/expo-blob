@@ -8,7 +8,6 @@ exports.getMirrorStateObject = getMirrorStateObject;
 const find_up_1 = __importDefault(require("find-up"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-// copied from autolinkingOptions, maybe export it somewhere
 const findPackageJsonPathAsync = async () => {
     const cwd = process.cwd();
     const result = await (0, find_up_1.default)('package.json', { cwd });

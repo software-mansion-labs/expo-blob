@@ -8,7 +8,6 @@ export type LocalModulesMirror = {
   kotlinClasses: string[];
 };
 
-// copied from autolinkingOptions, maybe export it somewhere
 const findPackageJsonPathAsync = async (): Promise<string> => {
   const cwd = process.cwd();
   const result = await findUp('package.json', { cwd });
