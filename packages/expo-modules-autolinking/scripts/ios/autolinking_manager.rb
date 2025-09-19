@@ -18,6 +18,12 @@ module Expo
       @target_definition = target_definition
       @options = options
 
+      podfile_properties = JSON.parse(File.read("#{Pod::Config.instance.installation_root}/Podfile.properties.json")) rescue {}
+      @watched_dirs = '[]'
+      if podfile_properties['expo.localModules.enabled'] == 'true' && podfile_properties["expo.localModules.watchedDirs"] != nil then
+        @watched_dirs = JSON.generate(podfile_properties['expo.localModules.watchedDirs'])
+      end
+
       validate_target_definition()
       resolve_result = resolve()
 
@@ -185,7 +191,7 @@ module Expo
       exclude = @options.fetch(:exclude, [])
       args = []
 
-      args.concat([ENV['EXPO_LOCAL_MODULES_WATCHED_DIRS']])
+      args.concat([@watched_dirs])
 
       if !search_paths.nil? && !search_paths.empty?
         args.concat(search_paths)
@@ -229,7 +235,7 @@ module Expo
     public def generate_modules_provider_command_args(target_path)
       node_command_args('generate-modules-provider').concat(
         [
-          ENV['EXPO_LOCAL_MODULES_WATCHED_DIRS'],
+          @watched_dirs,
           '--target',
           target_path,
           '--packages'

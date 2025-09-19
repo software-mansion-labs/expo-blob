@@ -15,7 +15,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "target": "ESNext",
-    "rootDirs": ["./", ".expo/localModules/types"]
+    "rootDirs": ["${configDir}", "${configDir}/.expo/localModules/types"]
   },
 
   "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]

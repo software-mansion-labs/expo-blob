@@ -130,10 +130,12 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
-    sourceSets {
-        main {
-            java {
-                srcDirs += [file('build/local/modules/').absolutePath]
+    if (project.properties["expo.localModules.enabled"] == "true") {
+        sourceSets {
+            main {
+                java {
+                    srcDirs += [file('build/local/modules/').absolutePath]
+                }
             }
         }
     }
