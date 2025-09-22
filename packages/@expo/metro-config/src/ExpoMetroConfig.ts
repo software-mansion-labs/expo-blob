@@ -174,8 +174,7 @@ function resolveLocalModules(
     };
   }
 
-  const resolution = context.resolveRequest(context, moduleName, platform);
-  return resolution;
+  return context.resolveRequest(context, moduleName, platform);
 }
 
 export function createStableModuleIdFactory(

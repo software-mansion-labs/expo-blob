@@ -25,18 +25,15 @@ export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) 
     ) => {
       const watchedDirs = JSON.parse(watchedDirsSerialized);
       if (!mirrorPath || !localModulesListPath) {
-        console.log('Need to provide mirrorPath and localModulesListPath!');
-        return;
+        throw new Error('Need to provide mirrorPath and localModulesListPath!');
       }
       if (!/.android./.test(mirrorPath) || !/.android./.test(localModulesListPath)) {
-        console.log('Generation path is not inside any android directory!');
-        return;
+        throw new Error('Generation path is not inside any android directory!');
       }
       if (!path.isAbsolute(mirrorPath) || !path.isAbsolute(localModulesListPath)) {
-        console.log(
+        throw new Error(
           'Need to provide the absolute path to both the local modules src mirror and generated mirror directory!'
         );
-        return;
       }
 
       fs.rmSync(mirrorPath, { recursive: true, force: true });

@@ -12,16 +12,13 @@ function mirrorKotlinLocalModulesCommand(cli) {
     return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>')).action(async (mirrorPath, localModulesListPath, watchedDirsSerialized, commandArguments) => {
         const watchedDirs = JSON.parse(watchedDirsSerialized);
         if (!mirrorPath || !localModulesListPath) {
-            console.log('Need to provide mirrorPath and localModulesListPath!');
-            return;
+            throw new Error('Need to provide mirrorPath and localModulesListPath!');
         }
         if (!/.android./.test(mirrorPath) || !/.android./.test(localModulesListPath)) {
-            console.log('Generation path is not inside any android directory!');
-            return;
+            throw new Error('Generation path is not inside any android directory!');
         }
         if (!path_1.default.isAbsolute(mirrorPath) || !path_1.default.isAbsolute(localModulesListPath)) {
-            console.log('Need to provide the absolute path to both the local modules src mirror and generated mirror directory!');
-            return;
+            throw new Error('Need to provide the absolute path to both the local modules src mirror and generated mirror directory!');
         }
         fs_1.default.rmSync(mirrorPath, { recursive: true, force: true });
         await (0, androidLocalModules_1.createSymlinksToKotlinFiles)(mirrorPath, watchedDirs);
