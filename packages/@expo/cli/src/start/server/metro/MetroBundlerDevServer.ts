@@ -60,6 +60,7 @@ import {
   ExportAssetDescriptor,
   ExportAssetMap,
 } from '../../../export/saveAssets';
+import { startModuleGenerationAsync } from '../../../localModules/generation';
 import { Log } from '../../../log';
 import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
@@ -92,7 +93,6 @@ import {
 } from '../middleware/metroOptions';
 import { prependMiddleware } from '../middleware/mutations';
 import { startTypescriptTypeGenerationAsync } from '../type-generation/startTypescriptTypeGeneration';
-import { startModuleGenerationAsync } from '../../../localModules/generation';
 
 export type ExpoRouterRuntimeManifest = Awaited<
   ReturnType<typeof import('expo-router/build/static/renderStaticContent').getManifest>

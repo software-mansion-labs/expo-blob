@@ -87,24 +87,22 @@ function memoize(fn) {
 }
 function resolveLocalModules(projectRoot, context, moduleName, platform) {
     const localModulesModulesPath = path_1.default.resolve(projectRoot, './.expo/localModules/modules');
+    let localModuleFileExtension = null;
     if (moduleName.endsWith('.module')) {
-        const relativePathToOriginModule = path_1.default.relative(projectRoot, path_1.default.dirname(context.originModulePath));
-        const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js');
-        return {
-            filePath: modulePath,
-            type: 'sourceFile',
-        };
+        localModuleFileExtension = '.module.js';
     }
     else if (moduleName.endsWith('.view')) {
+        localModuleFileExtension = '.view.js';
+    }
+    if (localModuleFileExtension) {
         const relativePathToOriginModule = path_1.default.relative(projectRoot, path_1.default.dirname(context.originModulePath));
-        const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js');
+        const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + localModuleFileExtension);
         return {
             filePath: modulePath,
             type: 'sourceFile',
         };
     }
-    const resolution = context.resolveRequest(context, moduleName, platform);
-    return resolution;
+    return context.resolveRequest(context, moduleName, platform);
 }
 function createStableModuleIdFactory(root) {
     const getModulePath = (modulePath, scope) => {

@@ -320,7 +320,7 @@ export interface ExpoConfig {
      */
     reactServerFunctions?: boolean;
     /**
-     * Enable support for local modules in expo-modules-autolinking and expo-cli.
+     * Enable support for local modules in Expo CLI and Expo Modules Autolinking.
      */
     localModules?: boolean;
   };

@@ -6,8 +6,8 @@ import { assert as consoleAssert } from 'console';
 import fs from 'fs';
 import path from 'path';
 
-import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 import { Event, EventsQueue } from './generation.types';
+import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -323,7 +323,7 @@ export async function startModuleGenerationAsync({
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
-    const isEventFileWatched = (event: Event): boolean => {
+    const isWatchedFileEvent = (event: Event): boolean => {
       return (
         event.metadata?.type !== 'd' &&
         /\.(kt|swift)$/.test(event.filePath) &&
@@ -334,7 +334,7 @@ export async function startModuleGenerationAsync({
 
     const listener = async ({ eventsQueue }: { eventsQueue: EventsQueue }) => {
       for (const event of eventsQueue) {
-        if (eventTypes.includes(event.type) && isEventFileWatched(event)) {
+        if (eventTypes.includes(event.type) && isWatchedFileEvent(event)) {
           const { filePath } = event;
           if (event.type === 'add') {
             onSourceFileCreated(projectRoot, filePath, filesWatched);
