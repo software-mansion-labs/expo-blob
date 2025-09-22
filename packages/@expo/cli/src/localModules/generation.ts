@@ -2,11 +2,12 @@ import { getConfig } from '@expo/config';
 import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import Server from '@expo/metro/metro/Server';
 import type MetroServer from '@expo/metro/metro/Server';
+import { assert as consoleAssert } from 'console';
 import fs from 'fs';
 import path from 'path';
 
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
-import { getRouterDirectoryModuleIdWithManifest } from '../start/server/metro/router';
+import { Event, EventsQueue } from './generation.types';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -34,13 +35,14 @@ function getMirrorDirectories(projectRoot: string): {
 function createFreshMirrorDirectories(projectRoot: string) {
   const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
 
-  // make sure the directories exist so we can remove them.
-  if (!fs.existsSync(localModulesModulesPath)) {
-    fs.mkdirSync(localModulesModulesPath, { recursive: true });
+  if (fs.existsSync(localModulesModulesPath)) {
+    fs.rmSync(localModulesModulesPath, { recursive: true, force: true });
   }
-  if (!fs.existsSync(localModulesTypesPath)) {
-    fs.mkdirSync(localModulesTypesPath, { recursive: true });
+  if (fs.existsSync(localModulesTypesPath)) {
+    fs.rmSync(localModulesTypesPath, { recursive: true, force: true });
   }
+  fs.mkdirSync(localModulesModulesPath, { recursive: true });
+  fs.mkdirSync(localModulesTypesPath, { recursive: true });
 }
 
 function trimExtension(fileName: string) {
@@ -48,29 +50,33 @@ function trimExtension(fileName: string) {
 }
 
 function typesAndLocalModulePathsForFile(projectRoot: string, absoluteFilePath: string) {
+  consoleAssert(!!absoluteFilePath);
+  consoleAssert(path.isAbsolute(absoluteFilePath));
   const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
   const splitPath = absoluteFilePath.split('/');
   const fileName = splitPath.at(-1);
-  if (!fileName)
-    throw new Error("In local modules we shouldn't watch files other than .kt and .swift");
+  if (!fileName) {
+    throw new Error('Invalid absoluteFilePath provided.');
+  }
   const moduleName = trimExtension(fileName);
 
   const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
+  const filePathRelativeToRootWithoutExtension = trimExtension(filePathRelativeToRoot);
   const moduleTypesFilePath = path.resolve(
     localModulesTypesPath,
-    trimExtension(filePathRelativeToRoot) + '.module.d.ts'
+    filePathRelativeToRootWithoutExtension + '.module.d.ts'
   );
   const viewTypesFilePath = path.resolve(
     localModulesTypesPath,
-    trimExtension(filePathRelativeToRoot) + '.view.d.ts'
+    filePathRelativeToRootWithoutExtension + '.view.d.ts'
   );
   const viewExportPath = path.resolve(
     localModulesModulesPath,
-    trimExtension(filePathRelativeToRoot) + '.view.js'
+    filePathRelativeToRootWithoutExtension + '.view.js'
   );
   const moduleExportPath = path.resolve(
     localModulesModulesPath,
-    trimExtension(filePathRelativeToRoot) + '.module.js'
+    filePathRelativeToRootWithoutExtension + '.module.js'
   );
   return {
     moduleTypesFilePath,
@@ -87,7 +93,7 @@ function fileWatchedWithAnyNativeExtension(
 ): boolean {
   const fileWithoutExtension = trimExtension(absoluteFilePath);
   for (const extension of nativeExtensions) {
-    const fileToCheck = fileWithoutExtension + extension;
+    const fileToCheck = `${fileWithoutExtension}${extension}`;
     if (filesWatched.has(fileToCheck)) {
       return true;
     }
@@ -159,7 +165,7 @@ export function updateXCodeProject(projectRoot: string) {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
-function fileSupposedToBeWatched(projectRoot: string, filePathAbsolute: string): boolean {
+function isFileInWatchedDirectories(projectRoot: string, filePathAbsolute: string): boolean {
   const watchedDirs = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
   const realRoot = fs.realpathSync(projectRoot);
   for (const dir of watchedDirs) {
@@ -171,7 +177,11 @@ function fileSupposedToBeWatched(projectRoot: string, filePathAbsolute: string):
   return false;
 }
 
-function addNewFile(projectRoot: string, absoluteFilePath: string, filesWatched?: Set<string>) {
+function onSourceFileCreated(
+  projectRoot: string,
+  absoluteFilePath: string,
+  filesWatched?: Set<string>
+) {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
     typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
 
@@ -223,9 +233,9 @@ async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set
       if (
         dirent.isFile() &&
         /\.(kt|swift)$/.test(dirent.name) &&
-        fileSupposedToBeWatched(projectRoot, absoluteDirentPath)
+        isFileInWatchedDirectories(projectRoot, absoluteDirentPath)
       ) {
-        addNewFile(projectRoot, absoluteDirentPath, filesWatched);
+        onSourceFileCreated(projectRoot, absoluteDirentPath, filesWatched);
       } else if (dirent.isDirectory()) {
         await generateExportsAndTypesForDirectory(absoluteDirentPath);
       }
@@ -265,7 +275,7 @@ export async function startModuleGenerationAsync({
   const { exp } = getConfig(projectRoot);
   const filesWatched = new Set<string>();
 
-  const fileExcluded = (absolutePath: string) => {
+  const isFileExcluded = (absolutePath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absolutePath, glob)) {
         return true;
@@ -275,11 +285,6 @@ export async function startModuleGenerationAsync({
   };
 
   createFreshMirrorDirectories(projectRoot);
-
-  process.env.EXPO_ROUTER_APP_ROOT = path.join(
-    projectRoot,
-    getRouterDirectoryModuleIdWithManifest(projectRoot, exp)
-  );
 
   const removeFileAndEmptyDirectories = (absoluteFilePath: string) => {
     if (fs.lstatSync(absoluteFilePath).isSymbolicLink()) {
@@ -294,7 +299,7 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onRemoveAppFile = (absoluteFilePath: string) => {
+  const onSourceFileRemoved = (absoluteFilePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
       typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
 
@@ -310,7 +315,7 @@ export async function startModuleGenerationAsync({
   const metroWatchKotlinAndSwiftFiles = async ({
     projectRoot,
     metro,
-    eventTypes = ['add', 'change', 'delete'],
+    eventTypes = ['add', 'delete'],
   }: {
     metro: MetroServer | null;
     projectRoot: string;
@@ -318,31 +323,23 @@ export async function startModuleGenerationAsync({
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
-    const listener = async ({
-      eventsQueue,
-    }: {
-      eventsQueue: {
-        filePath: string;
-        metadata?: {
-          type: 'f' | 'd' | 'l'; // Regular file / Directory / Symlink
-        } | null;
-        type: string;
-      }[];
-    }) => {
+    const isEventFileWatched = (event: Event): boolean => {
+      return (
+        event.metadata?.type !== 'd' &&
+        /\.(kt|swift)$/.test(event.filePath) &&
+        !isFileExcluded(event.filePath) &&
+        isFileInWatchedDirectories(projectRoot, event.filePath)
+      );
+    };
+
+    const listener = async ({ eventsQueue }: { eventsQueue: EventsQueue }) => {
       for (const event of eventsQueue) {
-        if (
-          eventTypes.includes(event.type) &&
-          event.metadata?.type !== 'd' &&
-          !/node_modules/.test(event.filePath) &&
-          /\.(kt|swift)$/.test(event.filePath) &&
-          !fileExcluded(event.filePath) &&
-          fileSupposedToBeWatched(projectRoot, event.filePath)
-        ) {
+        if (eventTypes.includes(event.type) && isEventFileWatched(event)) {
           const { filePath } = event;
           if (event.type === 'add') {
-            addNewFile(projectRoot, filePath, filesWatched);
+            onSourceFileCreated(projectRoot, filePath, filesWatched);
           } else if (event.type === 'delete') {
-            await onRemoveAppFile(filePath);
+            onSourceFileRemoved(filePath);
           }
         }
       }

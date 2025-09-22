@@ -1389,8 +1389,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }
 
   public async startTypeScriptServices() {
-    const projectRoot = this.projectRoot;
-    const metro = this.metro;
+    const { projectRoot, metro } = this;
     startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
