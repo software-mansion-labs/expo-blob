@@ -5,19 +5,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAppRoot = getAppRoot;
 exports.getMirrorStateObject = getMirrorStateObject;
-const find_up_1 = __importDefault(require("find-up"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const findPackageJsonPathAsync = async () => {
+/** Look up directories until one with a `package.json` can be found, assert if none can be found. */
+function findUpProjectRootOrAssert(cwd) {
+    const projectRoot = findUpProjectRoot(cwd);
+    if (!projectRoot) {
+        throw new Error(`Project root directory not found (working directory: ${cwd})`);
+    }
+    return projectRoot;
+}
+function findUpProjectRoot(cwd) {
+    const packageJsonPath = path_1.default.resolve(cwd, './package.json');
+    if (fs_1.default.existsSync(packageJsonPath)) {
+        return path_1.default.dirname(packageJsonPath);
+    }
+    const parent = path_1.default.dirname(cwd);
+    if (parent === cwd)
+        return null;
+    return findUpProjectRoot(parent);
+}
+async function getAppRoot() {
     const cwd = process.cwd();
-    const result = await (0, find_up_1.default)('package.json', { cwd });
+    const result = await findUpProjectRootOrAssert(cwd);
     if (!result) {
         throw new Error(`Couldn't find "package.json" up from path "${cwd}"`);
     }
     return result;
-};
-async function getAppRoot() {
-    return path_1.default.dirname(await findPackageJsonPathAsync());
 }
 function trimExtension(fileName) {
     return fileName.substring(0, fileName.lastIndexOf('.'));

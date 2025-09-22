@@ -1,4 +1,3 @@
-import findUp from 'find-up';
 import fs from 'fs';
 import path from 'path';
 
@@ -8,17 +7,34 @@ export type LocalModulesMirror = {
   kotlinClasses: string[];
 };
 
-const findPackageJsonPathAsync = async (): Promise<string> => {
+/** Look up directories until one with a `package.json` can be found, assert if none can be found. */
+function findUpProjectRootOrAssert(cwd: string): string {
+  const projectRoot = findUpProjectRoot(cwd);
+  if (!projectRoot) {
+    throw new Error(`Project root directory not found (working directory: ${cwd})`);
+  }
+  return projectRoot;
+}
+
+function findUpProjectRoot(cwd: string): string | null {
+  const packageJsonPath = path.resolve(cwd, './package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    return path.dirname(packageJsonPath);
+  }
+
+  const parent = path.dirname(cwd);
+  if (parent === cwd) return null;
+
+  return findUpProjectRoot(parent);
+}
+
+export async function getAppRoot(): Promise<string> {
   const cwd = process.cwd();
-  const result = await findUp('package.json', { cwd });
+  const result = await findUpProjectRootOrAssert(cwd);
   if (!result) {
     throw new Error(`Couldn't find "package.json" up from path "${cwd}"`);
   }
   return result;
-};
-
-export async function getAppRoot(): Promise<string> {
-  return path.dirname(await findPackageJsonPathAsync());
 }
 
 function trimExtension(fileName: string) {
