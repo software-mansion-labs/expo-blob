@@ -1,7 +1,7 @@
 import { Text } from 'react-native';
 
-import SimpleModule from './simpleModule.module';
-import TestView from './testView.view';
+import SimpleModule from './SimpleModule.module';
+import TestView from './TestView.view';
 
 export default function LocalModulesDemoComponent() {
   return (

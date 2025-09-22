@@ -35,23 +35,14 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   }
 
   const localModulesModulesPath = path.resolve(__dirname, './.expo/localModules/modules');
+
+  let localModuleFileExtension = null;
   if (moduleName.endsWith('.module')) {
-    const relativePathToOriginModule = path.relative(
-      __dirname,
-      path.dirname(context.originModulePath)
-    );
-
-    const modulePath = path.resolve(
-      localModulesModulesPath,
-      relativePathToOriginModule,
-      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.module.js'
-    );
-
-    return {
-      filePath: modulePath,
-      type: 'sourceFile',
-    };
+    localModuleFileExtension = '.module.js';
   } else if (moduleName.endsWith('.view')) {
+    localModuleFileExtension = '.view.js';
+  }
+  if (localModuleFileExtension) {
     const relativePathToOriginModule = path.relative(
       __dirname,
       path.dirname(context.originModulePath)
@@ -60,7 +51,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     const modulePath = path.resolve(
       localModulesModulesPath,
       relativePathToOriginModule,
-      moduleName.substring(0, moduleName.lastIndexOf('.')) + '.view.js'
+      moduleName.substring(0, moduleName.lastIndexOf('.')) + localModuleFileExtension
     );
 
     return {
