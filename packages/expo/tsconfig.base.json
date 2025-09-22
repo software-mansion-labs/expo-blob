@@ -17,6 +17,7 @@
     "target": "ESNext",
     "rootDirs": ["${configDir}", "${configDir}/.expo/localModules/types"]
   },
-
+  "include": ["${configDir}"],
+  "files": ["./localModules.d.ts"],
   "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
 }
