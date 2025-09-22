@@ -242,7 +242,6 @@ function excludePathsGlobs(projectRoot: string): string[] {
     path.resolve(projectRoot, 'node_modules'),
     path.resolve(projectRoot, 'node_modules', './**'),
     path.resolve(projectRoot, 'node_modules', './**/*'),
-    path.resolve(projectRoot, 'android'),
     path.resolve(projectRoot, 'localModules'),
     path.resolve(projectRoot, 'localModules', './**'),
     path.resolve(projectRoot, 'localModules', './**/*'),

@@ -1,5 +1,5 @@
 
-package local.modules.app
+package localModulesExamples
 
 
 import expo.modules.kotlin.modules.Module
@@ -13,7 +13,7 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 
-class testView : Module() {
+class TestView : Module() {
   override fun definition() = ModuleDefinition {
     View(ExpoWebView::class) {
       Events("onLoad")

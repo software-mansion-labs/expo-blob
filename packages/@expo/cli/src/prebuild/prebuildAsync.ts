@@ -175,7 +175,7 @@ export async function prebuildAsync(
     debug('Skipped pod install');
   }
   const localModulesEnabled = exp.experiments?.localModules === true;
-  if (options.platforms.includes('ios') && localModulesEnabled) {
+  if (localModulesEnabled && options.platforms.includes('ios')) {
     await updateXCodeProject(projectRoot);
   }
 
