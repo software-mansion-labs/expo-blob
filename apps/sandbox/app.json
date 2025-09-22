@@ -12,18 +12,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "experiments": {
-      "typedRoutes": true,
-      "localModules": true
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.sandbox"
+      "supportsTablet": true
     },
     "plugins": [
       [
@@ -46,12 +41,6 @@
     "web": {
       "bundler": "metro",
       "output": "server"
-    },
-    "android": {
-      "package": "com.anonymous.sandbox"
-    },
-    "localModules": {
-      "watchedDirs": ["src", "app"]
     }
   }
 }
