@@ -179,9 +179,9 @@ function resolveLocalModules(
   }
   if (localModuleFileExtension) {
     const tsProjectRoot = findUpTSProjectRootOrAssert(path.dirname(context.originModulePath));
-    const relativePathToOriginModule = path.resolve(
+    const relativePathToOriginModule = path.relative(
       tsProjectRoot,
-      path.dirname(context.originModulePath)
+      fs.realpathSync(path.dirname(context.originModulePath))
     );
 
     const modulePath = path.resolve(
