@@ -364,6 +364,11 @@ export function getDefaultConfig(
         expoConfig.exp.experiments?.localModules === true
           ? resolveLocalModulesWithRoot
           : defaultResolveRequest,
+      blockList: [
+        // .expo/types contains generated declaration files which are not and should not be processed by Metro.
+        // This prevents unwanted fast refresh on the declaration files changes.
+        /\.expo[\\/]types/,
+      ].concat(metroDefaultValues.resolver.blockList ?? []),
     },
     cacheStores: [cacheStore],
     watcher: {
