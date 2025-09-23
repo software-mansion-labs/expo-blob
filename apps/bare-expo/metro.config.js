@@ -1,6 +1,7 @@
 /* eslint-env node */
 // Learn more https://docs.expo.dev/guides/customizing-metro/
 const { getDefaultConfig } = require('expo/metro-config');
+const fs = require('node:fs');
 const path = require('node:path');
 
 /** @type {import('expo/metro-config').MetroConfig} */
@@ -24,6 +25,26 @@ config.watchFolders = [
   path.join(monorepoRoot, 'apps/test-suite'), // Workaround for Yarn v1 workspace issue where workspace dependencies aren't properly linked, should be at `<root>/node_modules/apps/test-suite`
 ];
 
+function findUpTSConfig(cwd) {
+  const tsconfigPath = path.resolve(cwd, './tsconfig.json');
+  if (fs.existsSync(tsconfigPath)) {
+    return path.dirname(tsconfigPath);
+  }
+
+  const parent = path.dirname(cwd);
+  if (parent === cwd) return null;
+
+  return findUpTSConfig(parent);
+}
+
+function findUpTSProjectRootOrAssert(dir) {
+  const tsProjectRoot = findUpTSConfig(dir);
+  if (!tsProjectRoot) {
+    throw new Error('Local modules watched dir needs to be inside a TS project with tsconfig.json');
+  }
+  return tsProjectRoot;
+}
+
 // When testing on MacOS we need to swap out `react-native` for `react-native-macos`
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (
@@ -43,9 +64,10 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     localModuleFileExtension = '.view.js';
   }
   if (localModuleFileExtension) {
+    const tsProjectRoot = findUpTSProjectRootOrAssert(path.dirname(context.originModulePath));
     const relativePathToOriginModule = path.relative(
-      __dirname,
-      path.dirname(context.originModulePath)
+      tsProjectRoot,
+      fs.realpathSync(path.dirname(context.originModulePath))
     );
 
     const modulePath = path.resolve(

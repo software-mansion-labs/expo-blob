@@ -14,6 +14,26 @@ export interface ModuleGenerationArguments {
   metro: Server | null;
 }
 
+function findUpTSConfig(cwd: string): string | null {
+  const tsconfigPath = path.resolve(cwd, './tsconfig.json');
+  if (fs.existsSync(tsconfigPath)) {
+    return path.dirname(tsconfigPath);
+  }
+
+  const parent = path.dirname(cwd);
+  if (parent === cwd) return null;
+
+  return findUpTSConfig(parent);
+}
+
+function findUpTSProjectRootOrAssert(dir: string): string {
+  const tsProjectRoot = findUpTSConfig(dir);
+  if (!tsProjectRoot) {
+    throw new Error('Local modules watched dir needs to be inside a TS project with tsconfig.json');
+  }
+  return tsProjectRoot;
+}
+
 const nativeExtensions = ['.kt', '.swift'];
 
 function isValidLocalModuleFileName(fileName: string): boolean {
@@ -68,7 +88,11 @@ function trimExtension(fileName: string) {
   return fileName.substring(0, fileName.lastIndexOf('.'));
 }
 
-function typesAndLocalModulePathsForFile(projectRoot: string, absoluteFilePath: string) {
+function typesAndLocalModulePathsForFile(
+  projectRoot: string,
+  watchedDirRoot: string,
+  absoluteFilePath: string
+) {
   consoleAssert(!!absoluteFilePath);
   consoleAssert(path.isAbsolute(absoluteFilePath));
   const { localModulesModulesPath, localModulesTypesPath } = getMirrorDirectories(projectRoot);
@@ -79,23 +103,27 @@ function typesAndLocalModulePathsForFile(projectRoot: string, absoluteFilePath: 
   }
   const moduleName = trimExtension(fileName);
 
-  const filePathRelativeToRoot = path.relative(projectRoot, absoluteFilePath);
-  const filePathRelativeToRootWithoutExtension = trimExtension(filePathRelativeToRoot);
+  const watchedDirTSProjectRoot = findUpTSProjectRootOrAssert(watchedDirRoot);
+  const filePathRelativeToTSProjectRoot = path.relative(watchedDirTSProjectRoot, absoluteFilePath);
+  const filePathRelativeToTSProjectRootWithoutExtension = trimExtension(
+    filePathRelativeToTSProjectRoot
+  );
+
   const moduleTypesFilePath = path.resolve(
     localModulesTypesPath,
-    filePathRelativeToRootWithoutExtension + '.module.d.ts'
+    filePathRelativeToTSProjectRootWithoutExtension + '.module.d.ts'
   );
   const viewTypesFilePath = path.resolve(
     localModulesTypesPath,
-    filePathRelativeToRootWithoutExtension + '.view.d.ts'
+    filePathRelativeToTSProjectRootWithoutExtension + '.view.d.ts'
   );
   const viewExportPath = path.resolve(
     localModulesModulesPath,
-    filePathRelativeToRootWithoutExtension + '.view.js'
+    filePathRelativeToTSProjectRootWithoutExtension + '.view.js'
   );
   const moduleExportPath = path.resolve(
     localModulesModulesPath,
-    filePathRelativeToRootWithoutExtension + '.module.js'
+    filePathRelativeToTSProjectRootWithoutExtension + '.module.js'
   );
   return {
     moduleTypesFilePath,
@@ -184,25 +212,26 @@ export function updateXCodeProject(projectRoot: string) {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
-function isFileInWatchedDirectories(projectRoot: string, filePathAbsolute: string): boolean {
+function fileWatchedDirAncestor(projectRoot: string, filePathAbsolute: string): string | null {
   const watchedDirs = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
   const realRoot = fs.realpathSync(projectRoot);
   for (const dir of watchedDirs) {
     const dirPathAbsolute = path.resolve(realRoot, dir);
     if (filePathAbsolute.startsWith(dirPathAbsolute)) {
-      return true;
+      return dirPathAbsolute;
     }
   }
-  return false;
+  return null;
 }
 
 function onSourceFileCreated(
   projectRoot: string,
+  watchedDirRoot: string,
   absoluteFilePath: string,
   filesWatched?: Set<string>
 ) {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
-    typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
+    typesAndLocalModulePathsForFile(projectRoot, watchedDirRoot, absoluteFilePath);
 
   if (filesWatched && fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
     filesWatched.add(absoluteFilePath);
@@ -239,7 +268,10 @@ export default _default`
 async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set<string>) {
   createFreshMirrorDirectories(projectRoot);
 
-  const generateExportsAndTypesForDirectory = async (absoluteDirPath: string) => {
+  const generateExportsAndTypesForDirectory = async (
+    absoluteDirPath: string,
+    watchedDirRoot: string
+  ) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
         return;
@@ -252,15 +284,22 @@ async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set
       if (
         dirent.isFile() &&
         isValidLocalModuleFileName(dirent.name) &&
-        isFileInWatchedDirectories(projectRoot, absoluteDirentPath)
+        absoluteDirentPath.startsWith(watchedDirRoot)
       ) {
-        onSourceFileCreated(projectRoot, absoluteDirentPath, filesWatched);
+        onSourceFileCreated(projectRoot, watchedDirRoot, absoluteDirentPath, filesWatched);
       } else if (dirent.isDirectory()) {
-        await generateExportsAndTypesForDirectory(absoluteDirentPath);
+        await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRoot);
       }
     }
   };
-  await generateExportsAndTypesForDirectory(projectRoot);
+
+  const watchedDirs = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
+  for (const watchedDir of watchedDirs) {
+    await generateExportsAndTypesForDirectory(
+      path.resolve(projectRoot, watchedDir),
+      fs.realpathSync(watchedDir)
+    );
+  }
 }
 
 function excludePathsGlobs(projectRoot: string): string[] {
@@ -318,9 +357,9 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onSourceFileRemoved = (absoluteFilePath: string) => {
+  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRoot: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
-      typesAndLocalModulePathsForFile(projectRoot, absoluteFilePath);
+      typesAndLocalModulePathsForFile(projectRoot, watchedDirRoot, absoluteFilePath);
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
@@ -342,23 +381,31 @@ export async function startModuleGenerationAsync({
   }) => {
     const watcher = metro?.getBundler().getBundler().getWatcher();
 
-    const isWatchedFileEvent = (event: Event): boolean => {
+    const isWatchedFileEvent = (event: Event, watchedDirAncestor: string | null): boolean => {
       return (
         event.metadata?.type !== 'd' &&
         isValidLocalModuleFileName(path.basename(event.filePath)) &&
         !isFileExcluded(event.filePath) &&
-        isFileInWatchedDirectories(projectRoot, event.filePath)
+        !!watchedDirAncestor
       );
     };
 
     const listener = async ({ eventsQueue }: { eventsQueue: EventsQueue }) => {
       for (const event of eventsQueue) {
-        if (eventTypes.includes(event.type) && isWatchedFileEvent(event)) {
+        const watchedDirAncestor = fileWatchedDirAncestor(
+          projectRoot,
+          fs.realpathSync(event.filePath)
+        );
+        if (
+          eventTypes.includes(event.type) &&
+          isWatchedFileEvent(event, watchedDirAncestor) &&
+          !!watchedDirAncestor
+        ) {
           const { filePath } = event;
           if (event.type === 'add') {
-            onSourceFileCreated(projectRoot, filePath, filesWatched);
+            onSourceFileCreated(projectRoot, filePath, watchedDirAncestor, filesWatched);
           } else if (event.type === 'delete') {
-            onSourceFileRemoved(filePath);
+            onSourceFileRemoved(filePath, watchedDirAncestor);
           }
         }
       }

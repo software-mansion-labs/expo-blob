@@ -97,7 +97,7 @@
       "localModules": true
     },
     "localModules": {
-      "watchedDirs": ["localModulesExamples"]
+      "watchedDirs": ["../native-component-list/src/screens/LocalModules/localModulesExamples"]
     }
   }
 }

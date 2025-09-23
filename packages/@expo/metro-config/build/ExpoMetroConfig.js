@@ -12,6 +12,7 @@ const paths_1 = require("@expo/config/paths");
 const json_file_1 = __importDefault(require("@expo/json-file"));
 const metro_cache_1 = require("@expo/metro/metro-cache");
 const chalk_1 = __importDefault(require("chalk"));
+const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
 const path_1 = __importDefault(require("path"));
 const resolve_from_1 = __importDefault(require("resolve-from"));
@@ -85,6 +86,23 @@ function memoize(fn) {
         return result;
     });
 }
+function findUpTSConfig(cwd) {
+    const tsconfigPath = path_1.default.resolve(cwd, './tsconfig.json');
+    if (fs_1.default.existsSync(tsconfigPath)) {
+        return path_1.default.dirname(tsconfigPath);
+    }
+    const parent = path_1.default.dirname(cwd);
+    if (parent === cwd)
+        return null;
+    return findUpTSConfig(parent);
+}
+function findUpTSProjectRootOrAssert(dir) {
+    const tsProjectRoot = findUpTSConfig(dir);
+    if (!tsProjectRoot) {
+        throw new Error('Local modules watched dir needs to be inside a TS project with tsconfig.json');
+    }
+    return tsProjectRoot;
+}
 function resolveLocalModules(projectRoot, context, moduleName, platform) {
     const localModulesModulesPath = path_1.default.resolve(projectRoot, './.expo/localModules/modules');
     let localModuleFileExtension = null;
@@ -95,7 +113,8 @@ function resolveLocalModules(projectRoot, context, moduleName, platform) {
         localModuleFileExtension = '.view.js';
     }
     if (localModuleFileExtension) {
-        const relativePathToOriginModule = path_1.default.relative(projectRoot, path_1.default.dirname(context.originModulePath));
+        const tsProjectRoot = findUpTSProjectRootOrAssert(path_1.default.dirname(context.originModulePath));
+        const relativePathToOriginModule = path_1.default.resolve(tsProjectRoot, path_1.default.dirname(context.originModulePath));
         const modulePath = path_1.default.resolve(localModulesModulesPath, relativePathToOriginModule, moduleName.substring(0, moduleName.lastIndexOf('.')) + localModuleFileExtension);
         return {
             filePath: modulePath,

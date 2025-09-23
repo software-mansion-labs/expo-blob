@@ -14,6 +14,7 @@ import { stableHash } from '@expo/metro/metro-cache';
 import type { ConfigT as MetroConfig, InputConfigT } from '@expo/metro/metro-config';
 import { CustomResolutionContext, Resolution } from '@expo/metro/metro-resolver/types';
 import chalk from 'chalk';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import resolveFrom from 'resolve-from';
@@ -142,6 +143,26 @@ function memoize<T extends (...args: any[]) => any>(fn: T): T {
   }) as T;
 }
 
+function findUpTSConfig(cwd: string): string | null {
+  const tsconfigPath = path.resolve(cwd, './tsconfig.json');
+  if (fs.existsSync(tsconfigPath)) {
+    return path.dirname(tsconfigPath);
+  }
+
+  const parent = path.dirname(cwd);
+  if (parent === cwd) return null;
+
+  return findUpTSConfig(parent);
+}
+
+function findUpTSProjectRootOrAssert(dir: string): string {
+  const tsProjectRoot = findUpTSConfig(dir);
+  if (!tsProjectRoot) {
+    throw new Error('Local modules watched dir needs to be inside a TS project with tsconfig.json');
+  }
+  return tsProjectRoot;
+}
+
 function resolveLocalModules(
   projectRoot: string,
   context: CustomResolutionContext,
@@ -157,8 +178,9 @@ function resolveLocalModules(
     localModuleFileExtension = '.view.js';
   }
   if (localModuleFileExtension) {
-    const relativePathToOriginModule = path.relative(
-      projectRoot,
+    const tsProjectRoot = findUpTSProjectRootOrAssert(path.dirname(context.originModulePath));
+    const relativePathToOriginModule = path.resolve(
+      tsProjectRoot,
       path.dirname(context.originModulePath)
     );
 
