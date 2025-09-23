@@ -16,6 +16,25 @@ export interface ModuleGenerationArguments {
 
 const nativeExtensions = ['.kt', '.swift'];
 
+function isValidLocalModuleFileName(fileName: string): boolean {
+  let numberOfDots = 0;
+  for (const character of fileName) {
+    if (character === '.') {
+      numberOfDots += 1;
+    }
+  }
+
+  let hasNativeExtension: boolean = false;
+  for (const extension of nativeExtensions) {
+    if (fileName.endsWith(extension)) {
+      hasNativeExtension = true;
+      break;
+    }
+  }
+
+  return hasNativeExtension && numberOfDots === 1;
+}
+
 function getMirrorDirectories(projectRoot: string): {
   localModulesModulesPath: string;
   localModulesTypesPath: string;
@@ -232,7 +251,7 @@ async function generateMirrorDirectories(projectRoot: string, filesWatched?: Set
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       if (
         dirent.isFile() &&
-        /\.(kt|swift)$/.test(dirent.name) &&
+        isValidLocalModuleFileName(dirent.name) &&
         isFileInWatchedDirectories(projectRoot, absoluteDirentPath)
       ) {
         onSourceFileCreated(projectRoot, absoluteDirentPath, filesWatched);
@@ -326,7 +345,7 @@ export async function startModuleGenerationAsync({
     const isWatchedFileEvent = (event: Event): boolean => {
       return (
         event.metadata?.type !== 'd' &&
-        /\.(kt|swift)$/.test(event.filePath) &&
+        isValidLocalModuleFileName(path.basename(event.filePath)) &&
         !isFileExcluded(event.filePath) &&
         isFileInWatchedDirectories(projectRoot, event.filePath)
       );

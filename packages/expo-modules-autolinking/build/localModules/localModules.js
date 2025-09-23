@@ -33,6 +33,23 @@ async function getAppRoot() {
     }
     return result;
 }
+const nativeExtensions = ['.kt', '.swift'];
+function isValidLocalModuleFileName(fileName) {
+    let numberOfDots = 0;
+    for (const character of fileName) {
+        if (character === '.') {
+            numberOfDots += 1;
+        }
+    }
+    let hasNativeExtension = false;
+    for (const extension of nativeExtensions) {
+        if (fileName.endsWith(extension)) {
+            hasNativeExtension = true;
+            break;
+        }
+    }
+    return hasNativeExtension && numberOfDots === 1;
+}
 function trimExtension(fileName) {
     return fileName.substring(0, fileName.lastIndexOf('.'));
 }
@@ -63,7 +80,7 @@ async function getMirrorStateObject(watchedDirs) {
             if (dirent.isDirectory()) {
                 await recursivelyScanDirectory(absoluteDirentPath);
             }
-            if (!dirent.isFile()) {
+            if (!dirent.isFile() || !isValidLocalModuleFileName(dirent.name)) {
                 continue;
             }
             if (/\.(kt)$/.test(dirent.name)) {

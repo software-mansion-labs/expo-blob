@@ -37,6 +37,27 @@ export async function getAppRoot(): Promise<string> {
   return result;
 }
 
+const nativeExtensions = ['.kt', '.swift'];
+
+function isValidLocalModuleFileName(fileName: string): boolean {
+  let numberOfDots = 0;
+  for (const character of fileName) {
+    if (character === '.') {
+      numberOfDots += 1;
+    }
+  }
+
+  let hasNativeExtension: boolean = false;
+  for (const extension of nativeExtensions) {
+    if (fileName.endsWith(extension)) {
+      hasNativeExtension = true;
+      break;
+    }
+  }
+
+  return hasNativeExtension && numberOfDots === 1;
+}
+
 function trimExtension(fileName: string) {
   return fileName.substring(0, fileName.lastIndexOf('.'));
 }
@@ -71,7 +92,7 @@ export async function getMirrorStateObject(watchedDirs: string[]): Promise<Local
       if (dirent.isDirectory()) {
         await recursivelyScanDirectory(absoluteDirentPath);
       }
-      if (!dirent.isFile()) {
+      if (!dirent.isFile() || !isValidLocalModuleFileName(dirent.name)) {
         continue;
       }
 
