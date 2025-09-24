@@ -9,7 +9,7 @@ const path_1 = __importDefault(require("path"));
 const autolinkingOptions_1 = require("./autolinkingOptions");
 const androidLocalModules_1 = require("../localModules/androidLocalModules");
 function mirrorKotlinLocalModulesCommand(cli) {
-    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>')).action(async (mirrorPath, localModulesListPath, watchedDirsSerialized, commandArguments) => {
+    return (0, autolinkingOptions_1.registerAutolinkingArguments)(cli.command('mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>')).action(async (mirrorPath, localModulesListPath, watchedDirsSerialized) => {
         const watchedDirs = JSON.parse(watchedDirsSerialized);
         if (!mirrorPath || !localModulesListPath) {
             throw new Error('Need to provide mirrorPath and localModulesListPath!');

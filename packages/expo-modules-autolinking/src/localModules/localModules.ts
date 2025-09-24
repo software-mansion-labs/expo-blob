@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export type LocalModulesMirror = {
-  files: string[];
+  files: { filePath: string; watchedDirRoot: string }[];
   swiftModuleClassNames: string[];
   kotlinClasses: string[];
 };
@@ -85,12 +85,12 @@ export async function getMirrorStateObject(watchedDirs: string[]): Promise<Local
     files: [],
   };
 
-  const recursivelyScanDirectory = async (absoluteDirPath: string) => {
+  const recursivelyScanDirectory = async (absoluteDirPath: string, watchedDirRoot: string) => {
     const dir = fs.opendirSync(absoluteDirPath);
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       if (dirent.isDirectory()) {
-        await recursivelyScanDirectory(absoluteDirentPath);
+        await recursivelyScanDirectory(absoluteDirentPath, watchedDirRoot);
       }
       if (!dirent.isFile() || !isValidLocalModuleFileName(dirent.name)) {
         continue;
@@ -99,17 +99,20 @@ export async function getMirrorStateObject(watchedDirs: string[]): Promise<Local
       if (/\.(kt)$/.test(dirent.name)) {
         const kotlinFileWithPackage = getKotlinFileNameWithItsPackage(absoluteDirentPath);
         localModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
-        localModulesMirror.files.push(absoluteDirentPath);
+        localModulesMirror.files.push({ filePath: absoluteDirentPath, watchedDirRoot });
       } else if (/\.(swift)$/.test(dirent.name)) {
         const swiftClassName = getSwiftModuleClassName(absoluteDirentPath);
         localModulesMirror.swiftModuleClassNames.push(swiftClassName);
-        localModulesMirror.files.push(absoluteDirentPath);
+        localModulesMirror.files.push({ filePath: absoluteDirentPath, watchedDirRoot });
       }
     }
   };
 
   for (const dir of watchedDirs ?? []) {
-    await recursivelyScanDirectory(path.resolve(appRoot, dir));
+    await recursivelyScanDirectory(
+      path.resolve(appRoot, dir),
+      fs.realpathSync(path.resolve(appRoot, dir))
+    );
   }
   return localModulesMirror;
 }

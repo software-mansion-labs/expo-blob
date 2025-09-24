@@ -73,12 +73,12 @@ async function getMirrorStateObject(watchedDirs) {
         swiftModuleClassNames: [],
         files: [],
     };
-    const recursivelyScanDirectory = async (absoluteDirPath) => {
+    const recursivelyScanDirectory = async (absoluteDirPath, watchedDirRoot) => {
         const dir = fs_1.default.opendirSync(absoluteDirPath);
         for await (const dirent of dir) {
             const absoluteDirentPath = path_1.default.resolve(absoluteDirPath, dirent.name);
             if (dirent.isDirectory()) {
-                await recursivelyScanDirectory(absoluteDirentPath);
+                await recursivelyScanDirectory(absoluteDirentPath, watchedDirRoot);
             }
             if (!dirent.isFile() || !isValidLocalModuleFileName(dirent.name)) {
                 continue;
@@ -86,17 +86,17 @@ async function getMirrorStateObject(watchedDirs) {
             if (/\.(kt)$/.test(dirent.name)) {
                 const kotlinFileWithPackage = getKotlinFileNameWithItsPackage(absoluteDirentPath);
                 localModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
-                localModulesMirror.files.push(absoluteDirentPath);
+                localModulesMirror.files.push({ filePath: absoluteDirentPath, watchedDirRoot });
             }
             else if (/\.(swift)$/.test(dirent.name)) {
                 const swiftClassName = getSwiftModuleClassName(absoluteDirentPath);
                 localModulesMirror.swiftModuleClassNames.push(swiftClassName);
-                localModulesMirror.files.push(absoluteDirentPath);
+                localModulesMirror.files.push({ filePath: absoluteDirentPath, watchedDirRoot });
             }
         }
     };
     for (const dir of watchedDirs ?? []) {
-        await recursivelyScanDirectory(path_1.default.resolve(appRoot, dir));
+        await recursivelyScanDirectory(path_1.default.resolve(appRoot, dir), fs_1.default.realpathSync(path_1.default.resolve(appRoot, dir)));
     }
     return localModulesMirror;
 }

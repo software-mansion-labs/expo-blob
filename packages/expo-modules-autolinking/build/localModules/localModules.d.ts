@@ -1,5 +1,8 @@
 export type LocalModulesMirror = {
-    files: string[];
+    files: {
+        filePath: string;
+        watchedDirRoot: string;
+    }[];
     swiftModuleClassNames: string[];
     kotlinClasses: string[];
 };

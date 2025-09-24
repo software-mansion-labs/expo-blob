@@ -7,11 +7,11 @@ export async function createSymlinksToKotlinFiles(mirrorPath: string, watchedDir
   const localModulesObject = await getMirrorStateObject(watchedDirs);
   const appRoot = await getAppRoot();
 
-  for (const filePath of localModulesObject.files) {
+  for (const { filePath, watchedDirRoot } of localModulesObject.files) {
     if (!filePath.endsWith('.kt')) {
       continue;
     }
-    const filePathRelativeToRoot = path.relative(appRoot, filePath);
+    const filePathRelativeToRoot = path.relative(watchedDirRoot, filePath);
     const targetPath = path.resolve(mirrorPath, filePathRelativeToRoot);
 
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });

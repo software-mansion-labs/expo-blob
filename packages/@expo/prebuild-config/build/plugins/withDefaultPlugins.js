@@ -92,6 +92,13 @@ function _expoDocumentPicker() {
   };
   return data;
 }
+function _withLocalModules() {
+  const data = _interopRequireDefault(require("./unversioned/expo-local-modules/withLocalModules"));
+  _withLocalModules = function () {
+    return data;
+  };
+  return data;
+}
 function _expoNavigationBar() {
   const data = _interopRequireDefault(require("./unversioned/expo-navigation-bar/expo-navigation-bar"));
   _expoNavigationBar = function () {
@@ -137,13 +144,6 @@ function _newArchPlistHotfix() {
 function _reactNativeMaps() {
   const data = _interopRequireDefault(require("./unversioned/react-native-maps"));
   _reactNativeMaps = function () {
-    return data;
-  };
-  return data;
-}
-function _withLocalModules() {
-  const data = _interopRequireDefault(require("./unversioned/expo-local-modules/withLocalModules"));
-  _withLocalModules = function () {
     return data;
   };
   return data;

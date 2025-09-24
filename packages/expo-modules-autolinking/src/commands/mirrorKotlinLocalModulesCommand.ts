@@ -17,12 +17,7 @@ export function mirrorKotlinLocalModulesCommand(cli: commander.CommanderStatic) 
       'mirror-kotlin-local-modules <mirrorPath> <localModulesListPath> <watchedDirsSerialized>'
     )
   ).action(
-    async (
-      mirrorPath: string,
-      localModulesListPath: string,
-      watchedDirsSerialized: string,
-      commandArguments: ResolveArguments
-    ) => {
+    async (mirrorPath: string, localModulesListPath: string, watchedDirsSerialized: string) => {
       const watchedDirs = JSON.parse(watchedDirsSerialized);
       if (!mirrorPath || !localModulesListPath) {
         throw new Error('Need to provide mirrorPath and localModulesListPath!');
