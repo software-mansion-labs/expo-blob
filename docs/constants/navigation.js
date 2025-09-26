@@ -314,6 +314,7 @@ export const general = [
       ]),
       makeSection('Reference', [
         makePage('modules/module-api.mdx'),
+        makePage('modules/local-native-modules-reference.mdx'),
         makePage('modules/android-lifecycle-listeners.mdx'),
         makePage('modules/appdelegate-subscribers.mdx'),
         makePage('modules/autolinking.mdx'),

@@ -1,0 +1,98 @@
+---
+title: Local native modules reference
+description: A reference of Expo local native modules.
+sidebar_title: Local modules reference
+---
+
+import { PaddedAPIBox } from '~/components/plugins/PaddedAPIBox';
+
+Local native modules is a set of functionalities which allow for simple native module creation and usage.
+
+## Configuration
+
+### app.json
+
+```json app.json
+{
+  "expo": {
+    "experiments": {
+      "localModules": true
+    },
+    "localModules": {
+      "watchedDirs": ["app", "src"]
+    }
+  }
+}
+```
+
+<PaddedAPIBox header="expo.experiments.localModules">
+When set to `true` enables local modules functionality in Expo CLI and Expo Modules Autolinking.
+
+```json app.json
+{
+  "expo": {
+    "experiments": {
+      "localModules": true
+    }
+  }
+}
+```
+
+</PaddedAPIBox>
+
+<PaddedAPIBox header="expo.localModules.watchedDirs">
+Configures in which directories the local native modules can be created.
+ 
+```json app.json
+{
+  "expo": {
+    "localModules": {
+      "watchedDirs": ["app", "src"]
+    }
+  }
+}
+```
+
+Files inside nested directories will also be used e.g. if `watchedDirs = ["app"]`
+and there exists a `app/nested/directory/SomeModule.kt` then the SomeModule will be used.
+
+A directory in `watchedDirs`:
+
+- needs to be inside a typescript project i.e. have an ancestor in the directory tree which has tsconfig.json. E.g. `watchedDirs: ["app", "src/some/directory", pathToOtherTSproject]` should work and `"watchedDirs": ["./", "../", "/"] won't.
+- cannot be the whole project directory `"./"` - the recursion would cause problems.
+- cannot be a subdirectory of other directory in watchedDirs. E.g. watchedDirs cannot be ["app", "app/nested/directory"], however you can just set`watchedDirs` to `["app"]`.
+- cannot contain special characters like `" ", "(", ")", "$"`. Note that this means you cannot have `"app/(tabs)"` in the `watchedDirs`, but you can have `"app"` and it should still use native files from `"app/(tabs)"` directory.
+
+</PaddedAPIBox>
+
+### metro.config.json
+
+The deafult expo metro config automatically configures `config.resolver.resolveRequest` option to properly resolve imports to `*.module` and `*.view` files.
+If in your project the `resolveRequest` function is changed then for the local modules to work you need to also manually resolve `*.module` and `*view` files.
+Check the `bare-expo/metro.config.json` to see how to do it.
+
+### tsconfig.json
+
+The `expo/tsconfig.base.json is setup for the local modules to work automatically.
+
+```json expo/tsconfig.base.json
+{
+  // ...
+  "compilerOptions": {
+    "rootDirs": ["${configDir}", "${configDir}/.expo/localModules/types"]
+  },
+  "files": ["./localModules.d.ts"]
+}
+```
+
+If you change the `compilerOptions.rootDirs` in your project you need to also add `.expo/localModules/types`
+and if you change `files` you need to manually add `node_modules/expo/localModules.d.ts`.
+
+In the `.expo/localModules/types` directory are generated `d.ts` files for each local native module and view.
+
+The `node_modules/expo/localModules.d.ts` is needed mainly for CI as you may run typescript checks before the generation of `.expo/localModules/types` mirror. If you override "files" in your `tsconfig.json` you may also need to add it manually.
+
+```ts localModules.d.ts
+declare module '*.module';
+declare module '*.view';
+```
