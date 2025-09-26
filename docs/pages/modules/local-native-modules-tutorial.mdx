@@ -1,0 +1,267 @@
+---
+title: 'Tutorial: Create a local native module'
+sidebar_title: Create a local native module
+description: A tutorial on creating local native modules.
+---
+
+import { Grid01Icon } from '@expo/styleguide-icons/outline/Grid01Icon';
+
+import { BoxLink } from '~/ui/components/BoxLink';
+import { Collapsible } from '~/ui/components/Collapsible';
+import { ContentSpotlight } from '~/ui/components/ContentSpotlight';
+import { Terminal } from '~/ui/components/Snippet';
+import { Step } from '~/ui/components/Step';
+
+In this tutorial, you'll build a simple local native module.
+
+<Step label="1">
+
+## Setup your project
+
+Set `expo.experiments.localModules` flag to `true` inside the `app.json`, also set the `expo.localModules.watchedDirs` to `["app"]`
+
+```json app.json
+{
+    ...
+    "expo": {
+        ...
+        "experiments": {
+            ...
+            "localModules": true
+        }
+        ...
+    }
+    ...
+    "localModules": {
+        "watchedDirs": ["app"]
+    }
+}
+```
+
+Setting `expo.experiments.localModules` flag to `true` enables local modules functionality in Expo.
+In `expo.localModules.watchedDirs` you can specify in which directories are your local modules.
+
+</Step>
+
+<Step label="2">
+
+## Run prebuild
+
+Run the prebuild command to generate android and ios projects with the local modules setup.
+
+<Terminal cmdCopy="yarn expo prebuild" cmd={['$ yarn expo prebuild']} />
+
+</Step>
+
+<Step label="3">
+
+## Create a local module
+
+Create a kotlin file `FirstLocalModule.kt` in the `app` directory and write a module in there.
+
+```kotlin app/FirstLocalModule.kt
+package app
+
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
+
+class FirstLocalModule : Module() {
+  override fun definition() = ModuleDefinition {
+    Constant("Hello") { ->
+      "Hello android local modules!"
+    }
+  }
+}
+
+```
+
+Also create a `FirstLocalModule.swift` in the `app` directory and write a similar module.
+
+```swift app/FirstLocalModule.swift
+import ExpoModulesCore
+
+public class FirstLocalModule: Module {
+  public func definition() -> ModuleDefinition {
+    Constant("Hello") {
+      return "Hello ios local modules!"
+    }
+  }
+}
+
+```
+
+</Step>
+
+<Step label="4">
+
+## Use the module inside your components
+
+For typescript to find type definitions of the local module you've just created, you need to run a `yarn expo start` command which generates neccessary `.d.ts` files.
+
+<Terminal cmdCopy="yarn expo start" cmd={['$ yarn expo start']} />
+
+Now you can use the module in a following way
+
+```tsx app/index.tsx
+import { Text } from 'react-native';
+
+import FirstLocalModule from './FirstLocalModule.module';
+
+export default function LocalModulesDemoComponent() {
+  return <Text> {FirstLocalModule.Hello} </Text>;
+}
+```
+
+You can run you android app
+
+<Terminal cmdCopy="yarn expo run:android" cmd={['$ yarn expo run:android']} />
+
+Or your ios app
+
+<Terminal cmdCopy="yarn expo run:ios" cmd={['$ yarn expo run:ios']} />
+
+When run you should see the application with the text constant from the appropriate android/ios module.
+
+</Step>
+
+<Step label="5">
+## Create a native view
+
+Create a kotlin file `FirstLocalView.kt` in the `app` directory and write a view in there.
+We will use a ExpoWebView created in native views tutorial.
+
+```kotlin app/FirstLocalView.kt
+package app
+
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
+import java.net.URL
+
+import android.content.Context
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.viewevent.EventDispatcher
+import expo.modules.kotlin.views.ExpoView
+
+class TestView : Module() {
+  override fun definition() = ModuleDefinition {
+    View() {
+      Events("onLoad")
+
+      Prop("url") { view: ExpoWebView, url: URL? ->
+        view.webView.loadUrl(url.toString())
+      }
+    }
+  }
+}
+
+class ExpoWebView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
+  private val onLoad by EventDispatcher()
+
+  internal val webView = WebView(context).also {
+    it.layoutParams = LayoutParams(
+      LayoutParams.MATCH_PARENT,
+      LayoutParams.MATCH_PARENT
+    )
+
+    it.webViewClient = object : WebViewClient() {
+      override fun onPageFinished(view: WebView, url: String) {
+        onLoad(mapOf("url" to url))
+      }
+    }
+
+    addView(it)
+  }
+}
+
+```
+
+Now create a swift file `FirstLocalView.swift` in the `app` directory.
+
+```swift app/FirstLocalView.swift
+import ExpoModulesCore
+import WebKit
+
+public class FirstLocalView: Module {
+  public func definition() -> ModuleDefinition {
+    View(ExpoWebView.self) {
+      Events("onLoad")
+
+      Prop("url") { (view, url: URL) in
+        if view.webView.url != url {
+          let urlRequest = URLRequest(url: url)
+          view.webView.load(urlRequest)
+        }
+      }
+    }
+  }
+}
+
+class ExpoWebView: ExpoView, WKNavigationDelegate {
+  let webView = WKWebView()
+  let onLoad = EventDispatcher()
+
+  required init(appContext: AppContext? = nil) {
+    super.init(appContext: appContext)
+    clipsToBounds = true
+    webView.navigationDelegate = self
+    addSubview(webView)
+  }
+
+  override func layoutSubviews() {
+    webView.frame = bounds
+  }
+
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    if let url = webView.url {
+      onLoad([
+        "url": url.absoluteString
+      ])
+    }
+  }
+}
+
+```
+
+</Step>
+
+<Step label="6">
+## Use the native view
+You have to have `yarn expo start` running to see changes in typescript files. You use the local native view in a similar way to the local native module:
+
+```tsx app/index.tsx
+import { Text } from 'react-native';
+
+import FirstLocalModule from './FirstLocalModule.module';
+import FirstLocalView from './FirstLocalView.view';
+
+export default function LocalModulesDemoComponent() {
+  return (
+    <>
+      <Text> {FirstLocalModule.Hello} </Text>
+      <FirstLocalView style={{ flex: 1 }} url="https://docs.expo.dev/modules/" />
+    </>
+  );
+}
+```
+
+</Step>
+
+Congratulations! You've created your first Expo local native module and local native view.
+
+## Next steps
+
+<BoxLink
+  title="Expo Modules API Reference"
+  description="Create native modules using Kotlin and Swift."
+  href="/modules/module-api/"
+  Icon={Grid01Icon}
+/>
+
+<BoxLink
+  title="Tutorial: Creating a native module"
+  description="A tutorial on creating a native module that persists settings with Expo Modules API."
+  href="/modules/native-module-tutorial/"
+  Icon={Grid01Icon}
+/>
