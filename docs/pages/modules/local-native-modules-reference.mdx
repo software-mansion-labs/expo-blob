@@ -10,7 +10,7 @@ Local native modules is a set of functionalities which allow for simple native m
 
 ## Configuration
 
-### app.json
+### App config
 
 ```json app.json
 {
@@ -53,25 +53,25 @@ Configures in which directories the local native modules can be created.
 }
 ```
 
-Files inside nested directories will also be used e.g. if `watchedDirs = ["app"]`
+Files inside nested directories will also be used, for example if `watchedDirs = ["app"]`
 and there exists a `app/nested/directory/SomeModule.kt` then the SomeModule will be used.
 
 A directory in `watchedDirs`:
 
-- needs to be inside a typescript project i.e. have an ancestor in the directory tree which has tsconfig.json. E.g. `watchedDirs: ["app", "src/some/directory", pathToOtherTSproject]` should work and `"watchedDirs": ["./", "../", "/"] won't.
+- needs to be inside a typescript project, that is, have an ancestor in the directory tree which has tsconfig.json. For example `watchedDirs: ["app", "src/some/directory", pathToOtherTSproject]` should work and `"watchedDirs": ["./", "../", "/"] won't.
 - cannot be the whole project directory `"./"` - the recursion would cause problems.
-- cannot be a subdirectory of other directory in watchedDirs. E.g. watchedDirs cannot be ["app", "app/nested/directory"], however you can just set`watchedDirs` to `["app"]`.
+- cannot be a subdirectory of other directory in watchedDirs. For example watchedDirs cannot be ["app", "app/nested/directory"], however you can just set`watchedDirs` to `["app"]`.
 - cannot contain special characters like `" ", "(", ")", "$"`. Note that this means you cannot have `"app/(tabs)"` in the `watchedDirs`, but you can have `"app"` and it should still use native files from `"app/(tabs)"` directory.
 
 </PaddedAPIBox>
 
-### metro.config.json
+### Metro config
 
 The deafult expo metro config automatically configures `config.resolver.resolveRequest` option to properly resolve imports to `*.module` and `*.view` files.
 If in your project the `resolveRequest` function is changed then for the local modules to work you need to also manually resolve `*.module` and `*view` files.
 Check the `bare-expo/metro.config.json` to see how to do it.
 
-### tsconfig.json
+### TSconfig
 
 The `expo/tsconfig.base.json is setup for the local modules to work automatically.
 
