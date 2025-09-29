@@ -89,7 +89,7 @@ function trimExtension(fileName: string): string {
 
 function typesAndLocalModulePathsForFile(
   projectRoot: string,
-  watchedDirRoot: string,
+  watchedDirRootAbolutePath: string,
   absoluteFilePath: string
 ): {
   moduleTypesFilePath: string;
@@ -102,7 +102,7 @@ function typesAndLocalModulePathsForFile(
   const fileName = path.basename(absoluteFilePath);
   const moduleName = trimExtension(fileName);
 
-  const watchedDirTSProjectRoot = findUpTSProjectRootOrThrow(watchedDirRoot);
+  const watchedDirTSProjectRoot = findUpTSProjectRootOrThrow(watchedDirRootAbolutePath);
   const filePathRelativeToTSProjectRoot = path.relative(watchedDirTSProjectRoot, absoluteFilePath);
   const filePathRelativeToTSProjectRootWithoutExtension = trimExtension(
     filePathRelativeToTSProjectRoot
@@ -211,9 +211,12 @@ export function updateXCodeProject(projectRoot: string): void {
   fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
 }
 
-function getWatchedDirAncestor(projectRoot: string, filePathAbsolute: string): string | null {
+function getWatchedDirAncestorAbsolutePath(
+  projectRoot: string,
+  filePathAbsolute: string
+): string | null {
   const watchedDirs = getConfig(projectRoot).exp.localModules?.watchedDirs ?? [];
-  const realRoot = fs.realpathSync(projectRoot);
+  const realRoot = path.resolve(projectRoot);
   for (const dir of watchedDirs) {
     const dirPathAbsolute = path.resolve(realRoot, dir);
     if (filePathAbsolute.startsWith(dirPathAbsolute)) {
@@ -225,12 +228,12 @@ function getWatchedDirAncestor(projectRoot: string, filePathAbsolute: string): s
 
 function onSourceFileCreated(
   projectRoot: string,
-  watchedDirRoot: string,
+  watchedDirRootAbolutePath: string,
   absoluteFilePath: string,
   filesWatched?: Set<string>
 ): void {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
-    typesAndLocalModulePathsForFile(projectRoot, watchedDirRoot, absoluteFilePath);
+    typesAndLocalModulePathsForFile(projectRoot, watchedDirRootAbolutePath, absoluteFilePath);
 
   if (filesWatched && fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
     filesWatched.add(absoluteFilePath);
@@ -272,7 +275,7 @@ async function generateMirrorDirectories(
 
   const generateExportsAndTypesForDirectory = async (
     absoluteDirPath: string,
-    watchedDirRoot: string
+    watchedDirRootAbolutePath: string
   ) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
@@ -286,11 +289,16 @@ async function generateMirrorDirectories(
       if (
         dirent.isFile() &&
         isValidLocalModuleFileName(dirent.name) &&
-        absoluteDirentPath.startsWith(watchedDirRoot)
+        absoluteDirentPath.startsWith(watchedDirRootAbolutePath)
       ) {
-        onSourceFileCreated(projectRoot, watchedDirRoot, absoluteDirentPath, filesWatched);
+        onSourceFileCreated(
+          projectRoot,
+          watchedDirRootAbolutePath,
+          absoluteDirentPath,
+          filesWatched
+        );
       } else if (dirent.isDirectory()) {
-        await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRoot);
+        await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRootAbolutePath);
       }
     }
   };
@@ -352,9 +360,9 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRoot: string) => {
+  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbolutePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
-      typesAndLocalModulePathsForFile(projectRoot, watchedDirRoot, absoluteFilePath);
+      typesAndLocalModulePathsForFile(projectRoot, watchedDirRootAbolutePath, absoluteFilePath);
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
@@ -379,9 +387,9 @@ export async function startModuleGenerationAsync({
 
   const listener = async ({ eventsQueue }: { eventsQueue: EventsQueue }) => {
     for (const event of eventsQueue) {
-      const watchedDirAncestor = getWatchedDirAncestor(
+      const watchedDirAncestor = getWatchedDirAncestorAbsolutePath(
         projectRoot,
-        fs.realpathSync(event.filePath)
+        path.resolve(event.filePath)
       );
       if (
         eventTypes.includes(event.type) &&
@@ -390,7 +398,7 @@ export async function startModuleGenerationAsync({
       ) {
         const { filePath } = event;
         if (event.type === 'add') {
-          onSourceFileCreated(projectRoot, filePath, watchedDirAncestor, filesWatched);
+          onSourceFileCreated(projectRoot, watchedDirAncestor, filePath, filesWatched);
         } else if (event.type === 'delete') {
           onSourceFileRemoved(filePath, watchedDirAncestor);
         }
