@@ -348,11 +348,7 @@ export async function startModuleGenerationAsync({
   createFreshMirrorDirectories(projectRoot);
 
   const removeFileAndEmptyDirectories = (absoluteFilePath: string) => {
-    if (fs.lstatSync(absoluteFilePath).isSymbolicLink()) {
-      fs.unlinkSync(absoluteFilePath);
-    } else {
-      fs.rmSync(absoluteFilePath);
-    }
+    fs.rmSync(absoluteFilePath);
     let dirNow: string = path.dirname(absoluteFilePath);
     while (fs.readdirSync(dirNow).length === 0 && dirNow !== dotExpoDir) {
       fs.rmdirSync(dirNow);
