@@ -1,0 +1,1444 @@
+{
+  "_kind": "source_file",
+  "filename": "TestView.swift",
+  "compiler_version": {
+    "_kind": "compiler_version",
+    "major": "6",
+    "minor": "1",
+    "full": "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+  },
+  "items": [
+    {
+      "_kind": "import_decl",
+      "range": { "start": 0, "end": 7 },
+      "module_path": ["ExpoModulesCore"]
+    },
+    { "_kind": "import_decl", "range": { "start": 23, "end": 30 }, "module_path": ["WebKit"] },
+    {
+      "_kind": "class_decl",
+      "usr": "s:8TestViewAAC",
+      "range": { "start": 45, "end": 554 },
+      "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "TestView" } },
+      "interface_type": "$s8TestViewAACmD",
+      "access": "public",
+      "non_resilient": true,
+      "inherits": ["$sXeD"],
+      "attrs": [
+        {
+          "_kind": "access_control_attr",
+          "range": { "start": 38, "end": 38 },
+          "access_level": "public"
+        }
+      ],
+      "members": [
+        {
+          "_kind": "func_decl",
+          "usr": "s:8TestViewAAC10definitionyXeXeF",
+          "range": { "start": 79, "end": 552 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "name": "definition" }
+          },
+          "interface_type": "$syXeyc8TestViewAACcD",
+          "access": "public",
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } }
+          },
+          "result": "$sXeD",
+          "thrown_type": "",
+          "params": { "_kind": "parameter_list", "range": { "start": 94, "end": 95 } },
+          "body": {
+            "_kind": "brace_stmt",
+            "range": { "start": 117, "end": 552 },
+            "elements": [
+              {
+                "_kind": "return_stmt",
+                "implicit": true,
+                "range": { "start": 123, "end": 548 },
+                "result": {
+                  "_kind": "call_expr",
+                  "type": "",
+                  "nothrow": true,
+                  "isolation_crossing": "none",
+                  "fn": {
+                    "_kind": "unresolved_decl_ref_expr",
+                    "type": "",
+                    "name": "View",
+                    "function_ref": "unapplied"
+                  },
+                  "args": {
+                    "_kind": "argument_list",
+                    "args": [
+                      {
+                        "_kind": "argument",
+                        "expr": {
+                          "_kind": "dot_self_expr",
+                          "type": "",
+                          "sub_expr": {
+                            "_kind": "unresolved_decl_ref_expr",
+                            "type": "",
+                            "name": "ExpoWebView",
+                            "function_ref": "unapplied"
+                          }
+                        }
+                      },
+                      {
+                        "_kind": "argument",
+                        "expr": {
+                          "_kind": "closure_expr",
+                          "type": "",
+                          "discriminator": "0",
+                          "params": {
+                            "_kind": "parameter_list",
+                            "range": { "start": 146, "end": 146 }
+                          },
+                          "body": {
+                            "_kind": "brace_stmt",
+                            "range": { "start": 146, "end": 548 },
+                            "elements": [
+                              {
+                                "_kind": "call_expr",
+                                "type": "",
+                                "isolation_crossing": "none",
+                                "fn": {
+                                  "_kind": "unresolved_decl_ref_expr",
+                                  "type": "",
+                                  "name": "Events",
+                                  "function_ref": "unapplied"
+                                },
+                                "args": {
+                                  "_kind": "argument_list",
+                                  "args": [
+                                    {
+                                      "_kind": "argument",
+                                      "expr": {
+                                        "_kind": "string_literal_expr",
+                                        "type": "",
+                                        "encoding": "utf8",
+                                        "value": "onLoad"
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "_kind": "call_expr",
+                                "type": "",
+                                "isolation_crossing": "none",
+                                "fn": {
+                                  "_kind": "unresolved_decl_ref_expr",
+                                  "type": "",
+                                  "name": "Prop",
+                                  "function_ref": "unapplied"
+                                },
+                                "args": {
+                                  "_kind": "argument_list",
+                                  "args": [
+                                    {
+                                      "_kind": "argument",
+                                      "expr": {
+                                        "_kind": "string_literal_expr",
+                                        "type": "",
+                                        "encoding": "utf8",
+                                        "value": "url"
+                                      }
+                                    },
+                                    {
+                                      "_kind": "argument",
+                                      "expr": {
+                                        "_kind": "closure_expr",
+                                        "type": "",
+                                        "discriminator": "0",
+                                        "params": {
+                                          "_kind": "parameter_list",
+                                          "range": { "start": 192, "end": 207 },
+                                          "params": [
+                                            {
+                                              "_kind": "parameter",
+                                              "name": {
+                                                "_kind": "decl_name",
+                                                "base_name": {
+                                                  "_kind": "base_name",
+                                                  "name": "view"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "_kind": "parameter",
+                                              "name": {
+                                                "_kind": "decl_name",
+                                                "base_name": { "_kind": "base_name", "name": "url" }
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "body": {
+                                          "_kind": "brace_stmt",
+                                          "range": { "start": 190, "end": 353 },
+                                          "elements": [
+                                            {
+                                              "_kind": "if_stmt",
+                                              "range": { "start": 220, "end": 345 },
+                                              "conditions": [
+                                                {
+                                                  "_kind": "sequence_expr",
+                                                  "type": "",
+                                                  "elements": [
+                                                    {
+                                                      "_kind": "unresolved_dot_expr",
+                                                      "type": "",
+                                                      "field": "url",
+                                                      "function_ref": "unapplied",
+                                                      "base": {
+                                                        "_kind": "unresolved_dot_expr",
+                                                        "type": "",
+                                                        "field": "webView",
+                                                        "function_ref": "unapplied",
+                                                        "base": {
+                                                          "_kind": "unresolved_decl_ref_expr",
+                                                          "type": "",
+                                                          "name": "view",
+                                                          "function_ref": "unapplied"
+                                                        }
+                                                      }
+                                                    },
+                                                    {
+                                                      "_kind": "unresolved_decl_ref_expr",
+                                                      "type": "",
+                                                      "name": "!=",
+                                                      "function_ref": "unapplied"
+                                                    },
+                                                    {
+                                                      "_kind": "unresolved_decl_ref_expr",
+                                                      "type": "",
+                                                      "name": "url",
+                                                      "function_ref": "unapplied"
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "then_stmt": {
+                                                "_kind": "brace_stmt",
+                                                "range": { "start": 247, "end": 345 },
+                                                "elements": [
+                                                  {
+                                                    "_kind": "pattern_binding_decl",
+                                                    "range": { "start": 259, "end": 295 },
+                                                    "pattern_entries": [
+                                                      {
+                                                        "_kind": "pattern_entry",
+                                                        "pattern": {
+                                                          "_kind": "pattern_named",
+                                                          "name": {
+                                                            "_kind": "decl_name",
+                                                            "base_name": {
+                                                              "_kind": "base_name",
+                                                              "name": "urlRequest"
+                                                            }
+                                                          }
+                                                        },
+                                                        "original_init": {
+                                                          "_kind": "call_expr",
+                                                          "type": "",
+                                                          "isolation_crossing": "none",
+                                                          "fn": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "URLRequest",
+                                                            "function_ref": "unapplied"
+                                                          },
+                                                          "args": {
+                                                            "_kind": "argument_list",
+                                                            "labels": "url:",
+                                                            "args": [
+                                                              {
+                                                                "_kind": "argument",
+                                                                "label": "url",
+                                                                "expr": {
+                                                                  "_kind": "unresolved_decl_ref_expr",
+                                                                  "type": "",
+                                                                  "name": "url",
+                                                                  "function_ref": "unapplied"
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        },
+                                                        "processed_init": {
+                                                          "_kind": "call_expr",
+                                                          "type": "",
+                                                          "isolation_crossing": "none",
+                                                          "fn": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "URLRequest",
+                                                            "function_ref": "unapplied"
+                                                          },
+                                                          "args": {
+                                                            "_kind": "argument_list",
+                                                            "labels": "url:",
+                                                            "args": [
+                                                              {
+                                                                "_kind": "argument",
+                                                                "label": "url",
+                                                                "expr": {
+                                                                  "_kind": "unresolved_decl_ref_expr",
+                                                                  "type": "",
+                                                                  "name": "url",
+                                                                  "function_ref": "unapplied"
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_kind": "var_decl",
+                                                    "range": { "start": 263, "end": 263 },
+                                                    "name": {
+                                                      "_kind": "decl_name",
+                                                      "base_name": {
+                                                        "_kind": "base_name",
+                                                        "name": "urlRequest"
+                                                      }
+                                                    },
+                                                    "let": true
+                                                  },
+                                                  {
+                                                    "_kind": "call_expr",
+                                                    "type": "",
+                                                    "isolation_crossing": "none",
+                                                    "fn": {
+                                                      "_kind": "unresolved_dot_expr",
+                                                      "type": "",
+                                                      "field": "load",
+                                                      "function_ref": "unapplied",
+                                                      "base": {
+                                                        "_kind": "unresolved_dot_expr",
+                                                        "type": "",
+                                                        "field": "webView",
+                                                        "function_ref": "unapplied",
+                                                        "base": {
+                                                          "_kind": "unresolved_decl_ref_expr",
+                                                          "type": "",
+                                                          "name": "view",
+                                                          "function_ref": "unapplied"
+                                                        }
+                                                      }
+                                                    },
+                                                    "args": {
+                                                      "_kind": "argument_list",
+                                                      "args": [
+                                                        {
+                                                          "_kind": "argument",
+                                                          "expr": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "urlRequest",
+                                                            "function_ref": "unapplied"
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "_kind": "call_expr",
+                                "type": "",
+                                "isolation_crossing": "none",
+                                "fn": {
+                                  "_kind": "unresolved_decl_ref_expr",
+                                  "type": "",
+                                  "name": "Prop",
+                                  "function_ref": "unapplied"
+                                },
+                                "args": {
+                                  "_kind": "argument_list",
+                                  "args": [
+                                    {
+                                      "_kind": "argument",
+                                      "expr": {
+                                        "_kind": "string_literal_expr",
+                                        "type": "",
+                                        "encoding": "utf8",
+                                        "value": "grepProp"
+                                      }
+                                    },
+                                    {
+                                      "_kind": "argument",
+                                      "expr": {
+                                        "_kind": "closure_expr",
+                                        "type": "",
+                                        "discriminator": "1",
+                                        "params": {
+                                          "_kind": "parameter_list",
+                                          "range": { "start": 381, "end": 396 },
+                                          "params": [
+                                            {
+                                              "_kind": "parameter",
+                                              "name": {
+                                                "_kind": "decl_name",
+                                                "base_name": {
+                                                  "_kind": "base_name",
+                                                  "name": "view"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "_kind": "parameter",
+                                              "name": {
+                                                "_kind": "decl_name",
+                                                "base_name": { "_kind": "base_name", "name": "url" }
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "body": {
+                                          "_kind": "brace_stmt",
+                                          "range": { "start": 379, "end": 542 },
+                                          "elements": [
+                                            {
+                                              "_kind": "if_stmt",
+                                              "range": { "start": 409, "end": 534 },
+                                              "conditions": [
+                                                {
+                                                  "_kind": "sequence_expr",
+                                                  "type": "",
+                                                  "elements": [
+                                                    {
+                                                      "_kind": "unresolved_dot_expr",
+                                                      "type": "",
+                                                      "field": "url",
+                                                      "function_ref": "unapplied",
+                                                      "base": {
+                                                        "_kind": "unresolved_dot_expr",
+                                                        "type": "",
+                                                        "field": "webView",
+                                                        "function_ref": "unapplied",
+                                                        "base": {
+                                                          "_kind": "unresolved_decl_ref_expr",
+                                                          "type": "",
+                                                          "name": "view",
+                                                          "function_ref": "unapplied"
+                                                        }
+                                                      }
+                                                    },
+                                                    {
+                                                      "_kind": "unresolved_decl_ref_expr",
+                                                      "type": "",
+                                                      "name": "!=",
+                                                      "function_ref": "unapplied"
+                                                    },
+                                                    {
+                                                      "_kind": "unresolved_decl_ref_expr",
+                                                      "type": "",
+                                                      "name": "url",
+                                                      "function_ref": "unapplied"
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "then_stmt": {
+                                                "_kind": "brace_stmt",
+                                                "range": { "start": 436, "end": 534 },
+                                                "elements": [
+                                                  {
+                                                    "_kind": "pattern_binding_decl",
+                                                    "range": { "start": 448, "end": 484 },
+                                                    "pattern_entries": [
+                                                      {
+                                                        "_kind": "pattern_entry",
+                                                        "pattern": {
+                                                          "_kind": "pattern_named",
+                                                          "name": {
+                                                            "_kind": "decl_name",
+                                                            "base_name": {
+                                                              "_kind": "base_name",
+                                                              "name": "urlRequest"
+                                                            }
+                                                          }
+                                                        },
+                                                        "original_init": {
+                                                          "_kind": "call_expr",
+                                                          "type": "",
+                                                          "isolation_crossing": "none",
+                                                          "fn": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "URLRequest",
+                                                            "function_ref": "unapplied"
+                                                          },
+                                                          "args": {
+                                                            "_kind": "argument_list",
+                                                            "labels": "url:",
+                                                            "args": [
+                                                              {
+                                                                "_kind": "argument",
+                                                                "label": "url",
+                                                                "expr": {
+                                                                  "_kind": "unresolved_decl_ref_expr",
+                                                                  "type": "",
+                                                                  "name": "url",
+                                                                  "function_ref": "unapplied"
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        },
+                                                        "processed_init": {
+                                                          "_kind": "call_expr",
+                                                          "type": "",
+                                                          "isolation_crossing": "none",
+                                                          "fn": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "URLRequest",
+                                                            "function_ref": "unapplied"
+                                                          },
+                                                          "args": {
+                                                            "_kind": "argument_list",
+                                                            "labels": "url:",
+                                                            "args": [
+                                                              {
+                                                                "_kind": "argument",
+                                                                "label": "url",
+                                                                "expr": {
+                                                                  "_kind": "unresolved_decl_ref_expr",
+                                                                  "type": "",
+                                                                  "name": "url",
+                                                                  "function_ref": "unapplied"
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_kind": "var_decl",
+                                                    "range": { "start": 452, "end": 452 },
+                                                    "name": {
+                                                      "_kind": "decl_name",
+                                                      "base_name": {
+                                                        "_kind": "base_name",
+                                                        "name": "urlRequest"
+                                                      }
+                                                    },
+                                                    "let": true
+                                                  },
+                                                  {
+                                                    "_kind": "call_expr",
+                                                    "type": "",
+                                                    "isolation_crossing": "none",
+                                                    "fn": {
+                                                      "_kind": "unresolved_dot_expr",
+                                                      "type": "",
+                                                      "field": "load",
+                                                      "function_ref": "unapplied",
+                                                      "base": {
+                                                        "_kind": "unresolved_dot_expr",
+                                                        "type": "",
+                                                        "field": "webView",
+                                                        "function_ref": "unapplied",
+                                                        "base": {
+                                                          "_kind": "unresolved_decl_ref_expr",
+                                                          "type": "",
+                                                          "name": "view",
+                                                          "function_ref": "unapplied"
+                                                        }
+                                                      }
+                                                    },
+                                                    "args": {
+                                                      "_kind": "argument_list",
+                                                      "args": [
+                                                        {
+                                                          "_kind": "argument",
+                                                          "expr": {
+                                                            "_kind": "unresolved_decl_ref_expr",
+                                                            "type": "",
+                                                            "name": "urlRequest",
+                                                            "function_ref": "unapplied"
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_kind": "destructor_decl",
+          "usr": "s:8TestViewAACfd",
+          "implicit": true,
+          "range": { "start": 51, "end": 51 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "special": "deinit" }
+          },
+          "interface_type": "$syyyc8TestViewAACcD",
+          "access": "public",
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } }
+          },
+          "thrown_type": "",
+          "params": { "_kind": "parameter_list" },
+          "body": { "_kind": "brace_stmt", "implicit": true, "range": { "start": 51, "end": 51 } }
+        },
+        {
+          "_kind": "constructor_decl",
+          "usr": "s:8TestViewAACABycfc",
+          "implicit": true,
+          "range": { "start": 51, "end": 51 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "special": "init" }
+          },
+          "interface_type": "$sy8TestViewAACycABmcD",
+          "access": "internal",
+          "designated": true,
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } }
+          },
+          "thrown_type": "",
+          "params": { "_kind": "parameter_list" },
+          "body": {
+            "_kind": "brace_stmt",
+            "implicit": true,
+            "range": { "start": 51, "end": 51 },
+            "elements": [
+              { "_kind": "return_stmt", "implicit": true, "range": { "start": 51, "end": 51 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "_kind": "class_decl",
+      "usr": "s:8TestView07ExpoWebB0C",
+      "range": { "start": 557, "end": 1073 },
+      "name": {
+        "_kind": "decl_name",
+        "base_name": { "_kind": "base_name", "name": "ExpoWebView" }
+      },
+      "interface_type": "$s8TestView07ExpoWebB0CmD",
+      "access": "internal",
+      "non_resilient": true,
+      "inherits": ["$sXeD", "$sSo20WKNavigationDelegate_pD"],
+      "attrs": [
+        { "_kind": "preconcurrency_attr", "implicit": true },
+        { "_kind": "custom_attr", "implicit": true, "type": "$sScMD" }
+      ],
+      "members": [
+        {
+          "_kind": "pattern_binding_decl",
+          "range": { "start": 611, "end": 635 },
+          "pattern_entries": [
+            {
+              "_kind": "pattern_entry",
+              "pattern": {
+                "_kind": "pattern_named",
+                "type": "$sSo9WKWebViewCD",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "webView" }
+                }
+              },
+              "original_init": {
+                "_kind": "call_expr",
+                "type": "$sSo9WKWebViewCD",
+                "range": { "start": 625, "end": 635 },
+                "nothrow": true,
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "constructor_ref_call_expr",
+                  "type": "$sSo9WKWebViewCycD",
+                  "range": { "start": 625, "end": 625 },
+                  "nothrow": true,
+                  "isolation_crossing": "none",
+                  "fn": {
+                    "_kind": "declref_expr",
+                    "implicit": true,
+                    "type": "$sySo9WKWebViewCycABmcD",
+                    "range": { "start": 625, "end": 625 },
+                    "decl": {
+                      "_kind": "decl_ref",
+                      "base_name": "init",
+                      "decl_usr": "c:objc(cs)NSResponder(im)init",
+                      "type_usr": "$sSo9WKWebViewCycD"
+                    },
+                    "function_ref": "single_apply"
+                  },
+                  "args": {
+                    "_kind": "argument_list",
+                    "implicit": true,
+                    "args": [
+                      {
+                        "_kind": "argument",
+                        "expr": {
+                          "_kind": "type_expr",
+                          "type": "$sSo9WKWebViewCmD",
+                          "range": { "start": 625, "end": 625 }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "args": { "_kind": "argument_list" }
+              },
+              "processed_init": {
+                "_kind": "call_expr",
+                "type": "$sSo9WKWebViewCD",
+                "range": { "start": 625, "end": 635 },
+                "nothrow": true,
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "constructor_ref_call_expr",
+                  "type": "$sSo9WKWebViewCycD",
+                  "range": { "start": 625, "end": 625 },
+                  "nothrow": true,
+                  "isolation_crossing": "none",
+                  "fn": {
+                    "_kind": "declref_expr",
+                    "implicit": true,
+                    "type": "$sySo9WKWebViewCycABmcD",
+                    "range": { "start": 625, "end": 625 },
+                    "decl": {
+                      "_kind": "decl_ref",
+                      "base_name": "init",
+                      "decl_usr": "c:objc(cs)NSResponder(im)init",
+                      "type_usr": "$sSo9WKWebViewCycD"
+                    },
+                    "function_ref": "single_apply"
+                  },
+                  "args": {
+                    "_kind": "argument_list",
+                    "implicit": true,
+                    "args": [
+                      {
+                        "_kind": "argument",
+                        "expr": {
+                          "_kind": "type_expr",
+                          "type": "$sSo9WKWebViewCmD",
+                          "range": { "start": 625, "end": 625 }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "args": { "_kind": "argument_list" }
+              }
+            }
+          ]
+        },
+        {
+          "_kind": "var_decl",
+          "usr": "s:8TestView07ExpoWebB0C03webB0So05WKWebB0Cvp",
+          "range": { "start": 615, "end": 615 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "name": "webView" }
+          },
+          "interface_type": "$sSo9WKWebViewCD",
+          "access": "internal",
+          "let": true,
+          "readImpl": "stored",
+          "immutable": true,
+          "accessors": [
+            {
+              "_kind": "accessor_decl",
+              "usr": "s:8TestView07ExpoWebB0C03webB0So05WKWebB0Cvg",
+              "implicit": true,
+              "range": { "start": 615, "end": 615 },
+              "interface_type": "$sySo9WKWebViewCyc04TestB007ExpoWebB0CcD",
+              "access": "internal",
+              "get": true,
+              "for": {
+                "_kind": "decl_name",
+                "base_name": { "_kind": "base_name", "name": "webView" }
+              },
+              "implicit_self_decl": {
+                "_kind": "parameter",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "self" }
+                },
+                "interface_type": "$s8TestView07ExpoWebB0CD"
+              },
+              "result": "$sSo9WKWebViewCD",
+              "thrown_type": "",
+              "params": { "_kind": "parameter_list" },
+              "body": {
+                "_kind": "brace_stmt",
+                "implicit": true,
+                "range": { "start": 615, "end": 615 },
+                "elements": [
+                  {
+                    "_kind": "return_stmt",
+                    "implicit": true,
+                    "result": {
+                      "_kind": "member_ref_expr",
+                      "implicit": true,
+                      "type": "$sSo9WKWebViewCD",
+                      "decl": {
+                        "_kind": "decl_ref",
+                        "base_name": "webView",
+                        "decl_usr": "s:8TestView07ExpoWebB0C03webB0So05WKWebB0Cvp",
+                        "type_usr": "$sSo9WKWebViewCD"
+                      },
+                      "direct_to_storage": true,
+                      "base": {
+                        "_kind": "declref_expr",
+                        "implicit": true,
+                        "type": "$s8TestView07ExpoWebB0CD",
+                        "decl": {
+                          "_kind": "decl_ref",
+                          "base_name": "self",
+                          "decl_usr": "",
+                          "type_usr": "$s8TestView07ExpoWebB0CD"
+                        },
+                        "function_ref": "unapplied"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "_kind": "pattern_binding_decl",
+          "range": { "start": 639, "end": 668 },
+          "pattern_entries": [
+            {
+              "_kind": "pattern_entry",
+              "pattern": {
+                "_kind": "pattern_named",
+                "type": "$sXeD",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "onLoad" }
+                }
+              },
+              "original_init": {
+                "_kind": "call_expr",
+                "type": "$sXeD",
+                "range": { "start": 652, "end": 668 },
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 652, "end": 652 }
+                },
+                "args": { "_kind": "argument_list" }
+              },
+              "processed_init": {
+                "_kind": "call_expr",
+                "type": "$sXeD",
+                "range": { "start": 652, "end": 668 },
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 652, "end": 652 }
+                },
+                "args": { "_kind": "argument_list" }
+              }
+            }
+          ]
+        },
+        {
+          "_kind": "var_decl",
+          "usr": "s:8TestView07ExpoWebB0C6onLoadXevp",
+          "range": { "start": 643, "end": 643 },
+          "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "onLoad" } },
+          "interface_type": "$sXeD",
+          "access": "internal",
+          "let": true,
+          "readImpl": "stored",
+          "immutable": true,
+          "accessors": [
+            {
+              "_kind": "accessor_decl",
+              "usr": "s:8TestView07ExpoWebB0C6onLoadXevr",
+              "implicit": true,
+              "range": { "start": 643, "end": 643 },
+              "interface_type": "$syyyc8TestView07ExpoWebB0CcD",
+              "access": "internal",
+              "_read": true,
+              "for": {
+                "_kind": "decl_name",
+                "base_name": { "_kind": "base_name", "name": "onLoad" }
+              },
+              "implicit_self_decl": {
+                "_kind": "parameter",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "self" }
+                },
+                "interface_type": "$s8TestView07ExpoWebB0CD"
+              },
+              "result": "$sytD",
+              "thrown_type": "",
+              "params": { "_kind": "parameter_list" },
+              "body": {
+                "_kind": "brace_stmt",
+                "implicit": true,
+                "range": { "start": 643, "end": 643 },
+                "elements": [
+                  {
+                    "_kind": "yield_stmt",
+                    "implicit": true,
+                    "range": { "start": 643, "end": 643 },
+                    "yields": [
+                      {
+                        "_kind": "member_ref_expr",
+                        "implicit": true,
+                        "type": "$sXeD",
+                        "decl": {
+                          "_kind": "decl_ref",
+                          "base_name": "onLoad",
+                          "decl_usr": "s:8TestView07ExpoWebB0C6onLoadXevp",
+                          "type_usr": "$sXeD"
+                        },
+                        "direct_to_impl": true,
+                        "base": {
+                          "_kind": "declref_expr",
+                          "implicit": true,
+                          "type": "$s8TestView07ExpoWebB0CD",
+                          "decl": {
+                            "_kind": "decl_ref",
+                            "base_name": "self",
+                            "decl_usr": "",
+                            "type_usr": "$s8TestView07ExpoWebB0CD"
+                          },
+                          "function_ref": "unapplied"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "_kind": "constructor_decl",
+          "usr": "s:8TestView07ExpoWebB0CyXeXecfc",
+          "range": { "start": 682, "end": 848 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "special": "init" },
+            "args": ["appContext"]
+          },
+          "interface_type": "$sy8TestView07ExpoWebB0CXe_tcACmcD",
+          "access": "internal",
+          "required": true,
+          "designated": true,
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } },
+            "interface_type": "$s8TestView07ExpoWebB0CD"
+          },
+          "thrown_type": "",
+          "params": {
+            "_kind": "parameter_list",
+            "range": { "start": 686, "end": 716 },
+            "params": [
+              {
+                "_kind": "parameter",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "appContext" }
+                },
+                "apiName": "appContext",
+                "interface_type": "$sXeD",
+                "default_arg": "nil",
+                "expression": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 713, "end": 713 }
+                }
+              }
+            ]
+          },
+          "body": {
+            "_kind": "brace_stmt",
+            "range": { "start": 718, "end": 848 },
+            "elements": [
+              {
+                "_kind": "call_expr",
+                "type": "$sXeD",
+                "range": { "start": 724, "end": 757 },
+                "nothrow": true,
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "unresolved_dot_expr",
+                  "type": "$sXeD",
+                  "range": { "start": 724, "end": 730 },
+                  "field": "init",
+                  "function_ref": "single_apply",
+                  "base": {
+                    "_kind": "error_expr",
+                    "implicit": true,
+                    "type": "$sXeD",
+                    "range": { "start": 724, "end": 724 }
+                  }
+                },
+                "args": {
+                  "_kind": "argument_list",
+                  "labels": "appContext:",
+                  "args": [
+                    {
+                      "_kind": "argument",
+                      "label": "appContext",
+                      "expr": {
+                        "_kind": "declref_expr",
+                        "type": "$sXeD",
+                        "range": { "start": 747, "end": 747 },
+                        "decl": {
+                          "_kind": "decl_ref",
+                          "base_name": "appContext",
+                          "decl_usr": "",
+                          "type_usr": "$sXeD"
+                        },
+                        "function_ref": "unapplied"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "_kind": "assign_expr",
+                "type": "$sXeD",
+                "range": { "start": 763, "end": 779 },
+                "dest": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 763, "end": 763 }
+                },
+                "src": {
+                  "_kind": "boolean_literal_expr",
+                  "type": "$sXeD",
+                  "range": { "start": 779, "end": 779 },
+                  "value": "true"
+                }
+              },
+              {
+                "_kind": "assign_expr",
+                "type": "$sytD",
+                "range": { "start": 788, "end": 817 },
+                "dest": {
+                  "_kind": "member_ref_expr",
+                  "type": "$sSo20WKNavigationDelegate_pXSqD",
+                  "range": { "start": 788, "end": 796 },
+                  "decl": {
+                    "_kind": "decl_ref",
+                    "base_name": "navigationDelegate",
+                    "decl_usr": "c:objc(cs)WKWebView(py)navigationDelegate",
+                    "type_usr": "$sSo20WKNavigationDelegate_pSgD"
+                  },
+                  "base": {
+                    "_kind": "load_expr",
+                    "implicit": true,
+                    "type": "$sSo9WKWebViewCD",
+                    "range": { "start": 788, "end": 788 },
+                    "sub_expr": {
+                      "_kind": "member_ref_expr",
+                      "type": "$sSo9WKWebViewCD",
+                      "range": { "start": 788, "end": 788 },
+                      "decl": {
+                        "_kind": "decl_ref",
+                        "base_name": "webView",
+                        "decl_usr": "s:8TestView07ExpoWebB0C03webB0So05WKWebB0Cvp",
+                        "type_usr": "$sSo9WKWebViewCD"
+                      },
+                      "direct_to_storage": true,
+                      "base": {
+                        "_kind": "declref_expr",
+                        "implicit": true,
+                        "type": "$s8TestView07ExpoWebB0CD",
+                        "range": { "start": 788, "end": 788 },
+                        "decl": {
+                          "_kind": "decl_ref",
+                          "base_name": "self",
+                          "decl_usr": "",
+                          "type_usr": "$s8TestView07ExpoWebB0CD"
+                        },
+                        "function_ref": "unapplied"
+                      }
+                    }
+                  }
+                },
+                "src": {
+                  "_kind": "inject_into_optional",
+                  "implicit": true,
+                  "type": "$sSo20WKNavigationDelegate_pXSqD",
+                  "range": { "start": 817, "end": 817 },
+                  "sub_expr": {
+                    "_kind": "erasure_expr",
+                    "implicit": true,
+                    "type": "$sSo20WKNavigationDelegate_pD",
+                    "range": { "start": 817, "end": 817 },
+                    "conformances": [
+                      {
+                        "_kind": "normal_conformance",
+                        "type": "$s8TestView07ExpoWebB0CD",
+                        "protocol": "c:objc(pl)WKNavigationDelegate"
+                      }
+                    ],
+                    "sub_expr": {
+                      "_kind": "declref_expr",
+                      "type": "$s8TestView07ExpoWebB0CD",
+                      "range": { "start": 817, "end": 817 },
+                      "decl": {
+                        "_kind": "decl_ref",
+                        "base_name": "self",
+                        "decl_usr": "",
+                        "type_usr": "$s8TestView07ExpoWebB0CD"
+                      },
+                      "function_ref": "unapplied"
+                    }
+                  }
+                }
+              },
+              {
+                "_kind": "call_expr",
+                "type": "$sXeD",
+                "range": { "start": 826, "end": 844 },
+                "nothrow": true,
+                "isolation_crossing": "none",
+                "fn": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 826, "end": 826 }
+                },
+                "args": {
+                  "_kind": "argument_list",
+                  "args": [
+                    {
+                      "_kind": "argument",
+                      "expr": {
+                        "_kind": "unresolved_dot_expr",
+                        "type": "$sXeD",
+                        "range": { "start": 837, "end": 837 },
+                        "field": "webView",
+                        "function_ref": "unapplied",
+                        "base": {
+                          "_kind": "declref_expr",
+                          "implicit": true,
+                          "type": "$sXeD",
+                          "range": { "start": 837, "end": 837 },
+                          "decl": {
+                            "_kind": "decl_ref",
+                            "base_name": "self",
+                            "decl_usr": "",
+                            "type_usr": "$s8TestView07ExpoWebB0CD"
+                          },
+                          "function_ref": "unapplied"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              { "_kind": "return_stmt", "implicit": true, "range": { "start": 848, "end": 848 } }
+            ]
+          }
+        },
+        {
+          "_kind": "func_decl",
+          "usr": "s:8TestView07ExpoWebB0C14layoutSubviewsyyF",
+          "range": { "start": 862, "end": 915 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "name": "layoutSubviews" }
+          },
+          "interface_type": "$syyyc8TestView07ExpoWebB0CcD",
+          "access": "internal",
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } },
+            "interface_type": "$s8TestView07ExpoWebB0CD"
+          },
+          "result": "$sytD",
+          "thrown_type": "",
+          "params": { "_kind": "parameter_list", "range": { "start": 881, "end": 882 } },
+          "body": {
+            "_kind": "brace_stmt",
+            "range": { "start": 884, "end": 915 },
+            "elements": [
+              {
+                "_kind": "assign_expr",
+                "type": "$sXeD",
+                "range": { "start": 890, "end": 906 },
+                "dest": {
+                  "_kind": "unresolved_dot_expr",
+                  "type": "$sXeD",
+                  "range": { "start": 890, "end": 898 },
+                  "field": "frame",
+                  "function_ref": "unapplied",
+                  "base": {
+                    "_kind": "unresolved_dot_expr",
+                    "type": "$sXeD",
+                    "range": { "start": 890, "end": 890 },
+                    "field": "webView",
+                    "function_ref": "unapplied",
+                    "base": {
+                      "_kind": "declref_expr",
+                      "implicit": true,
+                      "type": "$sXeD",
+                      "range": { "start": 890, "end": 890 },
+                      "decl": {
+                        "_kind": "decl_ref",
+                        "base_name": "self",
+                        "decl_usr": "",
+                        "type_usr": "$s8TestView07ExpoWebB0CD"
+                      },
+                      "function_ref": "unapplied"
+                    }
+                  }
+                },
+                "src": {
+                  "_kind": "error_expr",
+                  "implicit": true,
+                  "type": "$sXeD",
+                  "range": { "start": 906, "end": 906 }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_kind": "func_decl",
+          "usr": "s:8TestView07ExpoWebB0C03webB0yySo05WKWebB0C_So12WKNavigationCtF",
+          "range": { "start": 920, "end": 1071 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "name": "webView" },
+            "args": ["", ""]
+          },
+          "interface_type": "$syySo9WKWebViewC_So12WKNavigationCtc04TestB007ExpoWebB0CcD",
+          "access": "internal",
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } },
+            "interface_type": "$s8TestView07ExpoWebB0CD"
+          },
+          "result": "$sytD",
+          "thrown_type": "",
+          "params": {
+            "_kind": "parameter_list",
+            "range": { "start": 932, "end": 970 },
+            "params": [
+              {
+                "_kind": "parameter",
+                "name": {
+                  "_kind": "decl_name",
+                  "base_name": { "_kind": "base_name", "name": "webView" }
+                },
+                "interface_type": "$sSo9WKWebViewCD"
+              },
+              { "_kind": "parameter", "interface_type": "$sSo12WKNavigationCD" }
+            ]
+          },
+          "body": {
+            "_kind": "brace_stmt",
+            "range": { "start": 972, "end": 1071 },
+            "elements": [
+              {
+                "_kind": "if_stmt",
+                "range": { "start": 978, "end": 1067 },
+                "conditions": [
+                  {
+                    "_kind": "pattern",
+                    "pattern": {
+                      "_kind": "pattern_optional_some",
+                      "implicit": true,
+                      "type": "$s10Foundation3URLVXSqD",
+                      "sub_pattern": {
+                        "_kind": "pattern_binding",
+                        "implicit": true,
+                        "type": "$s10Foundation3URLVD",
+                        "kind": "let",
+                        "sub_pattern": {
+                          "_kind": "pattern_named",
+                          "type": "$s10Foundation3URLVD",
+                          "name": {
+                            "_kind": "decl_name",
+                            "base_name": { "_kind": "base_name", "name": "url" }
+                          }
+                        }
+                      }
+                    },
+                    "initializer": {
+                      "_kind": "member_ref_expr",
+                      "type": "$s10Foundation3URLVXSqD",
+                      "range": { "start": 991, "end": 999 },
+                      "decl": {
+                        "_kind": "decl_ref",
+                        "base_name": "url",
+                        "decl_usr": "c:objc(cs)WKWebView(py)URL",
+                        "type_usr": "$s10Foundation3URLVSgD"
+                      },
+                      "base": {
+                        "_kind": "declref_expr",
+                        "type": "$sSo9WKWebViewCD",
+                        "range": { "start": 991, "end": 991 },
+                        "decl": {
+                          "_kind": "decl_ref",
+                          "base_name": "webView",
+                          "decl_usr": "",
+                          "type_usr": "$sSo9WKWebViewCD"
+                        },
+                        "function_ref": "unapplied"
+                      }
+                    }
+                  }
+                ],
+                "then_stmt": {
+                  "_kind": "brace_stmt",
+                  "range": { "start": 1003, "end": 1067 },
+                  "elements": [
+                    {
+                      "_kind": "call_expr",
+                      "type": "$sXeD",
+                      "range": { "start": 1011, "end": 1061 },
+                      "nothrow": true,
+                      "isolation_crossing": "none",
+                      "fn": {
+                        "_kind": "unresolved_dot_expr",
+                        "type": "$sXeD",
+                        "range": { "start": 1011, "end": 1011 },
+                        "field": "onLoad",
+                        "function_ref": "single_apply",
+                        "base": {
+                          "_kind": "declref_expr",
+                          "implicit": true,
+                          "type": "$sXeD",
+                          "range": { "start": 1011, "end": 1011 },
+                          "decl": {
+                            "_kind": "decl_ref",
+                            "base_name": "self",
+                            "decl_usr": "",
+                            "type_usr": "$s8TestView07ExpoWebB0CD"
+                          },
+                          "function_ref": "unapplied"
+                        }
+                      },
+                      "args": {
+                        "_kind": "argument_list",
+                        "args": [
+                          {
+                            "_kind": "argument",
+                            "expr": {
+                              "_kind": "dictionary_expr",
+                              "type": "$sXeD",
+                              "range": { "start": 1018, "end": 1060 },
+                              "elements": [
+                                {
+                                  "_kind": "tuple_expr",
+                                  "implicit": true,
+                                  "type": "$sXeD",
+                                  "range": { "start": 1028, "end": 1039 },
+                                  "elements": [
+                                    {
+                                      "_kind": "string_literal_expr",
+                                      "type": "$sXeD",
+                                      "range": { "start": 1028, "end": 1028 },
+                                      "encoding": "utf8",
+                                      "value": "url"
+                                    },
+                                    {
+                                      "_kind": "unresolved_dot_expr",
+                                      "type": "$sXeD",
+                                      "range": { "start": 1035, "end": 1039 },
+                                      "field": "absoluteString",
+                                      "function_ref": "unapplied",
+                                      "base": {
+                                        "_kind": "declref_expr",
+                                        "type": "$sXeD",
+                                        "range": { "start": 1035, "end": 1035 },
+                                        "decl": {
+                                          "_kind": "decl_ref",
+                                          "base_name": "url",
+                                          "decl_usr": "",
+                                          "type_usr": "$s10Foundation3URLVD"
+                                        },
+                                        "function_ref": "unapplied"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_kind": "destructor_decl",
+          "usr": "s:8TestView07ExpoWebB0Cfd",
+          "implicit": true,
+          "range": { "start": 563, "end": 563 },
+          "name": {
+            "_kind": "decl_name",
+            "base_name": { "_kind": "base_name", "special": "deinit" }
+          },
+          "interface_type": "$syyyc8TestView07ExpoWebB0CcD",
+          "access": "internal",
+          "implicit_self_decl": {
+            "_kind": "parameter",
+            "name": { "_kind": "decl_name", "base_name": { "_kind": "base_name", "name": "self" } }
+          },
+          "thrown_type": "",
+          "params": { "_kind": "parameter_list" },
+          "body": { "_kind": "brace_stmt", "implicit": true, "range": { "start": 563, "end": 563 } }
+        }
+      ]
+    }
+  ]
+}

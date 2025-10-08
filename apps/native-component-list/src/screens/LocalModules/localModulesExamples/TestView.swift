@@ -16,6 +16,10 @@ public class TestView: Module {
   }
 }
 
+class TestClass {
+ let a = "Testing clases"
+}
+
 class ExpoWebView: ExpoView, WKNavigationDelegate {
   let webView = WKWebView()
   let onLoad = EventDispatcher()

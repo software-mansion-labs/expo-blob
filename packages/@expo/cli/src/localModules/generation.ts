@@ -7,6 +7,7 @@ import path from 'path';
 
 import { Event, EventsQueue } from './generation.types';
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
+import { getModuleTypesFileString, getViewTypesFileString, printFileTypes } from './typegen';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -243,6 +244,9 @@ function onSourceFileCreated(
     filesWatched.add(absoluteFilePath);
   }
 
+  const isSwiftFile = absoluteFilePath.endsWith('.swift');
+  const isKotlinFile = absoluteFilePath.endsWith('.kt');
+
   fs.mkdirSync(path.dirname(moduleExportPath), { recursive: true });
   fs.mkdirSync(path.dirname(moduleTypesFilePath), { recursive: true });
 
@@ -255,16 +259,28 @@ export default requireNativeView("${moduleName}");`
   fs.writeFileSync(
     moduleExportPath,
     `import { requireNativeModule } from 'expo';
-export default requireNativeModule("${moduleName}");`
+    export default requireNativeModule("${moduleName}");`
   );
 
+  let viewFileTypesPart = `const _default: React.JSX.ElementType
+export default _default`;
+  if (isSwiftFile) {
+    viewFileTypesPart = getViewTypesFileString(absoluteFilePath);
+  }
   fs.writeFileSync(
     viewTypesFilePath,
     `import React from "react"
-const _default: React.JSX.ElementType
-export default _default`
+${viewFileTypesPart}`
   );
-  fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
+
+  let moduleFileTypesPart = `const _default: any;
+export default _default;`;
+  if (isSwiftFile) {
+    moduleFileTypesPart = getModuleTypesFileString(absoluteFilePath);
+  }
+  fs.writeFileSync(moduleTypesFilePath, moduleFileTypesPart);
+
+  // fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
 }
 
 async function generateMirrorDirectories(
