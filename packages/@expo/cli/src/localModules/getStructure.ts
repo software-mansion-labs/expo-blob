@@ -1,7 +1,6 @@
 // convert requires above to imports
 import { execSync } from 'child_process';
 import fsNode from 'fs';
-import { globSync } from 'glob';
 import XML from 'xml-js';
 import YAML from 'yaml';
 
@@ -13,9 +12,6 @@ import {
   OutputModuleDefinition,
   Structure,
 } from './types';
-
-const rootDir = process.cwd();
-const pattern = `${rootDir}/**/*.swift`;
 
 function getStructureFromFile(file: FileType) {
   const command = 'sourcekitten structure --file ' + file.path;
@@ -263,19 +259,11 @@ function parseModuleDefinition(
   return parsedDefinition;
 }
 
-export function findModuleDefinitionsInFiles(files: string[]) {
-  const modules = [];
-  for (const path of files) {
-    const file = { path, content: fsNode.readFileSync(path, 'utf8') };
-    const definition = findModuleDefinitionInStructure(getStructureFromFile(file));
-    if (definition) {
-      modules.push(parseModuleDefinition(definition, file));
-    }
+export function findModuleDefinitionInFile(path: string): OutputModuleDefinition | null {
+  const file = { path, content: fsNode.readFileSync(path, 'utf8') };
+  const moduleDefinition = findModuleDefinitionInStructure(getStructureFromFile(file));
+  if (!moduleDefinition) {
+    return null;
   }
-  return modules;
-}
-
-export function getAllExpoModulesInWorkingDirectory() {
-  const files = globSync(pattern);
-  return findModuleDefinitionsInFiles(files);
+  return parseModuleDefinition(moduleDefinition, file);
 }

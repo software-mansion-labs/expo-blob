@@ -1,13 +1,12 @@
 import { getConfig } from '@expo/config';
 import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import Server from '@expo/metro/metro/Server';
-import type MetroServer from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
 
 import { Event, EventsQueue } from './generation.types';
+import { getGeneratedModuleTypesFileContent, getGeneratedViewTypesFileContent } from './typegen';
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
-import { getModuleTypesFileString, getViewTypesFileString, printFileTypes } from './typegen';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
@@ -227,12 +226,12 @@ function getWatchedDirAncestorAbsolutePath(
   return null;
 }
 
-function onSourceFileCreated(
+async function onSourceFileCreated(
   projectRoot: string,
   watchedDirRootAbolutePath: string,
   absoluteFilePath: string,
   filesWatched?: Set<string>
-): void {
+) {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
     typesAndLocalModulePathsForFile(projectRoot, watchedDirRootAbolutePath, absoluteFilePath);
 
@@ -265,18 +264,14 @@ export default requireNativeView("${moduleName}");`
   let viewFileTypesPart = `const _default: React.JSX.ElementType
 export default _default`;
   if (isSwiftFile) {
-    viewFileTypesPart = getViewTypesFileString(absoluteFilePath);
+    viewFileTypesPart = await getGeneratedViewTypesFileContent(absoluteFilePath);
   }
-  fs.writeFileSync(
-    viewTypesFilePath,
-    `import React from "react"
-${viewFileTypesPart}`
-  );
+  fs.writeFileSync(viewTypesFilePath, viewFileTypesPart);
 
   let moduleFileTypesPart = `const _default: any;
 export default _default;`;
   if (isSwiftFile) {
-    moduleFileTypesPart = getModuleTypesFileString(absoluteFilePath);
+    moduleFileTypesPart = await getGeneratedModuleTypesFileContent(absoluteFilePath);
   }
   fs.writeFileSync(moduleTypesFilePath, moduleFileTypesPart);
 
@@ -307,7 +302,7 @@ async function generateMirrorDirectories(
         isValidLocalModuleFileName(dirent.name) &&
         absoluteDirentPath.startsWith(watchedDirRootAbolutePath)
       ) {
-        onSourceFileCreated(
+        await onSourceFileCreated(
           projectRoot,
           watchedDirRootAbolutePath,
           absoluteDirentPath,
@@ -410,7 +405,7 @@ export async function startModuleGenerationAsync({
       ) {
         const { filePath } = event;
         if (event.type === 'add') {
-          onSourceFileCreated(projectRoot, watchedDirAncestor, filePath, filesWatched);
+          await onSourceFileCreated(projectRoot, watchedDirAncestor, filePath, filesWatched);
         } else if (event.type === 'delete') {
           onSourceFileRemoved(filePath, watchedDirAncestor);
         }
