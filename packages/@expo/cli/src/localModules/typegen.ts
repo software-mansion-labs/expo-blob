@@ -166,47 +166,62 @@ function wrapWithAsync(tsType: ts.TypeNode) {
   return ts.factory.createTypeReferenceNode('Promise', [tsType]);
 }
 
+function getFunctionDeclarationInformation(func: Closure): {
+  functionName: ts.Identifier;
+  returnType: TSNode;
+  functionParameters: ts.ParameterDeclaration[];
+} {
+  const functionName = ts.factory.createIdentifier(func.name);
+  const returnType = mapSwiftTypeToTsType(func.types?.returnType);
+  const functionParameters =
+    func?.types?.parameters.map((param) =>
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        param.name ?? '_',
+        undefined,
+        mapSwiftTypeToTsType(param.typename),
+        undefined
+      )
+    ) ?? [];
+  return {
+    functionName,
+    returnType,
+    functionParameters,
+  };
+}
+
+function getClassMethodsDeclarations(methods: Closure[], asyncFunction = false) {
+  return methods.map((method) => {
+    const { functionName, returnType, functionParameters } =
+      getFunctionDeclarationInformation(method);
+    return ts.factory.createMethodDeclaration(
+      [],
+      undefined,
+      functionName,
+      undefined,
+      undefined,
+      functionParameters,
+      asyncFunction ? wrapWithAsync(returnType) : returnType,
+      undefined
+    );
+  });
+}
+
 /*
 We iterate over a list of functions and we create TS AST for each of them.
 */
-function getFunctionsDeclarations(
-  functions: Closure[],
-  { async = false, classMethod = false } = {}
-) {
+function getFunctionsDeclarations(functions: Closure[], asyncFunction = false) {
   return functions.map((fnStructure) => {
-    const name = ts.factory.createIdentifier(fnStructure.name);
-    const returnType = mapSwiftTypeToTsType(fnStructure.types?.returnType);
-    const parameters =
-      fnStructure?.types?.parameters.map((p) =>
-        ts.factory.createParameterDeclaration(
-          undefined,
-          undefined,
-          p.name ?? '_',
-          undefined,
-          mapSwiftTypeToTsType(p.typename),
-          undefined
-        )
-      ) ?? [];
-
-    if (classMethod) {
-      return ts.factory.createMethodDeclaration(
-        [],
-        undefined,
-        name,
-        undefined,
-        undefined,
-        parameters,
-        async ? wrapWithAsync(returnType) : returnType,
-        undefined
-      );
-    }
+    const { functionName, returnType, functionParameters } =
+      getFunctionDeclarationInformation(fnStructure);
     const func = ts.factory.createFunctionDeclaration(
       [ts.factory.createToken(ts.SyntaxKind.ExportKeyword)],
       undefined,
-      name,
+      functionName,
       undefined,
-      parameters,
-      async ? wrapWithAsync(returnType) : returnType,
+      functionParameters,
+      asyncFunction ? wrapWithAsync(returnType) : returnType,
       undefined
     );
     return func;
@@ -321,14 +336,20 @@ Generate a class declaration for view props and functions.
 */
 function getViewTypes(
   nestedClassDefinitions: OutputNestedClassDefinition[]
-): (ts.TypeAliasDeclaration | ts.FunctionDeclaration | ts.JSDoc | ts.ClassDeclaration)[] {
+): (
+  | ts.TypeAliasDeclaration
+  | ts.VariableDeclaration
+  | ts.FunctionDeclaration
+  | ts.ExportAssignment
+)[] {
   return nestedClassDefinitions.flatMap((definition) => {
     if (!definition) {
+      console.log('!!! RIP NO DEFINITION');
       return [] as (
         | ts.TypeAliasDeclaration
+        | ts.VariableDeclaration
         | ts.FunctionDeclaration
-        | ts.JSDoc
-        | ts.ClassDeclaration
+        | ts.ExportAssignment
       )[];
     }
     const propsType = generatePropTypesForDefinition(definition);
@@ -354,8 +375,8 @@ function getClassDefinition(def: OutputNestedClassDefinition) {
     undefined,
     undefined,
     [
-      ...getFunctionsDeclarations(def.functions, { classMethod: true }),
-      ...getFunctionsDeclarations(def.asyncFunctions, { async: true, classMethod: true }),
+      ...getClassMethodsDeclarations(def.functions),
+      ...getClassMethodsDeclarations(def.asyncFunctions, true),
     ] as ts.MethodDeclaration[]
   );
   return classDecl;
@@ -418,7 +439,7 @@ function getViewTypesDeclarationsForModule(
         : [],
       newlineIdentifier,
       getFunctionsDeclarations(module.functions) as ts.FunctionDeclaration[],
-      getFunctionsDeclarations(module.asyncFunctions, { async: true }) as ts.FunctionDeclaration[],
+      getFunctionsDeclarations(module.asyncFunctions, true) as ts.FunctionDeclaration[],
       newlineIdentifier,
       getViewTypes(module.views),
       getClassesDefinitions(module.classes)
@@ -429,10 +450,7 @@ function getViewTypesDeclarationsForModule(
 function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName: string | null) {
   return [
     ts.factory.createClassDeclaration(
-      [
-        ts.factory.createModifier(ts.SyntaxKind.ExportKeyword),
-        ts.factory.createModifier(ts.SyntaxKind.DefaultKeyword),
-      ],
+      [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       module?.name ?? moduleName ?? 'MODULE_NAME',
       undefined,
       [
@@ -455,8 +473,8 @@ function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName
             );
           })
         )
-        .concat(getFunctionsDeclarations(module.functions, { classMethod: true }))
-        .concat(getFunctionsDeclarations(module.asyncFunctions, { classMethod: true, async: true }))
+        .concat(getClassMethodsDeclarations(module.functions))
+        .concat(getClassMethodsDeclarations(module.asyncFunctions, true))
         .concat(
           module.constants.map((constant) => {
             let constantType = constant.types?.returnType;
