@@ -265,13 +265,13 @@ function parseModuleDefinition(
     ),
     events: findGroupedDefinitionsOfType('Events', preparedModuleDefinition, file),
     properties: findNamedDefinitionsOfType('Property', preparedModuleDefinition, file),
+    constants: findNamedDefinitionsOfType('Constant', preparedModuleDefinition, file),
     props: omitParamsFromClosureArguments(
       findNamedDefinitionsOfType('Prop', preparedModuleDefinition, file),
       ['view']
     ),
     views: findAndParseNestedClassesOfType(preparedModuleDefinition, file, 'View'),
     classes: findAndParseNestedClassesOfType(preparedModuleDefinition, file, 'Class'),
-    moduleName: getModuleName(moduleDefinition, file),
   };
   return parsedDefinition;
 }

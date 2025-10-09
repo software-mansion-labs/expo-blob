@@ -31,7 +31,7 @@ export async function getGeneratedViewTypesFileContent(file: string): Promise<st
     return `// The ${file} file doesn't contain module definition!`;
   }
   const mock = ts.factory.createNodeArray(
-    getViewTypesDeclarationsForModule(outputModuleDefinition, true)
+    getViewTypesDeclarationsForModule(outputModuleDefinition, moduleName, true)
   );
   const printedTs = printer.printList(
     ts.ListFormat.MultiLine + ts.ListFormat.PreserveLines,
@@ -58,7 +58,6 @@ export async function getGeneratedModuleTypesFileContent(file: string): Promise<
     return `// The ${file} file doesn't contain module definition!`;
   }
 
-  console.log('!? OUTPUT MODULE NAME: ' + moduleName);
   const mock = ts.factory.createNodeArray(
     getModuleTypesDeclarationsForModule(outputModuleDefinition, moduleName)
   );
