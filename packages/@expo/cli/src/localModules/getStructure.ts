@@ -23,6 +23,7 @@ function getStructureFromFile(file: FileType) {
     console.error('An error occurred while executing the command:', error);
   }
 }
+
 // find an object with "key.typename" : "ModuleDefinition" somewhere in the structure and return it
 function findModuleDefinitionInStructure(
   structure: Structure
@@ -48,7 +49,6 @@ function findModuleDefinitionInStructure(
         structure['key.kind'] === 'source.lang.swift.decl.class'
       ) {
         // The class which contains the module structure... => the module class
-        console.log('!!!' + structure['key.name']);
         return { structure: result.structure, name: structure['key.name'] };
       }
       if (result) {
@@ -193,6 +193,7 @@ function findGroupedDefinitionsOfType(type: string, moduleDefinition: Structure[
     return definitionParams.map((d) => ({ name: getIdentifierFromOffsetObject(d, file) }));
   });
 }
+
 function findAndParseNestedClassesOfType(
   moduleDefinition: Structure[],
   file: FileType,
@@ -236,11 +237,6 @@ function omitParamsFromClosureArguments<T extends Closure>(
       parameters: d.types?.parameters?.filter((t, idx) => !paramsToOmit.includes(t.name)) ?? [],
     },
   }));
-}
-
-function getModuleName(moduleDefinition: Structure[], file: FileType): string {
-  const moduleName = getIdentifierFromOffsetObject(moduleDefinition[0], file);
-  return moduleName;
 }
 
 // Some blocks have additional modifiers like runOnQueue – we may need to do additional traversing to get to the function definition
