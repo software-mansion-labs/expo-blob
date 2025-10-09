@@ -267,7 +267,7 @@ function getPrefix() {
   return [ts.factory.createJSDocComment(prefix)];
 }
 
-function getComponentTypeInclude() {
+function getOneNamedImport(importedName: string, importFromName: string) {
   return ts.factory.createImportDeclaration(
     undefined,
     ts.factory.createImportClause(
@@ -277,11 +277,11 @@ function getComponentTypeInclude() {
         ts.factory.createImportSpecifier(
           false,
           undefined,
-          ts.factory.createIdentifier('ComponentType')
+          ts.factory.createIdentifier(importedName)
         ),
       ])
     ),
-    ts.factory.createStringLiteral('React'),
+    ts.factory.createStringLiteral(importFromName),
     undefined
   );
 }
@@ -397,7 +397,7 @@ function getViewTypesDeclarationsForModule(
     .concat(
       getPrefix(),
       newlineIdentifier,
-      getComponentTypeInclude(),
+      getOneNamedImport('ComponentType', 'React'),
       newlineIdentifier,
       includeTypes
         ? getAnyTypesDeclarationsForTypenames(
@@ -485,11 +485,28 @@ function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName
   ];
 }
 
-function getModuleTypesDeclarationsForModule(module: OutputModuleDefinition, moduleName: string) {
+function getModuleTypesDeclarationsForModule(
+  module: OutputModuleDefinition,
+  moduleName: string
+): (
+  | ts.TypeAliasDeclaration
+  | ts.FunctionDeclaration
+  | ts.JSDoc
+  | ts.ClassDeclaration
+  | ts.ImportDeclaration
+)[] {
   return (
-    [] as (ts.TypeAliasDeclaration | ts.FunctionDeclaration | ts.JSDoc | ts.ClassDeclaration)[]
+    [] as (
+      | ts.TypeAliasDeclaration
+      | ts.FunctionDeclaration
+      | ts.JSDoc
+      | ts.ClassDeclaration
+      | ts.ImportDeclaration
+    )[]
   ).concat(
     getPrefix(),
+    newlineIdentifier,
+    getOneNamedImport('NativeModule', 'expo'),
     newlineIdentifier,
     getAnyTypesDeclarationsForTypenames(
       omitFromSet(
@@ -502,9 +519,6 @@ function getModuleTypesDeclarationsForModule(module: OutputModuleDefinition, mod
         [module.name, ...module.views.map((c) => c.name), ...module.classes.map((c) => c.name)]
       )
     ),
-    newlineIdentifier,
-    getFunctionsDeclarations(module.functions) as ts.FunctionDeclaration[],
-    getFunctionsDeclarations(module.asyncFunctions, { async: true }) as ts.FunctionDeclaration[],
     newlineIdentifier,
     getTypeDeclarationsForModule(module, moduleName)
     // getViewTypes(module.views),
