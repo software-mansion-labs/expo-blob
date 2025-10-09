@@ -52,6 +52,7 @@ export type OutputModuleDefinition = {
   events: {
     name: string;
   }[];
+  moduleName: string;
 } & Record<'asyncFunctions' | 'functions' | 'properties', Closure[]> &
   Record<'props', Prop[]>;
 

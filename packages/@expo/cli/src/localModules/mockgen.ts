@@ -521,7 +521,39 @@ export function getViewTypesDeclarationsForModule(
     .flatMap(separateWithNewlines);
 }
 
-export function getModuleTypesDeclarationsForModule(module: OutputModuleDefinition) {
+function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName: string | null) {
+  console.log('???' + moduleName);
+  return ts.factory.createClassDeclaration(
+    [
+      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      ts.factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+    ],
+    module?.name ?? moduleName ?? 'MODULE_NAME',
+    undefined,
+    [
+      ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.factory.createExpressionWithTypeArguments(
+          ts.factory.createIdentifier('NativeModule'),
+          undefined
+        ),
+      ]),
+    ],
+    [
+      ts.factory.createPropertyDeclaration(
+        undefined,
+        'a',
+        undefined,
+        ts.factory.createTypeReferenceNode('string'),
+        undefined
+      ),
+    ]
+  );
+}
+
+export function getModuleTypesDeclarationsForModule(
+  module: OutputModuleDefinition,
+  moduleName: string
+) {
   return (
     [] as (ts.TypeAliasDeclaration | ts.FunctionDeclaration | ts.JSDoc | ts.ClassDeclaration)[]
   ).concat(
@@ -542,9 +574,9 @@ export function getModuleTypesDeclarationsForModule(module: OutputModuleDefiniti
     getMockedFunctions(module.functions) as ts.FunctionDeclaration[],
     getMockedFunctions(module.asyncFunctions, { async: true }) as ts.FunctionDeclaration[],
     newlineIdentifier,
-    // getModuleTypes(module.views)
+    getTypeDeclarationsForModule(module, moduleName)
     // getViewTypes(module.views),
-    getMockedClasses(module.classes)
+    // getMockedClasses(module.classes)
   );
 }
 

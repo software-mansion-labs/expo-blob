@@ -24,7 +24,9 @@ function getStructureFromFile(file: FileType) {
   }
 }
 // find an object with "key.typename" : "ModuleDefinition" somewhere in the structure and return it
-function findModuleDefinitionInStructure(structure: Structure): Structure[] | null {
+function findModuleDefinitionInStructure(
+  structure: Structure
+): { structure: Structure[]; name: string | null } | null {
   if (!structure) {
     return null;
   }
@@ -33,13 +35,22 @@ function findModuleDefinitionInStructure(structure: Structure): Structure[] | nu
     if (!root) {
       console.warn('Found ModuleDefinition but it is malformed');
     }
-    return root;
+    return { structure: root, name: null };
   }
   const substructure = structure['key.substructure'];
   if (Array.isArray(substructure) && substructure.length > 0) {
     for (const child of substructure) {
       let result = null;
       result = findModuleDefinitionInStructure(child);
+      if (
+        result &&
+        result.name == null &&
+        structure['key.kind'] === 'source.lang.swift.decl.class'
+      ) {
+        // The class which contains the module structure... => the module class
+        console.log('!!!' + structure['key.name']);
+        return { structure: result.structure, name: structure['key.name'] };
+      }
       if (result) {
         return result;
       }
@@ -227,6 +238,11 @@ function omitParamsFromClosureArguments<T extends Closure>(
   }));
 }
 
+function getModuleName(moduleDefinition: Structure[], file: FileType): string {
+  const moduleName = getIdentifierFromOffsetObject(moduleDefinition[0], file);
+  return moduleName;
+}
+
 // Some blocks have additional modifiers like runOnQueue – we may need to do additional traversing to get to the function definition
 function parseBlockModifiers(structureObject: Structure) {
   if (structureObject['key.name']?.includes('runOnQueue')) {
@@ -255,15 +271,26 @@ function parseModuleDefinition(
     ),
     views: findAndParseNestedClassesOfType(preparedModuleDefinition, file, 'View'),
     classes: findAndParseNestedClassesOfType(preparedModuleDefinition, file, 'Class'),
+    moduleName: getModuleName(moduleDefinition, file),
   };
   return parsedDefinition;
 }
 
-export function findModuleDefinitionInFile(path: string): OutputModuleDefinition | null {
+export function findModuleDefinitionInFile(
+  path: string
+): { outputModuleDefinition: OutputModuleDefinition; moduleName: string } | null {
   const file = { path, content: fsNode.readFileSync(path, 'utf8') };
-  const moduleDefinition = findModuleDefinitionInStructure(getStructureFromFile(file));
+  const { structure, name } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
+    structure: null,
+    name: null,
+  };
+  const moduleDefinition = structure;
   if (!moduleDefinition) {
     return null;
   }
-  return parseModuleDefinition(moduleDefinition, file);
+  const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file);
+  return {
+    outputModuleDefinition,
+    moduleName: name ?? 'INVALID_NAME',
+  };
 }

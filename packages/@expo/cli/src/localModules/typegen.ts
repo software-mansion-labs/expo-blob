@@ -23,12 +23,15 @@ export async function getGeneratedViewTypesFileContent(file: string): Promise<st
     false,
     ts.ScriptKind.TSX
   );
-  const moduleDefinitions = findModuleDefinitionInFile(file);
-  if (!moduleDefinitions) {
+  const { outputModuleDefinition, moduleName } = findModuleDefinitionInFile(file) ?? {
+    outputModuleDefinition: null,
+    moduleName: null,
+  };
+  if (!outputModuleDefinition) {
     return `// The ${file} file doesn't contain module definition!`;
   }
   const mock = ts.factory.createNodeArray(
-    getViewTypesDeclarationsForModule(moduleDefinitions, true)
+    getViewTypesDeclarationsForModule(outputModuleDefinition, true)
   );
   const printedTs = printer.printList(
     ts.ListFormat.MultiLine + ts.ListFormat.PreserveLines,
@@ -47,11 +50,18 @@ export async function getGeneratedModuleTypesFileContent(file: string): Promise<
     false,
     ts.ScriptKind.TSX
   );
-  const moduleDefinitions = findModuleDefinitionInFile(file);
-  if (!moduleDefinitions) {
+  const { outputModuleDefinition, moduleName } = findModuleDefinitionInFile(file) ?? {
+    outputModuleDefinition: null,
+    moduleName: null,
+  };
+  if (!outputModuleDefinition) {
     return `// The ${file} file doesn't contain module definition!`;
   }
-  const mock = ts.factory.createNodeArray(getModuleTypesDeclarationsForModule(moduleDefinitions));
+
+  console.log('!? OUTPUT MODULE NAME: ' + moduleName);
+  const mock = ts.factory.createNodeArray(
+    getModuleTypesDeclarationsForModule(outputModuleDefinition, moduleName)
+  );
   const printedTs = printer.printList(
     ts.ListFormat.MultiLine + ts.ListFormat.PreserveLines,
     mock,
