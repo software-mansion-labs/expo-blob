@@ -403,9 +403,15 @@ function omitFromSet(set: Set<string>, toOmit: (string | undefined)[]) {
 
 function getViewTypesDeclarationsForModule(
   module: OutputModuleDefinition,
-  moduleName: string,
   includeTypes: boolean
-) {
+): (
+  | ts.TypeAliasDeclaration
+  | ts.FunctionDeclaration
+  | ts.JSDoc
+  | ts.ClassDeclaration
+  | ts.ImportDeclaration
+  | ts.ExportAssignment
+)[] {
   return (
     [] as (
       | ts.TypeAliasDeclaration
@@ -413,12 +419,14 @@ function getViewTypesDeclarationsForModule(
       | ts.JSDoc
       | ts.ClassDeclaration
       | ts.ImportDeclaration
+      | ts.VariableDeclaration
+      | ts.ExportAssignment
     )[]
   )
     .concat(
       getPrefix(),
       newlineIdentifier,
-      getOneNamedImport('ComponentType', 'React'),
+      [getOneNamedImport('ComponentType', 'react')],
       newlineIdentifier,
       includeTypes
         ? getAnyTypesDeclarationsForTypenames(
@@ -448,10 +456,11 @@ function getViewTypesDeclarationsForModule(
 }
 
 function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName: string | null) {
+  const actualModuleName = module?.name ?? moduleName ?? 'MODULE_NAME';
   return [
     ts.factory.createClassDeclaration(
       [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      module?.name ?? moduleName ?? 'MODULE_NAME',
+      actualModuleName,
       undefined,
       [
         ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
@@ -491,13 +500,13 @@ function getTypeDeclarationsForModule(module: OutputModuleDefinition, moduleName
           })
         )
     ),
-    ts.factory.createVariableDeclaration(
-      'const _default',
+    ts.factory.createParameterDeclaration(
+      [ts.factory.createModifier(ts.SyntaxKind.ConstKeyword)],
       undefined,
-      ts.factory.createTypeReferenceNode(
-        ts.factory.createIdentifier(moduleName ?? 'MODULE_NAME'),
-        []
-      )
+      '_default',
+      undefined,
+      ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(actualModuleName), []),
+      undefined
     ),
     ts.factory.createExportDefault(ts.factory.createIdentifier('_default')),
   ];
@@ -563,15 +572,14 @@ export async function getGeneratedViewTypesFileContent(file: string): Promise<st
     false,
     ts.ScriptKind.TSX
   );
-  const { outputModuleDefinition, moduleName } = findModuleDefinitionInFile(file) ?? {
+  const { outputModuleDefinition } = findModuleDefinitionInFile(file) ?? {
     outputModuleDefinition: null,
-    moduleName: null,
   };
   if (!outputModuleDefinition) {
     return `// The ${file} file doesn't contain module definition!`;
   }
   const viewTypes = ts.factory.createNodeArray(
-    getViewTypesDeclarationsForModule(outputModuleDefinition, moduleName, true)
+    getViewTypesDeclarationsForModule(outputModuleDefinition, true)
   );
   const printedTs = printer.printList(
     ts.ListFormat.MultiLine + ts.ListFormat.PreserveLines,
