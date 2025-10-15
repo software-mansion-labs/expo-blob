@@ -108,16 +108,22 @@ describe('monorepo', () => {
     });
   });
 
-  describe('generate-package-list / generate-modules-provider', () => {
+  describe('generate-modules-provider', () => {
     test.each(testCases)('%s', async ({ app, platform }) => {
-      const command =
-        platform === 'android' ? 'generate-package-list' : 'generate-modules-provider';
+      if (platform === 'android') return;
       const appPath = projectPath(app);
       const target = join(appPath, 'generated', 'file.txt');
-      const platformExtraArgs = platform === 'android' ? ['--namespace', 'com.test'] : [];
+      const watchedDirsSerialized = JSON.stringify([]);
 
       const generatePackageListResult = await autolinkingRunAsync(
-        [command, '--platform', platform, '--target', target, ...platformExtraArgs],
+        [
+          'generate-modules-provider',
+          watchedDirsSerialized,
+          'platform',
+          platform,
+          '--target',
+          target,
+        ],
         {
           cwd: appPath,
         }
