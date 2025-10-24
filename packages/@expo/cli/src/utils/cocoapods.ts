@@ -1,4 +1,4 @@
-import { getPackageJson, PackageJSONConfig } from '@expo/config';
+import { getConfig, getPackageJson, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
@@ -11,6 +11,7 @@ import { AbortCommandError } from './errors';
 import { logNewSection } from './ora';
 import * as Log from '../log';
 import { hashForDependencyMap } from '../prebuild/updatePackageJson';
+import { updateXCodeProject } from '../inlineModules/generation';
 
 type PackageChecksums = {
   /** checksum for the `package.json` dependency object. */
@@ -69,6 +70,15 @@ export async function hasPackageJsonDependencyListChangedAsync(
 }
 
 export async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+
+  const inlineModulesEnabled = exp.experiments?.inlineModules === true;
+  if (inlineModulesEnabled) {
+    await updateXCodeProject(projectRoot);
+  }
+
   let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
