@@ -4,8 +4,12 @@ import Server from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
 
+import {
+  getGeneratedModuleTypesFileContent,
+  getGeneratedViewTypesFileContent,
+} from './dtsFileGeneration';
 import { Event, EventsQueue } from './generation.types';
-import { getGeneratedModuleTypesFileContent, getGeneratedViewTypesFileContent } from './typegen';
+import { getFileTypeInformation } from './typeInformation';
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 
 export interface ModuleGenerationArguments {
@@ -263,15 +267,23 @@ export default requireNativeView("${moduleName}");`
 
   let viewFileTypesPart = `const _default: React.JSX.ElementType
 export default _default`;
-  if (isSwiftFile) {
-    viewFileTypesPart = await getGeneratedViewTypesFileContent(absoluteFilePath);
+  const fileTypeInformation = getFileTypeInformation(absoluteFilePath);
+
+  if (isSwiftFile && fileTypeInformation) {
+    viewFileTypesPart = await getGeneratedViewTypesFileContent(
+      absoluteFilePath,
+      fileTypeInformation
+    );
   }
   fs.writeFileSync(viewTypesFilePath, viewFileTypesPart);
 
   let moduleFileTypesPart = `const _default: any;
 export default _default;`;
-  if (isSwiftFile) {
-    moduleFileTypesPart = await getGeneratedModuleTypesFileContent(absoluteFilePath);
+  if (isSwiftFile && fileTypeInformation) {
+    moduleFileTypesPart = await getGeneratedModuleTypesFileContent(
+      absoluteFilePath,
+      fileTypeInformation
+    );
   }
   fs.writeFileSync(moduleTypesFilePath, moduleFileTypesPart);
 

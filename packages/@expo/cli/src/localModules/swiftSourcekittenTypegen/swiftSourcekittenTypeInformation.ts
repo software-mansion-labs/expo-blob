@@ -1,0 +1,346 @@
+import { execSync } from 'child_process';
+import fs from 'fs';
+import XML from 'xml-js';
+import YAML from 'yaml';
+
+import {
+  ClassDeclaration,
+  ConstantDeclaration,
+  ConstructorDeclaration,
+  FileTypeInformation,
+  FunctionDeclaration,
+  ModuleClassDeclaration,
+  Type,
+  TypeKind,
+} from '../typeInformation';
+import { CursorInfoOutput, FileType, FullyAnnotatedDecl, Structure } from '../types';
+
+function getStructureFromFile(file: FileType) {
+  const command = 'sourcekitten structure --file ' + file.path;
+
+  try {
+    const output = execSync(command);
+    return JSON.parse(output.toString());
+  } catch (error) {
+    console.error('An error occurred while executing the command:', error);
+  }
+}
+
+// find an object with "key.typename" : "ModuleDefinition" somewhere in the structure and return it
+function findModuleDefinitionInStructure(
+  structure: Structure
+): { structure: Structure[]; name: string | null } | null {
+  if (!structure) {
+    return null;
+  }
+  if (structure?.['key.typename'] === 'ModuleDefinition') {
+    const root = structure?.['key.substructure'];
+    if (!root) {
+      console.warn('Found ModuleDefinition but it is malformed');
+    }
+    return { structure: root, name: null };
+  }
+  const substructure = structure['key.substructure'];
+  if (Array.isArray(substructure) && substructure.length > 0) {
+    for (const child of substructure) {
+      let result = null;
+      result = findModuleDefinitionInStructure(child);
+      if (
+        result &&
+        result.name == null &&
+        structure['key.kind'] === 'source.lang.swift.decl.class'
+      ) {
+        // The class which contains the module structure... => the module class
+        return { structure: result.structure, name: structure['key.name'] };
+      }
+      if (result) {
+        return result;
+      }
+    }
+  }
+  return null;
+}
+
+// Read string straight from file – needed since we can't get cursorinfo for modulename
+function getIdentifierFromOffsetObject(offsetObject: Structure, file: FileType) {
+  // adding 1 and removing 1 to get rid of quotes
+  return file.content
+    .substring(offsetObject['key.offset'], offsetObject['key.offset'] + offsetObject['key.length'])
+    .replaceAll('"', '');
+}
+
+function hasSubstructure(structureObject: Structure) {
+  return structureObject?.['key.substructure'] && structureObject['key.substructure'].length > 0;
+}
+
+function parseClosureTypes(structureObject: Structure) {
+  const closure = structureObject['key.substructure']?.find(
+    (s) => s['key.kind'] === 'source.lang.swift.expr.closure'
+  );
+  if (!closure) {
+    return null;
+  }
+  const parameters = closure['key.substructure']
+    ?.filter((s) => s['key.kind'] === 'source.lang.swift.decl.var.parameter')
+    .map((p) => ({ name: p['key.name'], typename: p['key.typename'] }));
+
+  const returnType = closure?.['key.typename'] ?? 'unknown';
+  return { parameters, returnType };
+}
+
+let cachedSDKPath: string | null = null;
+function getSDKPath() {
+  if (cachedSDKPath) {
+    return cachedSDKPath;
+  }
+  const sdkPath = execSync('xcrun --sdk iphoneos --show-sdk-path').toString().trim();
+  cachedSDKPath = sdkPath;
+  return cachedSDKPath;
+}
+
+// Read type description with sourcekitten, works only for variables
+function getTypeFromOffsetObject(offsetObject: Structure, file: FileType) {
+  if (!offsetObject) {
+    return null;
+  }
+  const request = {
+    'key.request': 'source.request.cursorinfo',
+    'key.sourcefile': file.path,
+    'key.offset': offsetObject['key.offset'],
+    'key.compilerargs': [file.path, '-target', 'arm64-apple-ios', '-sdk', getSDKPath()],
+  };
+  const yamlRequest = YAML.stringify(request, {
+    defaultStringType: 'QUOTE_DOUBLE',
+    lineWidth: 0,
+    defaultKeyType: 'PLAIN',
+    // needed since behaviour of sourcekitten is not consistent
+  } as any).replace('"source.request.cursorinfo"', 'source.request.cursorinfo');
+
+  const command = 'sourcekitten request --yaml "' + yamlRequest.replaceAll('"', '\\"') + '"';
+  try {
+    const output = execSync(command, { stdio: 'pipe' });
+    return parseXMLAnnotatedDeclarations(JSON.parse(output.toString()));
+  } catch (error) {
+    console.error('An error occurred while executing the command:', error);
+  }
+  return null;
+}
+
+function maybeWrapArray<T>(itemOrItems: T[] | T | null) {
+  if (!itemOrItems) {
+    return null;
+  }
+  if (Array.isArray(itemOrItems)) {
+    return itemOrItems;
+  } else {
+    return [itemOrItems];
+  }
+}
+
+function maybeUnwrapXMLStructs(
+  type: string | Partial<{ _text: string; 'ref.struct': string }>
+): string {
+  if (!type) {
+    return type;
+  }
+  if (typeof type === 'string') {
+    return type;
+  }
+  if (type['_text']) {
+    return type['_text'];
+  }
+  if (type['ref.struct']) {
+    return maybeUnwrapXMLStructs(type['ref.struct']);
+  }
+  return type + ''; // TODO check this, this had no + '' and it made TS have problems
+}
+
+function parseXMLAnnotatedDeclarations(cursorInfoOutput: CursorInfoOutput) {
+  const xml = cursorInfoOutput['key.fully_annotated_decl'];
+  if (!xml) {
+    return null;
+  }
+  const parsed = XML.xml2js(xml, { compact: true }) as FullyAnnotatedDecl;
+
+  const parameters =
+    maybeWrapArray(parsed?.['decl.function.free']?.['decl.var.parameter'])?.map((p) => ({
+      name: maybeUnwrapXMLStructs(p['decl.var.parameter.argument_label']),
+      typename: maybeUnwrapXMLStructs(p['decl.var.parameter.type']),
+    })) ?? [];
+  const returnType = maybeUnwrapXMLStructs(
+    parsed?.['decl.function.free']?.['decl.function.returntype']
+  );
+  return { parameters, returnType };
+}
+
+function mapParameterToType(parameter: { name: string; typename: string }): {
+  name: string;
+  typename: Type;
+} {
+  return {
+    name: parameter.name,
+    typename: {
+      kind: TypeKind.IDENTIFIER,
+      type: parameter.typename,
+    },
+  };
+}
+
+function parseModuleFunctionSubstructure(
+  substructure: Structure,
+  file: FileType
+): FunctionDeclaration {
+  const definitionParams = substructure['key.substructure'];
+  const name = getIdentifierFromOffsetObject(definitionParams[0], file);
+  let types = null;
+  if (hasSubstructure(definitionParams[1])) {
+    types = parseClosureTypes(definitionParams[1]);
+  } else {
+    types = getTypeFromOffsetObject(definitionParams[1], file);
+  }
+
+  return {
+    name,
+    returnType: { kind: TypeKind.IDENTIFIER, type: types?.returnType ?? 'any' }, // any or void ? Probably any
+    parameters: [], // TODO Module function is not generic. I think so. Check it
+    arguments: types?.parameters?.map(mapParameterToType) ?? [],
+  };
+}
+
+function parseModuleConstantSubstructure(
+  substructure: Structure,
+  file: FileType
+): ConstantDeclaration {
+  const definitionParams = substructure['key.substructure'];
+  const name = getIdentifierFromOffsetObject(definitionParams[0], file);
+  let types = null;
+  if (hasSubstructure(definitionParams[1])) {
+    types = parseClosureTypes(definitionParams[1]);
+  } else {
+    types = getTypeFromOffsetObject(definitionParams[1], file);
+  }
+
+  return {
+    name,
+    typename: types?.returnType ?? 'any',
+  };
+}
+
+function parseModuleClassSubstructure(substructure: Structure, file: FileType): ClassDeclaration {
+  const nestedModuleDefinition =
+    substructure['key.substructure']?.[1]?.['key.substructure']?.[0]?.['key.substructure']?.[0]?.[
+      'key.substructure'
+    ];
+  // [1] - omi
+
+  if (!nestedModuleDefinition) {
+    console.warn("Couldn't parse class definition!");
+    return {
+      name: '',
+      methods: [],
+      asyncMethods: [],
+      properties: [],
+    };
+  }
+
+  const name = getIdentifierFromOffsetObject(substructure['key.substructure']?.[0], file).replace(
+    '.self',
+    ''
+  );
+
+  const classTypeInfo = parseModuleDefinition(nestedModuleDefinition, file);
+  return {
+    name,
+    methods: classTypeInfo.functions,
+    asyncMethods: classTypeInfo.asyncFunctions,
+    properties: classTypeInfo.properties,
+    constructor: classTypeInfo.constructor,
+  };
+}
+
+const parseModulePropertySubstructure = parseModuleConstantSubstructure;
+
+function parseModuleConstructorDeclaration(
+  substructure: Structure,
+  file: FileType
+): ConstructorDeclaration {
+  const definitionParams = substructure['key.substructure'];
+  let types = null;
+
+  // TODO rethink this maybe split based on what closure is expected
+  // Maybe this should be the last substructure
+  if (hasSubstructure(definitionParams[1])) {
+    types = parseClosureTypes(definitionParams[1]);
+  } else if (hasSubstructure(definitionParams[0])) {
+    types = parseClosureTypes(definitionParams[0]);
+  } else {
+    types = getTypeFromOffsetObject(definitionParams[1], file);
+  }
+
+  console.log('!!!' + JSON.stringify(types));
+  return {
+    arguments: types?.parameters.map(mapParameterToType) ?? [],
+  };
+}
+
+function parseModuleDefinition(
+  moduleDefinition: Structure[],
+  file: FileType
+): ModuleClassDeclaration {
+  const mcd: ModuleClassDeclaration = {
+    name: '',
+    constants: [],
+    functions: [],
+    asyncFunctions: [],
+    classes: [],
+    properties: [],
+  };
+
+  for (const md of moduleDefinition) {
+    switch (md['key.name']) {
+      case 'Name':
+        mcd.name = getIdentifierFromOffsetObject(md['key.substructure']?.[0], file);
+        break;
+      case 'Function':
+        mcd.functions.push(parseModuleFunctionSubstructure(md, file));
+        break;
+      case 'Constant':
+        mcd.constants.push(parseModuleConstantSubstructure(md, file));
+        break;
+      case 'Class':
+        mcd.classes.push(parseModuleClassSubstructure(md, file));
+        break;
+      case 'Property':
+        mcd.properties.push(parseModulePropertySubstructure(md, file));
+        break;
+      case 'AsyncFunction':
+        mcd.asyncFunctions.push(parseModuleFunctionSubstructure(md, file));
+        break;
+      case 'Constructor':
+        mcd.constructor = parseModuleConstructorDeclaration(md, file);
+        break;
+      default:
+        console.log('Module substructure not supported');
+    }
+  }
+
+  console.log(JSON.stringify(mcd, null, 2));
+  return mcd;
+}
+
+export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
+  const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
+  const { structure } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
+    structure: null,
+    name: null,
+  };
+  const moduleDefinition = structure;
+  if (!moduleDefinition) {
+    return null;
+  }
+  const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file);
+  return {
+    moduleClasses: [outputModuleDefinition],
+    functions: [],
+  };
+}

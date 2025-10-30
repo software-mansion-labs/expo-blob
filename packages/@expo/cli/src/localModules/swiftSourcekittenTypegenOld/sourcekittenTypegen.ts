@@ -446,10 +446,14 @@ function getViewTypesDeclarationsForModule(
           )
         : [],
       newlineIdentifier,
+      ts.factory.createJSDocComment('Functions definitions'),
       getFunctionsDeclarations(module.functions) as ts.FunctionDeclaration[],
+      ts.factory.createJSDocComment('Async functions definitions'),
       getFunctionsDeclarations(module.asyncFunctions, true) as ts.FunctionDeclaration[],
       newlineIdentifier,
+      ts.factory.createJSDocComment('View types definitions'),
       getViewTypes(module.views),
+      ts.factory.createJSDocComment('Classes definitions'),
       getClassesDefinitions(module.classes)
     )
     .flatMap(separateWithNewlines);
@@ -521,6 +525,8 @@ function getModuleTypesDeclarationsForModule(
   | ts.JSDoc
   | ts.ClassDeclaration
   | ts.ImportDeclaration
+  | ts.ParameterDeclaration
+  | ts.ExportAssignment
 )[] {
   return (
     [] as (
@@ -529,6 +535,8 @@ function getModuleTypesDeclarationsForModule(
       | ts.JSDoc
       | ts.ClassDeclaration
       | ts.ImportDeclaration
+      | ts.ParameterDeclaration
+      | ts.ExportAssignment
     )[]
   ).concat(
     getPrefix(),
@@ -547,9 +555,9 @@ function getModuleTypesDeclarationsForModule(
       )
     ),
     newlineIdentifier,
-    getTypeDeclarationsForModule(module, moduleName)
+    getTypeDeclarationsForModule(module, moduleName),
+    getClassesDefinitions(module.classes)
     // getViewTypes(module.views),
-    // getClassesDefinitions(module.classes)
   );
 }
 

@@ -52,7 +52,7 @@ export type OutputModuleDefinition = {
   events: {
     name: string;
   }[];
-} & Record<'asyncFunctions' | 'functions' | 'properties', Closure[]> &
+} & Record<'asyncFunctions' | 'functions' | 'properties' | 'constants', Closure[]> &
   Record<'props', Prop[]>;
 
 // views and classes are a very similar structure, same as module but without more nesting levels

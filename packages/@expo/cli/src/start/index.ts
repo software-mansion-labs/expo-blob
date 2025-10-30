@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 
+import fs from 'fs';
+import path from 'path';
 import { Command } from '../../bin/cli';
+import { getFileTypeInformation } from '../localModules/typeInformation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
 
@@ -28,6 +31,7 @@ export const expoStart: Command = async (argv) => {
       '--localhost': Boolean,
       '--offline': Boolean,
       '--go': Boolean,
+      '--typegen': String,
       // Aliases
       '-h': '--help',
       '-c': '--clear',
@@ -43,6 +47,14 @@ export const expoStart: Command = async (argv) => {
     },
     argv
   );
+
+  if (args['--typegen']) {
+    const fileName = args['--typegen'];
+    getFileTypeInformation(fs.realpathSync(fileName));
+    // await findModuleDefinitionInFile(fs.realpathSync(fileName));
+    // console.log(JSON.stringify(await findModuleDefinitionInFile(fs.realpathSync(fileName))));
+    return;
+  }
 
   if (args['--help']) {
     printHelp(
