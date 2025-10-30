@@ -426,10 +426,11 @@ function parseModuleConstructorDeclaration(
 
 function parseModuleDefinition(
   moduleDefinition: Structure[],
-  file: FileType
+  file: FileType,
+  name: string
 ): ModuleClassDeclaration {
   const mcd: ModuleClassDeclaration = {
-    name: '',
+    name,
     constants: [],
     functions: [],
     asyncFunctions: [],
@@ -471,7 +472,7 @@ function parseModuleDefinition(
 
 export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
   const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
-  const { structure } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
+  const { structure, name } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
     structure: null,
     name: null,
   };
@@ -479,7 +480,7 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
   if (!moduleDefinition) {
     return null;
   }
-  const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file);
+  const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file, name);
   return {
     moduleClasses: [outputModuleDefinition],
     functions: [],

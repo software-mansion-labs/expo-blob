@@ -46,7 +46,7 @@ function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclara
   return [
     ts.factory.createClassDeclaration(
       [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      moduleClassDeclaration.name + 'GenericNameEnding',
+      moduleClassDeclaration.name,
       undefined,
       [
         ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
