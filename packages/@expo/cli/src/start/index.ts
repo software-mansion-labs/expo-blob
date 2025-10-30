@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-
 import fs from 'fs';
-import path from 'path';
+
 import { Command } from '../../bin/cli';
 import { getFileTypeInformation } from '../localModules/typeInformation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';

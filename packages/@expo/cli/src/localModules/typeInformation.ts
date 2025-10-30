@@ -5,25 +5,20 @@ type ParametrizedType = {
   parameterTypes: Type[];
 };
 
-export enum AnonymousTypeKind {
-  PRODUCT,
-  SUM,
-  FUNCTION,
-  PARAMETRIZED,
-}
-
 type ProductType = {
   bs: string;
 };
 
-type SumType = {};
+type SumType = {
+  types: Type[];
+};
 
 type FunctionType = {};
 
+type OptionalType = Type;
+
 type TypeIdentifier = string;
-type AnonymousType = {
-  kind: AnonymousTypeKind;
-} & (ParametrizedType | SumType | ProductType | FunctionType);
+type AnonymousType = ParametrizedType | SumType | ProductType | FunctionType | OptionalType;
 
 // const val: AnonymousType = {
 //   kind: AnonymousTypeKind.PARAMETRIZED,
@@ -32,13 +27,26 @@ type AnonymousType = {
 // };
 
 export enum TypeKind {
+  BASIC,
   IDENTIFIER,
-  ANONYMOUS,
+  PRODUCT,
+  SUM,
+  FUNCTION,
+  PARAMETRIZED,
+  OPTIONAL,
+}
+
+export enum BasicType {
+  ANY,
+  STRING,
+  NUMBER,
+  BOOLEAN,
+  VOID,
 }
 
 export type Type = {
   kind: TypeKind;
-  type: TypeIdentifier | AnonymousType;
+  type: BasicType | TypeIdentifier | AnonymousType;
 };
 
 export type PropertyDeclaration = ConstantDeclaration;

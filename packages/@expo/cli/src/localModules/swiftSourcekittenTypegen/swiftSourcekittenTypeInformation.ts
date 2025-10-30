@@ -4,6 +4,7 @@ import XML from 'xml-js';
 import YAML from 'yaml';
 
 import {
+  BasicType,
   ClassDeclaration,
   ConstantDeclaration,
   ConstructorDeclaration,
@@ -14,6 +15,149 @@ import {
   TypeKind,
 } from '../typeInformation';
 import { CursorInfoOutput, FileType, FullyAnnotatedDecl, Structure } from '../types';
+
+/*
+The Swift object type can have nested objects as the type of it's values (or maybe even keys).
+[String: [String: Any]]
+
+We can't use regex to find the root colon, so this is the safest way – by counting brackets.
+*/
+function findRootColonInDictionary(type: string) {
+  let colonIndex = -1;
+  let openBracketsCount = 0;
+  for (let i = 0; i < type.length; i++) {
+    if (type[i] === '[') {
+      openBracketsCount++;
+    } else if (type[i] === ']') {
+      openBracketsCount--;
+
+      // TODO check This should be openBracketsCount === 1 right ???
+    } else if (type[i] === ':' && openBracketsCount === 0) {
+      colonIndex = i;
+      break;
+    }
+  }
+  return colonIndex;
+}
+
+function unwrapSwiftDictionary(type: string) {
+  const innerType = type.substring(1, type.length - 1);
+  const colonPosition = findRootColonInDictionary(innerType);
+  return {
+    key: innerType.slice(0, colonPosition).trim(),
+    value: innerType.slice(colonPosition + 1).trim(),
+  };
+}
+
+function isSwiftDictionary(type: string): boolean {
+  return (
+    type.startsWith('[') &&
+    type.endsWith(']') &&
+    findRootColonInDictionary(type.substring(1, type.length - 1)) >= 0
+  );
+}
+
+/*
+We receive types from SourceKitten and `getStructure` like so (examples):
+[AcceptedTypes]?, UIColor?, [String: Any]
+
+We need to parse them first to TS nodes in `mapSwiftTypeToTsType` with the following helper functions.
+*/
+
+function isSwiftArray(type: string) {
+  // This can also be an object, but we check that first, so if it's not an object and is wrapped with [] it's an array.
+  return type.startsWith('[') && type.endsWith(']');
+}
+
+function maybeUnwrapSwiftArray(type: string) {
+  const isArray = isSwiftArray(type);
+  if (!isArray) {
+    return type;
+  }
+  const innerType = type.substring(1, type.length - 1);
+  return innerType;
+}
+
+function isSwiftOptional(type: string): boolean {
+  return type.endsWith('?');
+}
+
+function isEither(type: string) {
+  return (
+    type.endsWith('>') &&
+    (type.startsWith('Either<') ||
+      type.startsWith('EitherOfThree<') ||
+      type.startsWith('EitherOfFour<'))
+  );
+}
+
+// "Either<TypeOne, TypeTwo>" -> ["TypeOne", "TypeTwo"]
+function unwrapEither(type: string): string[] {
+  const innerType = type.substring(7, type.length - 1);
+  // This assumes no inner types with ',' Either<Either<int,char>, Either<Bool, Blob>> while funny will fail
+  // TODO check if this only fails for nested Eithers.
+  return innerType.split(',').map((t) => t.trim());
+}
+
+function mapSwiftTypeToTsType(type?: string): Type {
+  if (!type) {
+    return { kind: TypeKind.IDENTIFIER, type: 'any' };
+  }
+  if (isSwiftOptional(type)) {
+    return { kind: TypeKind.OPTIONAL, type: mapSwiftTypeToTsType(type.slice(0, -1).trim()) };
+  }
+  if (isSwiftDictionary(type)) {
+    const { key, value } = unwrapSwiftDictionary(type);
+    const keyType = mapSwiftTypeToTsType(key);
+    const valueType = mapSwiftTypeToTsType(value);
+
+    console.warn('Dicionaries not implemented yet!');
+    return { kind: TypeKind.BASIC, type: BasicType.ANY };
+  }
+  if (isSwiftArray(type)) {
+    // return ts.factory.createArrayTypeNode(mapSwiftTypeToTsType(maybeUnwrapSwiftArray(type)));
+    console.warn('Arrays not implemented yet!');
+    return { kind: TypeKind.BASIC, type: BasicType.ANY };
+  }
+  // Custom handling for the Either convertible
+  if (isEither(type)) {
+    const types = unwrapEither(type);
+    return {
+      kind: TypeKind.SUM,
+      type: { types },
+    };
+  }
+
+  const returnType: Type = {
+    kind: TypeKind.BASIC,
+    type: BasicType.ANY,
+  };
+  switch (type) {
+    case 'unknown':
+    case 'Any':
+      returnType.type = BasicType.ANY;
+      break;
+    case 'string':
+      returnType.type = BasicType.STRING;
+      break;
+    case 'Bool':
+      returnType.type = BasicType.BOOLEAN;
+      break;
+    case 'Int':
+    case 'Float':
+    case 'Double':
+      returnType.type = BasicType.NUMBER;
+      break;
+    case 'Void':
+      returnType.type = BasicType.VOID;
+      break;
+    default:
+      returnType.kind = TypeKind.IDENTIFIER;
+      returnType.type = type;
+  }
+
+  return returnType;
+}
 
 function getStructureFromFile(file: FileType) {
   const command = 'sourcekitten structure --file ' + file.path;
@@ -179,10 +323,7 @@ function mapParameterToType(parameter: { name: string; typename: string }): {
 } {
   return {
     name: parameter.name,
-    typename: {
-      kind: TypeKind.IDENTIFIER,
-      type: parameter.typename,
-    },
+    typename: mapSwiftTypeToTsType(parameter.typename),
   };
 }
 
@@ -201,7 +342,7 @@ function parseModuleFunctionSubstructure(
 
   return {
     name,
-    returnType: { kind: TypeKind.IDENTIFIER, type: types?.returnType ?? 'any' }, // any or void ? Probably any
+    returnType: mapSwiftTypeToTsType(types?.returnType), // any or void ? Probably any
     parameters: [], // TODO Module function is not generic. I think so. Check it
     arguments: types?.parameters?.map(mapParameterToType) ?? [],
   };
