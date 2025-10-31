@@ -12,9 +12,9 @@ import {
   FunctionDeclaration,
   ModuleClassDeclaration,
   PropDeclaration,
-  PropertyDeclaration,
   Type,
   TypeKind,
+  ViewDeclaration,
 } from '../typeInformation';
 import { CursorInfoOutput, FileType, FullyAnnotatedDecl, Structure } from '../types';
 
@@ -463,6 +463,23 @@ function parseModulePropDeclaration(substructure: Structure, file: FileType): Pr
   };
 }
 
+function parseModuleViewDeclaration(substructure: Structure, file: FileType): ViewDeclaration {
+  // The View arguments is a.self for some class a.
+  const suffixLength = 5;
+  const name = getIdentifierFromOffsetObject(substructure['key.substructure']?.[0], file).slice(
+    0,
+    -suffixLength
+  );
+
+  return parseModuleDefinition(
+    substructure['key.substructure'][1]['key.substructure'][0]['key.substructure'][0][
+      'key.substructure'
+    ],
+    file,
+    name
+  );
+}
+
 function parseModuleDefinition(
   moduleDefinition: Structure[],
   file: FileType,
@@ -476,6 +493,7 @@ function parseModuleDefinition(
     classes: [],
     properties: [],
     props: [],
+    views: [],
   };
 
   for (const md of moduleDefinition) {
@@ -503,6 +521,9 @@ function parseModuleDefinition(
         break;
       case 'Prop':
         mcd.props.push(parseModulePropDeclaration(md, file));
+        break;
+      case 'View':
+        mcd.views.push(parseModuleViewDeclaration(md, file));
         break;
       default:
         console.warn('Module substructure not supported');

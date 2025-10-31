@@ -3,11 +3,13 @@ import chalk from 'chalk';
 import fs from 'fs';
 
 import { Command } from '../../bin/cli';
+import {
+  getGeneratedModuleTypesFileContent,
+  getGeneratedViewTypesFileContent,
+} from '../localModules/dtsFileGeneration';
 import { getFileTypeInformation } from '../localModules/typeInformation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
-import { getGeneratedModuleTypesFileContent } from '../localModules/dtsFileGeneration';
-import { getSwiftFileTypeInformation } from '../localModules/swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
 
 export const expoStart: Command = async (argv) => {
   const args = assertArgs(
@@ -32,7 +34,9 @@ export const expoStart: Command = async (argv) => {
       '--localhost': Boolean,
       '--offline': Boolean,
       '--go': Boolean,
-      '--typegen': String,
+      '--typegen-module': String,
+      '--typegen-view': String,
+      '--typeinfo': String,
       // Aliases
       '-h': '--help',
       '-c': '--clear',
@@ -49,14 +53,26 @@ export const expoStart: Command = async (argv) => {
     argv
   );
 
-  if (args['--typegen']) {
-    const fileName = args['--typegen'];
-    const typeInfo = getSwiftFileTypeInformation(fileName);
+  if (args['--typegen-module']) {
+    const fileName = args['--typegen-module'];
+    const typeInfo = getFileTypeInformation(fileName);
     if (typeInfo) {
       console.log(await getGeneratedModuleTypesFileContent(fs.realpathSync(fileName), typeInfo));
     }
-    // await findModuleDefinitionInFile(fs.realpathSync(fileName));
-    // console.log(JSON.stringify(await findModuleDefinitionInFile(fs.realpathSync(fileName))));
+    return;
+  }
+  if (args['--typegen-view']) {
+    const fileName = args['--typegen-view'];
+    const typeInfo = getFileTypeInformation(fileName);
+    if (typeInfo) {
+      console.log(await getGeneratedViewTypesFileContent(fs.realpathSync(fileName), typeInfo));
+    }
+    return;
+  }
+  if (args['--typeinfo']) {
+    const fileName = args['--typeinfo'];
+    const typeInfo = getFileTypeInformation(fileName);
+    console.log(JSON.stringify(typeInfo, null, 2));
     return;
   }
 

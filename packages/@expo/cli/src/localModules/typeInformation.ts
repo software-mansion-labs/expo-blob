@@ -65,6 +65,8 @@ export type Type = {
 
 export type PropertyDeclaration = ConstantDeclaration;
 
+export type ViewDeclaration = ModuleClassDeclaration;
+
 export type ConstantDeclaration = {
   name: string;
   type: Type;
@@ -108,6 +110,7 @@ export type ModuleClassDeclaration = {
   asyncFunctions: FunctionDeclaration[];
   properties: PropertyDeclaration[];
   props: PropDeclaration[];
+  views: ViewDeclaration[];
 };
 
 export type FileTypeInformation = {
