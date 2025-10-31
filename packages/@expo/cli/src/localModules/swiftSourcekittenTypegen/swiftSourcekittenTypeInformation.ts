@@ -11,6 +11,8 @@ import {
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
+  PropDeclaration,
+  PropertyDeclaration,
   Type,
   TypeKind,
 } from '../typeInformation';
@@ -340,11 +342,11 @@ function parseXMLAnnotatedDeclarations(cursorInfoOutput: CursorInfoOutput) {
 
 function mapParameterToType(parameter: { name: string; typename: string }): {
   name: string;
-  typename: Type;
+  type: Type;
 } {
   return {
     name: parameter.name,
-    typename: mapSwiftTypeToTsType(parameter.typename),
+    type: mapSwiftTypeToTsType(parameter.typename),
   };
 }
 
@@ -448,6 +450,22 @@ function parseModuleConstructorDeclaration(
   };
 }
 
+function parseModulePropDeclaration(substructure: Structure, file: FileType): PropDeclaration {
+  const definitionParams = substructure['key.substructure'];
+  const name = getIdentifierFromOffsetObject(definitionParams[0], file);
+  let types = null;
+  if (hasSubstructure(definitionParams[1])) {
+    types = parseClosureTypes(definitionParams[1]);
+  } else {
+    types = getTypeFromOffsetObject(definitionParams[1], file);
+  }
+
+  return {
+    name,
+    arguments: types?.parameters?.map(mapParameterToType) ?? [],
+  };
+}
+
 function parseModuleDefinition(
   moduleDefinition: Structure[],
   file: FileType,
@@ -460,6 +478,7 @@ function parseModuleDefinition(
     asyncFunctions: [],
     classes: [],
     properties: [],
+    props: [],
   };
 
   for (const md of moduleDefinition) {
@@ -485,10 +504,15 @@ function parseModuleDefinition(
       case 'Constructor':
         mcd.constructor = parseModuleConstructorDeclaration(md, file);
         break;
+      case 'Prop':
+        mcd.props.push(parseModulePropDeclaration(md, file));
+        break;
       default:
         console.warn('Module substructure not supported');
     }
   }
+
+  console.log('!!!! properties' + JSON.stringify(mcd.properties));
 
   // console.log('!!!' + JSON.stringify(mcd, null, 2));
   return mcd;

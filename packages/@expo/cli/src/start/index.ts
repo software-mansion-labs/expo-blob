@@ -6,6 +6,8 @@ import { Command } from '../../bin/cli';
 import { getFileTypeInformation } from '../localModules/typeInformation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
+import { getGeneratedModuleTypesFileContent } from '../localModules/dtsFileGeneration';
+import { getSwiftFileTypeInformation } from '../localModules/swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
 
 export const expoStart: Command = async (argv) => {
   const args = assertArgs(
@@ -49,7 +51,10 @@ export const expoStart: Command = async (argv) => {
 
   if (args['--typegen']) {
     const fileName = args['--typegen'];
-    getFileTypeInformation(fs.realpathSync(fileName));
+    const typeInfo = getSwiftFileTypeInformation(fileName);
+    if (typeInfo) {
+      console.log(await getGeneratedModuleTypesFileContent(fs.realpathSync(fileName), typeInfo));
+    }
     // await findModuleDefinitionInFile(fs.realpathSync(fileName));
     // console.log(JSON.stringify(await findModuleDefinitionInFile(fs.realpathSync(fileName))));
     return;

@@ -10,6 +10,7 @@ import {
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
+  PropertyDeclaration,
   SumType,
   Type,
   TypeKind,
@@ -46,10 +47,42 @@ function getOneNamedImport(importedName: string, importFromName: string) {
   );
 }
 
+function wrapWithPromise(typeNode: ts.TypeNode): ts.TypeNode {
+  return ts.factory.createTypeReferenceNode('Promise', [typeNode]);
+}
+
+function getClassPropertyDeclaration(declaration: PropertyDeclaration): ts.PropertyDeclaration {
+  console.log('!!! Property: ' + JSON.stringify(declaration));
+  return ts.factory.createPropertyDeclaration(
+    [ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+    declaration.name,
+    undefined,
+    mapTypeToTsTypeNode(declaration.type),
+    undefined
+  );
+}
+
+function getClassDeclarationInModule(classDeclaration: ClassDeclaration): ts.ClassElement {
+  return ts.factory.createPropertyDeclaration(
+    undefined,
+    classDeclaration.name,
+    undefined,
+    // TODO that's a hack, but I couldn't find a proper way to do this
+    // The problem is that declare class semantics seem somewhat different than class semantics.
+    ts.factory.createTypeReferenceNode('typeof ' + classDeclaration.name),
+    undefined
+  );
+}
+
 function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclaration): ts.Node[] {
+  console.log('!!! exported module');
+  console.log(JSON.stringify(moduleClassDeclaration.properties));
   return [
     ts.factory.createClassDeclaration(
-      [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      [
+        ts.factory.createModifier(ts.SyntaxKind.ExportKeyword),
+        ts.factory.createToken(ts.SyntaxKind.DeclareKeyword),
+      ],
       moduleClassDeclaration.name,
       undefined,
       [
@@ -61,79 +94,54 @@ function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclara
         ]),
       ],
       ([] as ts.ClassElement[]).concat(
-        moduleClassDeclaration.constants.map((cd) =>
-          ts.factory.createPropertyDeclaration(
-            undefined,
-            cd.name,
-            undefined,
-            mapTypeToTsTypeNode(cd.type),
-            undefined
-          )
-        ),
-        moduleClassDeclaration.functions.map((fd) =>
-          ts.factory.createMethodDeclaration(
-            [],
-            undefined,
-            fd.name,
-            undefined,
-            undefined,
-            ([] as ts.ParameterDeclaration[]).concat(
-              fd.arguments.map((ad) =>
-                ts.factory.createParameterDeclaration(
-                  undefined,
-                  undefined,
-                  ad.name,
-                  undefined,
-                  mapTypeToTsTypeNode(ad.typename),
-                  undefined
-                )
-              )
-            ),
-            mapTypeToTsTypeNode(fd.returnType),
-            undefined
-          )
-        )
+        moduleClassDeclaration.constants.map(getClassPropertyDeclaration),
+        moduleClassDeclaration.properties.map(getClassPropertyDeclaration),
+        moduleClassDeclaration.functions.map(getSyncMethodDeclaration),
+        moduleClassDeclaration.asyncFunctions.map(getAsyncMethodDeclaration),
+        moduleClassDeclaration.classes.map(getClassDeclarationInModule)
       )
     ),
   ];
 }
 
-function getArgumentDeclaration(arg: { name: string; typename: Type }): ts.ParameterDeclaration {
+function getArgumentDeclaration(arg: { name: string; type: Type }): ts.ParameterDeclaration {
+  const optional = arg.type.kind === TypeKind.OPTIONAL;
+  const argType = optional ? (arg.type.type as Type) : arg.type;
+
   return ts.factory.createParameterDeclaration(
     undefined,
     undefined,
     arg.name,
-    undefined,
-    mapTypeToTsTypeNode(arg.typename),
+    optional ? ts.factory.createToken(ts.SyntaxKind.QuestionToken) : undefined,
+    mapTypeToTsTypeNode(argType),
     undefined
   );
 }
 
-function getClassAsyncMethodDeclaration(
-  functionDeclaration: FunctionDeclaration
-): ts.MethodDeclaration {
-  return getClassMethodDeclration(functionDeclaration, true);
+function getAsyncMethodDeclaration(functionDeclaration: FunctionDeclaration): ts.MethodDeclaration {
+  return getMethodDeclration(functionDeclaration, true);
 }
 
-function getClassSyncMethodDeclaration(
-  functionDeclaration: FunctionDeclaration
-): ts.MethodDeclaration {
-  return getClassMethodDeclration(functionDeclaration, false);
+function getSyncMethodDeclaration(functionDeclaration: FunctionDeclaration): ts.MethodDeclaration {
+  return getMethodDeclration(functionDeclaration, false);
 }
 
-function getClassMethodDeclration(
+function getMethodDeclration(
   functionDeclaration: FunctionDeclaration,
   async: boolean
 ): ts.MethodDeclaration {
+  let returnTypeNode = mapTypeToTsTypeNode(functionDeclaration.returnType);
+  if (async) {
+    returnTypeNode = wrapWithPromise(returnTypeNode);
+  }
   return ts.factory.createMethodDeclaration(
-    // isAsync ? [ts.factory.createModifier(ts.SyntaxKind.AsyncKeyword)] : [],
     [],
     undefined,
     functionDeclaration.name,
     undefined,
     undefined,
     functionDeclaration.arguments.map(getArgumentDeclaration),
-    mapTypeToTsTypeNode(functionDeclaration.returnType),
+    returnTypeNode,
     undefined
   );
 }
@@ -152,6 +160,8 @@ function mapBasicTypeToTsNode(basicType: BasicType): ts.TypeNode {
           return ts.SyntaxKind.StringKeyword;
         case BasicType.VOID:
           return ts.SyntaxKind.VoidKeyword;
+        case BasicType.UNDEFINED:
+          return ts.SyntaxKind.UndefinedKeyword;
       }
     })()
   );
@@ -184,7 +194,6 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
       if (type.type === 'unknown') {
         return ts.factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
       }
-      // console.log(`!!! ${type.type}`);
       return ts.factory.createTypeReferenceNode(type.type as string);
     case TypeKind.SUM:
       return ts.factory.createUnionTypeNode((type.type as SumType).types.map(mapTypeToTsTypeNode));
@@ -192,6 +201,16 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
       return ts.factory.createArrayTypeNode(mapTypeToTsTypeNode(type.type as ArrayType));
     case TypeKind.DICTIONARY:
       return createDictionaryTypeNode(type.type as DictionaryType);
+
+    // Technically this one should only be the top one and it should be handled somewhere else
+    // for example when creating arguemnt adding the '?' token.
+    //
+    // However we can just make it (type | undefined) in here.
+    case TypeKind.OPTIONAL:
+      return ts.factory.createUnionTypeNode([
+        mapTypeToTsTypeNode(type.type as Type),
+        mapBasicTypeToTsNode(BasicType.UNDEFINED),
+      ]);
   }
   return mapBasicTypeToTsNode(BasicType.ANY);
 }
@@ -199,13 +218,24 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
 function getExportedClassDeclaration(classDeclaration: ClassDeclaration): ts.Node[] {
   return ([] as ts.Node[]).concat(
     ts.factory.createClassDeclaration(
-      [ts.factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      [
+        ts.factory.createToken(ts.SyntaxKind.ExportKeyword),
+        ts.factory.createToken(ts.SyntaxKind.DeclareKeyword),
+      ],
       ts.factory.createIdentifier(classDeclaration.name),
       undefined,
-      undefined,
-      ([] as ts.MethodDeclaration[]).concat(
-        classDeclaration.methods.map(getClassSyncMethodDeclaration),
-        classDeclaration.asyncMethods.map(getClassAsyncMethodDeclaration)
+      [
+        ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+          ts.factory.createExpressionWithTypeArguments(
+            ts.factory.createIdentifier('SharedObject'),
+            undefined
+          ),
+        ]),
+      ],
+      ([] as ts.ClassElement[]).concat(
+        classDeclaration.methods.map(getSyncMethodDeclaration),
+        classDeclaration.asyncMethods.map(getAsyncMethodDeclaration),
+        classDeclaration.properties.map(getClassPropertyDeclaration)
       )
     )
   );
@@ -235,7 +265,7 @@ async function prettifyCode(text: string, parser: 'babel' | 'typescript' = 'babe
   });
 }
 
-async function prettyPrintTSToString(file: string, elements: ts.Node[]) {
+async function prettyPrintTSNodesToString(file: string, elements: ts.Node[]) {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
     file,
@@ -258,7 +288,10 @@ export async function getGeneratedViewTypesFileContent(
   FileTypeInformation: FileTypeInformation
 ): Promise<string> {
   const outputModuleDefinition = FileTypeInformation.moduleClasses[0];
-  return prettyPrintTSToString(file, getModuleTypesDeclarationsForModule(outputModuleDefinition));
+  return prettyPrintTSNodesToString(
+    file,
+    getModuleTypesDeclarationsForModule(outputModuleDefinition)
+  );
 }
 
 export async function getGeneratedModuleTypesFileContent(
@@ -266,5 +299,8 @@ export async function getGeneratedModuleTypesFileContent(
   FileTypeInformation: FileTypeInformation
 ): Promise<string> {
   const outputModuleDefinition = FileTypeInformation.moduleClasses[0];
-  return prettyPrintTSToString(file, getModuleTypesDeclarationsForModule(outputModuleDefinition));
+  return prettyPrintTSNodesToString(
+    file,
+    getModuleTypesDeclarationsForModule(outputModuleDefinition)
+  );
 }

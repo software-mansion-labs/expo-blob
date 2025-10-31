@@ -55,6 +55,7 @@ export enum BasicType {
   NUMBER,
   BOOLEAN,
   VOID,
+  UNDEFINED,
 }
 
 export type Type = {
@@ -72,12 +73,17 @@ export type ConstantDeclaration = {
 export type FunctionDeclaration = {
   name: string;
   returnType: Type;
-  arguments: { name: string; typename: Type }[];
+  arguments: { name: string; type: Type }[];
   parameters: Type[];
 };
 
+export type PropDeclaration = {
+  name: string;
+  arguments: { name: string; type: Type }[];
+};
+
 export type ConstructorDeclaration = {
-  arguments: { name: string; typename: Type }[];
+  arguments: { name: string; type: Type }[];
 };
 
 export type DictionaryType = {
@@ -101,11 +107,11 @@ export type ModuleClassDeclaration = {
   functions: FunctionDeclaration[];
   asyncFunctions: FunctionDeclaration[];
   properties: PropertyDeclaration[];
+  props: PropDeclaration[];
 };
 
 export type FileTypeInformation = {
   functions: FunctionDeclaration[];
-  //   nonModuleClasses: ClassDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
 };
 
