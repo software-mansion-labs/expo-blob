@@ -32,6 +32,7 @@ function findRootColonInDictionary(type: string) {
       openBracketsCount--;
 
       // TODO check This should be openBracketsCount === 1 right ???
+      // No, because this check is on inner type
     } else if (type[i] === ':' && openBracketsCount === 0) {
       colonIndex = i;
       break;
@@ -69,13 +70,9 @@ function isSwiftArray(type: string) {
   return type.startsWith('[') && type.endsWith(']');
 }
 
-function maybeUnwrapSwiftArray(type: string) {
-  const isArray = isSwiftArray(type);
-  if (!isArray) {
-    return type;
-  }
+function unwrapSwiftArray(type: string): Type {
   const innerType = type.substring(1, type.length - 1);
-  return innerType;
+  return mapSwiftTypeToTsType(innerType.trim());
 }
 
 function isSwiftOptional(type: string): boolean {
@@ -92,11 +89,28 @@ function isEither(type: string) {
 }
 
 // "Either<TypeOne, TypeTwo>" -> ["TypeOne", "TypeTwo"]
-function unwrapEither(type: string): string[] {
-  const innerType = type.substring(7, type.length - 1);
-  // This assumes no inner types with ',' Either<Either<int,char>, Either<Bool, Blob>> while funny will fail
-  // TODO check if this only fails for nested Eithers.
-  return innerType.split(',').map((t) => t.trim());
+function unwrapEither(type: string): Type[] {
+  let openBracketCount = 0;
+  let start = 0;
+  const innerTypes: Type[] = [];
+  for (let i = 0; i < type.length; i += 1) {
+    if (type[i] === '<') {
+      openBracketCount += 1;
+      if (openBracketCount === 1) {
+        start = i + 1;
+      }
+    } else if (type[i] === '>') {
+      openBracketCount -= 1;
+      if (openBracketCount === 0) {
+        innerTypes.push(mapSwiftTypeToTsType(type.substring(start, i).trim()));
+        start = i + 1;
+      }
+    } else if (type[i] === ',' && openBracketCount === 1) {
+      innerTypes.push(mapSwiftTypeToTsType(type.substring(start, i).trim()));
+      start = i + 1;
+    }
+  }
+  return innerTypes;
 }
 
 function mapSwiftTypeToTsType(type?: string): Type {
@@ -111,20 +125,25 @@ function mapSwiftTypeToTsType(type?: string): Type {
     const keyType = mapSwiftTypeToTsType(key);
     const valueType = mapSwiftTypeToTsType(value);
 
-    console.warn('Dicionaries not implemented yet!');
-    return { kind: TypeKind.BASIC, type: BasicType.ANY };
+    return {
+      kind: TypeKind.DICTIONARY,
+      type: {
+        key: keyType,
+        value: valueType,
+      },
+    };
   }
   if (isSwiftArray(type)) {
-    // return ts.factory.createArrayTypeNode(mapSwiftTypeToTsType(maybeUnwrapSwiftArray(type)));
-    console.warn('Arrays not implemented yet!');
-    return { kind: TypeKind.BASIC, type: BasicType.ANY };
+    return {
+      kind: TypeKind.ARRAY,
+      type: unwrapSwiftArray(type),
+    };
   }
   // Custom handling for the Either convertible
   if (isEither(type)) {
-    const types = unwrapEither(type);
     return {
       kind: TypeKind.SUM,
-      type: { types },
+      type: { types: unwrapEither(type) },
     };
   }
 
@@ -132,12 +151,13 @@ function mapSwiftTypeToTsType(type?: string): Type {
     kind: TypeKind.BASIC,
     type: BasicType.ANY,
   };
+
   switch (type) {
     case 'unknown':
     case 'Any':
       returnType.type = BasicType.ANY;
       break;
-    case 'string':
+    case 'String':
       returnType.type = BasicType.STRING;
       break;
     case 'Bool':
@@ -156,6 +176,7 @@ function mapSwiftTypeToTsType(type?: string): Type {
       returnType.type = type;
   }
 
+  // console.log(`!!!!! ${type} => ${JSON.stringify(returnType)}`);
   return returnType;
 }
 
@@ -363,7 +384,7 @@ function parseModuleConstantSubstructure(
 
   return {
     name,
-    typename: types?.returnType ?? 'any',
+    type: mapSwiftTypeToTsType(types?.returnType),
   };
 }
 
@@ -372,7 +393,6 @@ function parseModuleClassSubstructure(substructure: Structure, file: FileType): 
     substructure['key.substructure']?.[1]?.['key.substructure']?.[0]?.['key.substructure']?.[0]?.[
       'key.substructure'
     ];
-  // [1] - omi
 
   if (!nestedModuleDefinition) {
     console.warn("Couldn't parse class definition!");
@@ -389,7 +409,11 @@ function parseModuleClassSubstructure(substructure: Structure, file: FileType): 
     ''
   );
 
-  const classTypeInfo = parseModuleDefinition(nestedModuleDefinition, file);
+  const classTypeInfo = parseModuleDefinition(
+    nestedModuleDefinition,
+    file,
+    'GREPME Does Not Matter :)'
+  );
   return {
     name,
     methods: classTypeInfo.functions,
@@ -418,7 +442,7 @@ function parseModuleConstructorDeclaration(
     types = getTypeFromOffsetObject(definitionParams[1], file);
   }
 
-  console.log('!!!' + JSON.stringify(types));
+  // console.log('!!!' + JSON.stringify(types));
   return {
     arguments: types?.parameters.map(mapParameterToType) ?? [],
   };
@@ -462,11 +486,11 @@ function parseModuleDefinition(
         mcd.constructor = parseModuleConstructorDeclaration(md, file);
         break;
       default:
-        console.log('Module substructure not supported');
+        console.warn('Module substructure not supported');
     }
   }
 
-  console.log(JSON.stringify(mcd, null, 2));
+  // console.log('!!!' + JSON.stringify(mcd, null, 2));
   return mcd;
 }
 
@@ -477,7 +501,9 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
     name: null,
   };
   const moduleDefinition = structure;
-  if (!moduleDefinition) {
+
+  // TODO Handle the name properly when we also resolve non module types
+  if (!moduleDefinition || !name) {
     return null;
   }
   const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file, name);

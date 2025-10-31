@@ -5,20 +5,31 @@ type ParametrizedType = {
   parameterTypes: Type[];
 };
 
-type ProductType = {
-  bs: string;
-};
-
-type SumType = {
+export type ProductType = {
   types: Type[];
 };
 
-type FunctionType = {};
+export type SumType = {
+  types: Type[];
+};
 
-type OptionalType = Type;
+export type FunctionType = {
+  arguments: { name: string; type: Type }[];
+  returnType: Type;
+};
 
-type TypeIdentifier = string;
-type AnonymousType = ParametrizedType | SumType | ProductType | FunctionType | OptionalType;
+export type OptionalType = Type;
+export type ArrayType = Type;
+
+export type TypeIdentifier = string;
+export type AnonymousType =
+  | ParametrizedType
+  | SumType
+  | ProductType
+  | FunctionType
+  | OptionalType
+  | DictionaryType
+  | ArrayType;
 
 // const val: AnonymousType = {
 //   kind: AnonymousTypeKind.PARAMETRIZED,
@@ -34,6 +45,8 @@ export enum TypeKind {
   FUNCTION,
   PARAMETRIZED,
   OPTIONAL,
+  ARRAY,
+  DICTIONARY,
 }
 
 export enum BasicType {
@@ -53,7 +66,7 @@ export type PropertyDeclaration = ConstantDeclaration;
 
 export type ConstantDeclaration = {
   name: string;
-  typename: string;
+  type: Type;
 };
 
 export type FunctionDeclaration = {
@@ -65,6 +78,11 @@ export type FunctionDeclaration = {
 
 export type ConstructorDeclaration = {
   arguments: { name: string; typename: Type }[];
+};
+
+export type DictionaryType = {
+  key: Type;
+  value: Type;
 };
 
 export type ClassDeclaration = {

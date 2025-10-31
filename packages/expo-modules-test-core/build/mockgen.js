@@ -85,8 +85,29 @@ function maybeUnwrapEither(type) {
     if (!isEither(type)) {
         return [type];
     }
-    const innerType = type.substring(7, type.length - 1);
-    return innerType.split(',').map((t) => t.trim());
+    let openBracketCount = 0;
+    let start = 0;
+    const innerTypes = [];
+    for (let i = 0; i < type.length; i += 1) {
+        if (type[i] === '<') {
+            openBracketCount += 1;
+            if (openBracketCount === 1) {
+                start = i + 1;
+            }
+        }
+        else if (type[i] === '>') {
+            openBracketCount -= 1;
+            if (openBracketCount === 0) {
+                innerTypes.push(type.substring(start, i).trim());
+                start = i + 1;
+            }
+        }
+        else if (type[i] === ',' && openBracketCount === 1) {
+            innerTypes.push(type.substring(start, i).trim());
+            start = i + 1;
+        }
+    }
+    return innerTypes;
 }
 /*
 The Swift object type can have nested objects as the type of it's values (or maybe even keys).

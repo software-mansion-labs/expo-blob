@@ -1,12 +1,16 @@
 'use strict';
+import prettier from 'prettier';
 import ts from 'typescript';
 
 import {
+  ArrayType,
   BasicType,
   ClassDeclaration,
+  DictionaryType,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
+  SumType,
   Type,
   TypeKind,
 } from './typeInformation';
@@ -62,7 +66,7 @@ function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclara
             undefined,
             cd.name,
             undefined,
-            ts.factory.createTypeReferenceNode(cd.typename, []),
+            mapTypeToTsTypeNode(cd.type),
             undefined
           )
         ),
@@ -80,12 +84,12 @@ function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclara
                   undefined,
                   ad.name,
                   undefined,
-                  ts.factory.createTypeReferenceNode(ad.typename.toString()),
+                  mapTypeToTsTypeNode(ad.typename),
                   undefined
                 )
               )
             ),
-            ts.factory.createTypeReferenceNode(fd.returnType.toString()),
+            mapTypeToTsTypeNode(fd.returnType),
             undefined
           )
         )
@@ -100,7 +104,7 @@ function getArgumentDeclaration(arg: { name: string; typename: Type }): ts.Param
     undefined,
     arg.name,
     undefined,
-    mapTypeToTsNode(arg.typename),
+    mapTypeToTsTypeNode(arg.typename),
     undefined
   );
 }
@@ -129,7 +133,7 @@ function getClassMethodDeclration(
     undefined,
     undefined,
     functionDeclaration.arguments.map(getArgumentDeclaration),
-    ts.factory.createTypeReferenceNode(functionDeclaration.returnType.type.toString()),
+    mapTypeToTsTypeNode(functionDeclaration.returnType),
     undefined
   );
 }
@@ -153,15 +157,43 @@ function mapBasicTypeToTsNode(basicType: BasicType): ts.TypeNode {
   );
 }
 
-function mapTypeToTsNode(type: Type): ts.TypeNode {
+function createDictionaryTypeNode(type: DictionaryType): ts.TypeNode {
+  return ts.factory.createTypeLiteralNode([
+    ts.factory.createIndexSignature(
+      undefined,
+      [
+        ts.factory.createParameterDeclaration(
+          undefined,
+          undefined,
+          'key',
+          undefined,
+          mapTypeToTsTypeNode(type.key),
+          undefined
+        ),
+      ],
+      mapTypeToTsTypeNode(type.value)
+    ),
+  ]);
+}
+
+function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
   switch (type.kind) {
     case TypeKind.BASIC:
       return mapBasicTypeToTsNode(type.type as BasicType);
     case TypeKind.IDENTIFIER:
+      if (type.type === 'unknown') {
+        return ts.factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+      }
+      // console.log(`!!! ${type.type}`);
       return ts.factory.createTypeReferenceNode(type.type as string);
+    case TypeKind.SUM:
+      return ts.factory.createUnionTypeNode((type.type as SumType).types.map(mapTypeToTsTypeNode));
+    case TypeKind.ARRAY:
+      return ts.factory.createArrayTypeNode(mapTypeToTsTypeNode(type.type as ArrayType));
+    case TypeKind.DICTIONARY:
+      return createDictionaryTypeNode(type.type as DictionaryType);
   }
-  return ts.factory.createTypeReferenceNode('any');
-  //   return ts.SyntaxKind.AnyKeyword;
+  return mapBasicTypeToTsNode(BasicType.ANY);
 }
 
 function getExportedClassDeclaration(classDeclaration: ClassDeclaration): ts.Node[] {
@@ -194,14 +226,13 @@ function getModuleTypesDeclarationsForModule(
 }
 
 async function prettifyCode(text: string, parser: 'babel' | 'typescript' = 'babel') {
-  //   return await prettier.format(text, {
-  //     parser,
-  //     tabWidth: 2,
-  //     printWidth: 100,
-  //     trailingComma: 'none',
-  //     singleQuote: true,
-  //   });
-  return text;
+  return await prettier.format(text, {
+    parser,
+    tabWidth: 2,
+    printWidth: 100,
+    trailingComma: 'none',
+    singleQuote: true,
+  });
 }
 
 async function prettyPrintTSToString(file: string, elements: ts.Node[]) {

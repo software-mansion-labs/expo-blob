@@ -58,13 +58,33 @@ function isSwiftDictionary(type: string) {
 function isEither(type: string) {
   return type.startsWith('Either<');
 }
+
 // "Either<TypeOne, TypeTwo>" -> ["TypeOne", "TypeTwo"]
 function maybeUnwrapEither(type: string): string[] {
   if (!isEither(type)) {
     return [type];
   }
-  const innerType = type.substring(7, type.length - 1);
-  return innerType.split(',').map((t) => t.trim());
+  let openBracketCount = 0;
+  let start = 0;
+  const innerTypes = [];
+  for (let i = 0; i < type.length; i += 1) {
+    if (type[i] === '<') {
+      openBracketCount += 1;
+      if (openBracketCount === 1) {
+        start = i + 1;
+      }
+    } else if (type[i] === '>') {
+      openBracketCount -= 1;
+      if (openBracketCount === 0) {
+        innerTypes.push(type.substring(start, i).trim());
+        start = i + 1;
+      }
+    } else if (type[i] === ',' && openBracketCount === 1) {
+      innerTypes.push(type.substring(start, i).trim());
+      start = i + 1;
+    }
+  }
+  return innerTypes;
 }
 
 /*
@@ -88,6 +108,7 @@ function findRootColonInDictionary(type: string) {
   }
   return colonIndex;
 }
+
 function unwrapSwiftDictionary(type: string) {
   const innerType = type.substring(1, type.length - 1);
   const colonPosition = findRootColonInDictionary(innerType);
