@@ -6,6 +6,7 @@ import {
   ArrayType,
   BasicType,
   ClassDeclaration,
+  ConstructorDeclaration,
   DictionaryType,
   FileTypeInformation,
   FunctionDeclaration,
@@ -52,7 +53,6 @@ function wrapWithPromise(typeNode: ts.TypeNode): ts.TypeNode {
 }
 
 function getClassPropertyDeclaration(declaration: PropertyDeclaration): ts.PropertyDeclaration {
-  console.log('!!! Property: ' + JSON.stringify(declaration));
   return ts.factory.createPropertyDeclaration(
     [ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
     declaration.name,
@@ -75,8 +75,6 @@ function getClassDeclarationInModule(classDeclaration: ClassDeclaration): ts.Cla
 }
 
 function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclaration): ts.Node[] {
-  console.log('!!! exported module');
-  console.log(JSON.stringify(moduleClassDeclaration.properties));
   return [
     ts.factory.createClassDeclaration(
       [
@@ -215,7 +213,18 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
   return mapBasicTypeToTsNode(BasicType.ANY);
 }
 
+function getClassConstructorDeclaration(constructor: ConstructorDeclaration): ts.ClassElement {
+  return ts.factory.createConstructorDeclaration(
+    undefined,
+    constructor.arguments.map(getArgumentDeclaration),
+    undefined
+  );
+}
+
 function getExportedClassDeclaration(classDeclaration: ClassDeclaration): ts.Node[] {
+  const constructorDeclaration = classDeclaration.constructor
+    ? getClassConstructorDeclaration(classDeclaration.constructor)
+    : undefined;
   return ([] as ts.Node[]).concat(
     ts.factory.createClassDeclaration(
       [
@@ -232,11 +241,14 @@ function getExportedClassDeclaration(classDeclaration: ClassDeclaration): ts.Nod
           ),
         ]),
       ],
-      ([] as ts.ClassElement[]).concat(
-        classDeclaration.methods.map(getSyncMethodDeclaration),
-        classDeclaration.asyncMethods.map(getAsyncMethodDeclaration),
-        classDeclaration.properties.map(getClassPropertyDeclaration)
-      )
+      ([] as (ts.ClassElement | undefined)[])
+        .concat(
+          classDeclaration.methods.map(getSyncMethodDeclaration),
+          classDeclaration.asyncMethods.map(getAsyncMethodDeclaration),
+          classDeclaration.properties.map(getClassPropertyDeclaration),
+          constructorDeclaration
+        )
+        .filter((v) => !!v)
     )
   );
 }

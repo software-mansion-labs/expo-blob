@@ -177,8 +177,6 @@ function mapSwiftTypeToTsType(type?: string): Type {
       returnType.kind = TypeKind.IDENTIFIER;
       returnType.type = type;
   }
-
-  // console.log(`!!!!! ${type} => ${JSON.stringify(returnType)}`);
   return returnType;
 }
 
@@ -444,7 +442,6 @@ function parseModuleConstructorDeclaration(
     types = getTypeFromOffsetObject(definitionParams[1], file);
   }
 
-  // console.log('!!!' + JSON.stringify(types));
   return {
     arguments: types?.parameters.map(mapParameterToType) ?? [],
   };
@@ -512,9 +509,6 @@ function parseModuleDefinition(
     }
   }
 
-  console.log('!!!! properties' + JSON.stringify(mcd.properties));
-
-  // console.log('!!!' + JSON.stringify(mcd, null, 2));
   return mcd;
 }
 
