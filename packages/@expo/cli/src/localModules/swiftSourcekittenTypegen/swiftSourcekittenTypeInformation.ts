@@ -8,11 +8,14 @@ import {
   ClassDeclaration,
   ConstantDeclaration,
   ConstructorDeclaration,
+  DictionaryType,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
   PropDeclaration,
+  SumType,
   Type,
+  TypeIdentifier,
   TypeKind,
   ViewDeclaration,
 } from '../typeInformation';
@@ -488,6 +491,7 @@ function parseModuleDefinition(
   const mcd: ModuleClassDeclaration = {
     name,
     constants: [],
+    constructor: null,
     functions: [],
     asyncFunctions: [],
     classes: [],
@@ -533,6 +537,59 @@ function parseModuleDefinition(
   return mcd;
 }
 
+function collectTypeIdentifiers(type: Type, typeIdentiers: Set<string>) {
+  switch (type.kind) {
+    case TypeKind.ARRAY:
+    case TypeKind.OPTIONAL:
+      collectTypeIdentifiers(type.type as Type, typeIdentiers);
+      break;
+    case TypeKind.DICTIONARY:
+      collectTypeIdentifiers((type.type as DictionaryType).key, typeIdentiers);
+      collectTypeIdentifiers((type.type as DictionaryType).value, typeIdentiers);
+      break;
+    case TypeKind.SUM:
+      for (const t of (type.type as SumType).types) {
+        collectTypeIdentifiers(t, typeIdentiers);
+      }
+      break;
+    case TypeKind.BASIC:
+      // typeIdentiers.add('BASIC: ' + (type.type as BasicType).toString());
+      break;
+    case TypeKind.IDENTIFIER:
+      typeIdentiers.add(type.type as TypeIdentifier);
+  }
+}
+
+function collectModuleTypeIdentifiers(
+  moduleClassDeclaration: ModuleClassDeclaration,
+  typeIdentifiers: Set<string>
+) {
+  const collect = (type: Type) => {
+    collectTypeIdentifiers(type, typeIdentifiers);
+  };
+  const collectArg = (arg: { name: string; type: Type }) => {
+    collect(arg.type);
+  };
+  const collectFunction = (functionDeclaration: FunctionDeclaration) => {
+    collect(functionDeclaration.returnType);
+    functionDeclaration.arguments.forEach(collectArg);
+    functionDeclaration.parameters.forEach(collect);
+  };
+  moduleClassDeclaration.asyncFunctions.forEach(collectFunction);
+  moduleClassDeclaration.functions.forEach(collectFunction);
+  moduleClassDeclaration.constants.forEach(collectArg);
+  moduleClassDeclaration.properties.forEach(collectArg);
+  moduleClassDeclaration.constructor?.arguments.forEach(collectArg);
+  moduleClassDeclaration.views.forEach((v) => collectModuleTypeIdentifiers(v, typeIdentifiers));
+  moduleClassDeclaration.props.forEach((p) => p.arguments.forEach(collectArg));
+  moduleClassDeclaration.classes.forEach((c) => {
+    c.asyncMethods.forEach(collectFunction);
+    c.methods.forEach(collectFunction);
+    c.constructor?.arguments.forEach(collectArg);
+    c.properties.forEach(collectArg);
+  });
+}
+
 export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
   const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
   const { structure, name } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
@@ -545,9 +602,14 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
   if (!moduleDefinition || !name) {
     return null;
   }
-  const outputModuleDefinition = parseModuleDefinition(moduleDefinition, file, name);
+
+  const typeIdentifiers: Set<string> = new Set<string>();
+  const moduleClassDeclaration = parseModuleDefinition(moduleDefinition, file, name);
+  collectModuleTypeIdentifiers(moduleClassDeclaration, typeIdentifiers);
+
   return {
-    moduleClasses: [outputModuleDefinition],
+    moduleClasses: [moduleClassDeclaration],
     functions: [],
+    typeIdentifiers,
   };
 }

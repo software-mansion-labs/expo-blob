@@ -270,13 +270,25 @@ function getModuleDefaultValueExport(defaultValueTypename: string): ts.Node[] {
   );
 }
 
+function getIdentifierAnyDeclaration(identifier: string): ts.Node {
+  return ts.factory.createTypeAliasDeclaration(
+    undefined,
+    identifier,
+    undefined,
+    ts.factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+  );
+}
+
 function getModuleTypesDeclarationsForModule(
-  moduleClassDeclaration: ModuleClassDeclaration
+  moduleClassDeclaration: ModuleClassDeclaration,
+  typeIdentifiers: Set<string>
 ): ts.Node[] {
   return ([] as ts.Node[]).concat(
     getPrefix(),
     newlineIdentifier,
     getOneNamedImport('NativeModule', 'expo'),
+    newlineIdentifier,
+    [...typeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
     moduleClassDeclaration.classes.flatMap(getExportedClassDeclaration),
     newlineIdentifier,
@@ -347,7 +359,8 @@ function getViewDefaultValueExport(view: ViewDeclaration): ts.Node[] {
 }
 
 function getViewTypesDeclarationsForModule(
-  moduleClassDeclaration: ModuleClassDeclaration
+  moduleClassDeclaration: ModuleClassDeclaration,
+  typeIdentifiers: Set<string>
 ): ts.Node[] {
   if (moduleClassDeclaration.views.length === 0) {
     return [];
@@ -356,7 +369,10 @@ function getViewTypesDeclarationsForModule(
     getPrefix(),
     newlineIdentifier,
     getOneNamedImport('SharedObject', 'expo'),
+    newlineIdentifier,
     getOneNamedImport('ViewProps', 'react-native'),
+    newlineIdentifier,
+    [...typeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
     getPropsTypeDeclaration(moduleClassDeclaration.views[0].props),
     newlineIdentifier,
@@ -394,22 +410,22 @@ async function prettyPrintTSNodesToString(file: string, elements: ts.Node[]) {
 
 export async function getGeneratedViewTypesFileContent(
   file: string,
-  FileTypeInformation: FileTypeInformation
+  fileTypeInformation: FileTypeInformation
 ): Promise<string> {
-  const outputModuleDefinition = FileTypeInformation.moduleClasses[0];
+  const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
   return prettyPrintTSNodesToString(
     file,
-    getViewTypesDeclarationsForModule(outputModuleDefinition)
+    getViewTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation.typeIdentifiers)
   );
 }
 
 export async function getGeneratedModuleTypesFileContent(
   file: string,
-  FileTypeInformation: FileTypeInformation
+  fileTypeInformation: FileTypeInformation
 ): Promise<string> {
-  const outputModuleDefinition = FileTypeInformation.moduleClasses[0];
+  const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
   return prettyPrintTSNodesToString(
     file,
-    getModuleTypesDeclarationsForModule(outputModuleDefinition)
+    getModuleTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation.typeIdentifiers)
   );
 }

@@ -1,49 +1,41 @@
 import { getSwiftFileTypeInformation } from './swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
 
-type ParametrizedType = {
-  typeIdentifier: TypeIdentifier;
-  parameterTypes: Type[];
-};
+// type ParametrizedType = {
+//   typeIdentifier: TypeIdentifier;
+//   parameterTypes: Type[];
+// };
 
-export type ProductType = {
-  types: Type[];
-};
+// export type ProductType = {
+//   types: Type[];
+// };
 
 export type SumType = {
   types: Type[];
 };
 
-export type FunctionType = {
-  arguments: { name: string; type: Type }[];
-  returnType: Type;
-};
+// export type FunctionType = {
+//   arguments: { name: string; type: Type }[];
+//   returnType: Type;
+// };
 
 export type OptionalType = Type;
 export type ArrayType = Type;
 
 export type TypeIdentifier = string;
 export type AnonymousType =
-  | ParametrizedType
+  // | ParametrizedType
   | SumType
-  | ProductType
-  | FunctionType
+  // | FunctionType
   | OptionalType
   | DictionaryType
   | ArrayType;
 
-// const val: AnonymousType = {
-//   kind: AnonymousTypeKind.PARAMETRIZED,
-//   typeIdentifier: 'asfas',
-//   bs: 'agabg',
-// };
-
 export enum TypeKind {
   BASIC,
   IDENTIFIER,
-  PRODUCT,
   SUM,
-  FUNCTION,
-  PARAMETRIZED,
+  // FUNCTION,
+  // PARAMETRIZED,
   OPTIONAL,
   ARRAY,
   DICTIONARY,
@@ -95,7 +87,7 @@ export type DictionaryType = {
 
 export type ClassDeclaration = {
   name: string;
-  constructor?: ConstructorDeclaration;
+  constructor: ConstructorDeclaration | null;
   methods: FunctionDeclaration[];
   asyncMethods: FunctionDeclaration[];
   properties: PropertyDeclaration[];
@@ -103,7 +95,7 @@ export type ClassDeclaration = {
 
 export type ModuleClassDeclaration = {
   name: string;
-  constructor?: ConstructorDeclaration;
+  constructor: ConstructorDeclaration | null;
   constants: ConstantDeclaration[];
   classes: ClassDeclaration[];
   functions: FunctionDeclaration[];
@@ -114,28 +106,10 @@ export type ModuleClassDeclaration = {
 };
 
 export type FileTypeInformation = {
+  typeIdentifiers: Set<string>;
   functions: FunctionDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
 };
-
-// type EitherType = {
-//   types: AlgebraicType;
-// };
-
-// type ProductType = {
-//   types: AlgebraicType;
-// };
-
-// enum AlgebraicTypeKind {
-//   EITHER = 0,
-//   PRODUCT = 1,
-//   TYPENAME = 2,
-// }
-
-// type AlgebraicType = {
-//   kind: AlgebraicTypeKind;
-//   type: EitherType | ProductType | { typename: string };
-// };
 
 export function getFileTypeInformation(absoluteFilePath: string): FileTypeInformation | null {
   if (absoluteFilePath.endsWith('.swift')) {
