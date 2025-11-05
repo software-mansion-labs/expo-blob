@@ -13,6 +13,7 @@ import {
   ModuleClassDeclaration,
   PropDeclaration,
   PropertyDeclaration,
+  RecordType,
   SumType,
   Type,
   TypeKind,
@@ -210,6 +211,7 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
     // for example when creating arguemnt adding the '?' token.
     //
     // However we can just make it (type | undefined) in here.
+    // TODO Maybe also need null?
     case TypeKind.OPTIONAL:
       return ts.factory.createUnionTypeNode([
         mapTypeToTsTypeNode(type.type as Type),
@@ -279,8 +281,27 @@ function getIdentifierAnyDeclaration(identifier: string): ts.Node {
   );
 }
 
+function getRecordDeclaration(recordType: RecordType): ts.Node {
+  return ts.factory.createTypeAliasDeclaration(
+    undefined,
+    recordType.name,
+    undefined,
+    ts.factory.createTypeLiteralNode(
+      recordType.fields.map((field) =>
+        ts.factory.createPropertySignature(
+          undefined,
+          field.name,
+          undefined,
+          mapTypeToTsTypeNode(field.type)
+        )
+      )
+    )
+  );
+}
+
 function getModuleTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
+  recordTypes: RecordType[],
   typeIdentifiers: Set<string>
 ): ts.Node[] {
   return ([] as ts.Node[]).concat(
@@ -289,6 +310,8 @@ function getModuleTypesDeclarationsForModule(
     getOneNamedImport('NativeModule', 'expo'),
     newlineIdentifier,
     [...typeIdentifiers].map(getIdentifierAnyDeclaration),
+    newlineIdentifier,
+    recordTypes.flatMap(getRecordDeclaration),
     newlineIdentifier,
     moduleClassDeclaration.classes.flatMap(getExportedClassDeclaration),
     newlineIdentifier,
@@ -349,7 +372,7 @@ function getViewDefaultValueExport(view: ViewDeclaration): ts.Node[] {
       undefined,
       '_default',
       undefined,
-      ts.factory.createTypeReferenceNode('React.JSX.ElementType', [
+      ts.factory.createTypeReferenceNode('React.JSXElementConstructor', [
         ts.factory.createTypeReferenceNode('Props'),
       ]),
       undefined
@@ -423,9 +446,24 @@ export async function getGeneratedModuleTypesFileContent(
   file: string,
   fileTypeInformation: FileTypeInformation
 ): Promise<string> {
-  const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
+  const moduleClassDeclaration: ModuleClassDeclaration = fileTypeInformation.moduleClasses.at(
+    0
+  ) ?? {
+    name: 'EmptyModule',
+    asyncFunctions: [],
+    functions: [],
+    properties: [],
+    classes: [],
+    views: [],
+    constants: [],
+    props: [],
+  };
   return prettyPrintTSNodesToString(
     file,
-    getModuleTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation.typeIdentifiers)
+    getModuleTypesDeclarationsForModule(
+      moduleClassDeclaration,
+      fileTypeInformation.records,
+      fileTypeInformation.typeIdentifiers
+    )
   );
 }

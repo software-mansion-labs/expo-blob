@@ -13,6 +13,7 @@ import {
   FunctionDeclaration,
   ModuleClassDeclaration,
   PropDeclaration,
+  RecordType,
   SumType,
   Type,
   TypeIdentifier,
@@ -194,39 +195,48 @@ function getStructureFromFile(file: FileType) {
   }
 }
 
-// find an object with "key.typename" : "ModuleDefinition" somewhere in the structure and return it
-function findModuleDefinitionInStructure(
-  structure: Structure
-): { structure: Structure[]; name: string | null } | null {
-  if (!structure) {
-    return null;
-  }
-  if (structure?.['key.typename'] === 'ModuleDefinition') {
-    const root = structure?.['key.substructure'];
-    if (!root) {
-      console.warn('Found ModuleDefinition but it is malformed');
-    }
-    return { structure: root, name: null };
-  }
+function isRecordStructure(structure: Structure): boolean {
+  return (
+    structure['key.kind'] === 'source.lang.swift.decl.struct' &&
+    structure['key.inheritedtypes'] &&
+    structure['key.inheritedtypes'].find((type) => {
+      return type['key.name'] === 'Record';
+    }) !== undefined
+  );
+}
+
+function isModuleStructure(structure: Structure): boolean {
+  return structure['key.typename'] === 'ModuleDefinition';
+}
+
+function parseStructure(
+  structure: Structure,
+  name: string
+): {
+  modulesStructures: { structure: Structure; name: string }[];
+  recordsStructures: Structure[];
+} {
+  let resultModulesStructures: { structure: Structure; name: string }[] = [];
+  let resultRecordsStructures: Structure[] = [];
   const substructure = structure['key.substructure'];
-  if (Array.isArray(substructure) && substructure.length > 0) {
-    for (const child of substructure) {
-      let result = null;
-      result = findModuleDefinitionInStructure(child);
-      if (
-        result &&
-        result.name == null &&
-        structure['key.kind'] === 'source.lang.swift.decl.class'
-      ) {
-        // The class which contains the module structure... => the module class
-        return { structure: result.structure, name: structure['key.name'] };
-      }
-      if (result) {
-        return result;
-      }
+
+  if (isModuleStructure(structure)) {
+    resultModulesStructures.push({ structure, name });
+  } else if (isRecordStructure(structure)) {
+    resultRecordsStructures.push(structure);
+    console.log('!! RECORD !!');
+  } else if (Array.isArray(substructure) && substructure.length > 0) {
+    for (const substructure of structure['key.substructure']) {
+      const { modulesStructures, recordsStructures } = parseStructure(
+        substructure,
+        structure['key.name'] ?? name
+      );
+      resultModulesStructures = resultModulesStructures.concat(modulesStructures);
+      resultRecordsStructures = resultRecordsStructures.concat(recordsStructures);
     }
   }
-  return null;
+
+  return { modulesStructures: resultModulesStructures, recordsStructures: resultRecordsStructures };
 }
 
 // Read string straight from file – needed since we can't get cursorinfo for modulename
@@ -467,7 +477,7 @@ function parseModulePropDeclaration(substructure: Structure, file: FileType): Pr
 }
 
 function parseModuleViewDeclaration(substructure: Structure, file: FileType): ViewDeclaration {
-  // The View arguments is a.self for some class a.
+  // The View arguments is a.self for some class a we want.
   const suffixLength = 5;
   const name = getIdentifierFromOffsetObject(substructure['key.substructure']?.[0], file).slice(
     0,
@@ -481,6 +491,30 @@ function parseModuleViewDeclaration(substructure: Structure, file: FileType): Vi
     file,
     name
   );
+}
+
+function parseRecordDefinition(
+  recordDefinition: Structure,
+  typeIdentifiers: Set<string>
+): RecordType {
+  const fields: { name: string; type: Type }[] = [];
+
+  for (const substructure of recordDefinition['key.substructure']) {
+    // TODO handle val also
+    if (substructure['key.kind'] === 'source.lang.swift.decl.var.instance') {
+      const type: Type = mapSwiftTypeToTsType(substructure['key.typename'] as string);
+      fields.push({
+        name: substructure['key.name'],
+        type,
+      });
+      collectTypeIdentifiers(type, typeIdentifiers);
+    }
+  }
+
+  return {
+    name: recordDefinition['key.name'],
+    fields,
+  };
 }
 
 function parseModuleDefinition(
@@ -592,24 +626,28 @@ function collectModuleTypeIdentifiers(
 
 export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
   const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
-  const { structure, name } = findModuleDefinitionInStructure(getStructureFromFile(file)) ?? {
-    structure: null,
-    name: null,
-  };
-  const moduleDefinition = structure;
 
-  // TODO Handle the name properly when we also resolve non module types
-  if (!moduleDefinition || !name) {
-    return null;
+  const { modulesStructures, recordsStructures } = parseStructure(getStructureFromFile(file), '');
+
+  const recordTypeIdentifiers: Set<string> = new Set<string>();
+  const recordMap = (rd: Structure) => parseRecordDefinition(rd, recordTypeIdentifiers);
+  const records = recordsStructures.map(recordMap);
+
+  const moduleClasses: ModuleClassDeclaration[] = [];
+  const moduleTypeIdentifiers: Set<string> = new Set<string>();
+  for (const { structure, name } of modulesStructures) {
+    if (!structure['key.substructure']) {
+      continue;
+    }
+    const moduleClassDeclaration = parseModuleDefinition(structure['key.substructure'], file, name);
+    moduleClasses.push(moduleClassDeclaration);
+    collectModuleTypeIdentifiers(moduleClassDeclaration, moduleTypeIdentifiers);
   }
 
-  const typeIdentifiers: Set<string> = new Set<string>();
-  const moduleClassDeclaration = parseModuleDefinition(moduleDefinition, file, name);
-  collectModuleTypeIdentifiers(moduleClassDeclaration, typeIdentifiers);
-
   return {
-    moduleClasses: [moduleClassDeclaration],
+    moduleClasses,
+    records,
     functions: [],
-    typeIdentifiers,
+    typeIdentifiers: moduleTypeIdentifiers.union(recordTypeIdentifiers),
   };
 }

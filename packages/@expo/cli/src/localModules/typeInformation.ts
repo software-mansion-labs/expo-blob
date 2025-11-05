@@ -9,6 +9,14 @@ import { getSwiftFileTypeInformation } from './swiftSourcekittenTypegen/swiftSou
 //   types: Type[];
 // };
 
+export type Argument = { name: string; type: Type };
+export type Field = Argument;
+
+export type RecordType = {
+  name: string;
+  fields: Field[];
+};
+
 export type SumType = {
   types: Type[];
 };
@@ -109,6 +117,7 @@ export type FileTypeInformation = {
   typeIdentifiers: Set<string>;
   functions: FunctionDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
+  records: RecordType[];
 };
 
 export function getFileTypeInformation(absoluteFilePath: string): FileTypeInformation | null {
