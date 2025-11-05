@@ -216,40 +216,30 @@ function isModuleStructure(structure: Structure): boolean {
 
 function parseStructure(
   structure: Structure,
-  name: string
-): {
-  modulesStructures: { structure: Structure; name: string }[];
-  recordsStructures: Structure[];
-  enumsStructures: Structure[];
-} {
-  let resultModulesStructures: { structure: Structure; name: string }[] = [];
-  let resultRecordsStructures: Structure[] = [];
-  let resultEnumsStructures: Structure[] = [];
+  name: string,
+  modulesStructures: { structure: Structure; name: string }[],
+  recordsStructures: Structure[],
+  enumsStructures: Structure[]
+) {
   const substructure = structure['key.substructure'];
 
   if (isModuleStructure(structure)) {
-    resultModulesStructures.push({ structure, name });
+    modulesStructures.push({ structure, name });
   } else if (isRecordStructure(structure)) {
-    resultRecordsStructures.push(structure);
+    recordsStructures.push(structure);
   } else if (isEnumStructure(structure)) {
-    resultEnumsStructures.push(structure);
+    enumsStructures.push(structure);
   } else if (Array.isArray(substructure) && substructure.length > 0) {
     for (const substructure of structure['key.substructure']) {
-      const { modulesStructures, recordsStructures, enumsStructures } = parseStructure(
+      parseStructure(
         substructure,
-        structure['key.name'] ?? name
+        structure['key.name'] ?? name,
+        modulesStructures,
+        recordsStructures,
+        enumsStructures
       );
-      resultModulesStructures = resultModulesStructures.concat(modulesStructures);
-      resultRecordsStructures = resultRecordsStructures.concat(recordsStructures);
-      resultEnumsStructures = resultEnumsStructures.concat(enumsStructures);
     }
   }
-
-  return {
-    modulesStructures: resultModulesStructures,
-    recordsStructures: resultRecordsStructures,
-    enumsStructures: resultEnumsStructures,
-  };
 }
 
 // Read string straight from file – needed since we can't get cursorinfo for modulename
@@ -621,6 +611,7 @@ function collectTypeIdentifiers(type: Type, typeIdentiers: Set<string>) {
       break;
     case TypeKind.IDENTIFIER:
       typeIdentiers.add(type.type as TypeIdentifier);
+      break;
   }
 }
 
@@ -657,9 +648,15 @@ function collectModuleTypeIdentifiers(
 export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
   const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
 
-  const { modulesStructures, recordsStructures, enumsStructures } = parseStructure(
+  const modulesStructures: { name: string; structure: Structure }[] = [];
+  const recordsStructures: Structure[] = [];
+  const enumsStructures: Structure[] = [];
+  parseStructure(
     getStructureFromFile(file),
-    ''
+    '',
+    modulesStructures,
+    recordsStructures,
+    enumsStructures
   );
 
   const enums: EnumType[] = enumsStructures.map(parseEnumDefinition);
