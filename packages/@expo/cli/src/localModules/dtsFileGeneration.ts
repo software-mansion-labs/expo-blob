@@ -8,6 +8,7 @@ import {
   ClassDeclaration,
   ConstructorDeclaration,
   DictionaryType,
+  EnumType,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
@@ -287,21 +288,32 @@ function getRecordDeclaration(recordType: RecordType): ts.Node {
     recordType.name,
     undefined,
     ts.factory.createTypeLiteralNode(
-      recordType.fields.map((field) =>
-        ts.factory.createPropertySignature(
+      recordType.fields.map((field) => {
+        const optional = field.type.kind === TypeKind.OPTIONAL;
+        const argType = optional ? (field.type.type as Type) : field.type;
+        return ts.factory.createPropertySignature(
           undefined,
           field.name,
-          undefined,
-          mapTypeToTsTypeNode(field.type)
-        )
-      )
+          optional ? ts.factory.createToken(ts.SyntaxKind.QuestionToken) : undefined,
+          mapTypeToTsTypeNode(argType)
+        );
+      })
     )
+  );
+}
+
+function getEnumDeclaration(enumType: EnumType): ts.Node {
+  return ts.factory.createEnumDeclaration(
+    undefined,
+    enumType.name,
+    enumType.cases.map((enumcase) => ts.factory.createEnumMember(enumcase))
   );
 }
 
 function getModuleTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
   recordTypes: RecordType[],
+  enumTypes: EnumType[],
   typeIdentifiers: Set<string>
 ): ts.Node[] {
   return ([] as ts.Node[]).concat(
@@ -312,6 +324,8 @@ function getModuleTypesDeclarationsForModule(
     [...typeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
     recordTypes.flatMap(getRecordDeclaration),
+    newlineIdentifier,
+    enumTypes.flatMap(getEnumDeclaration),
     newlineIdentifier,
     moduleClassDeclaration.classes.flatMap(getExportedClassDeclaration),
     newlineIdentifier,
@@ -328,12 +342,6 @@ function getPropTypeElementDeclaration(propDeclaration: PropDeclaration): ts.Typ
     undefined,
     mapTypeToTsTypeNode(propDeclaration.arguments[1].type)
   );
-  // return ts.factory.createTypeParameterDeclaration(
-  //   [],
-  //   propDeclaration.name,
-  //   undefined,
-  //   mapTypeToTsTypeNode(propDeclaration.arguments[1].type)
-  // );
 }
 
 function getPropsTypeDeclaration(propsDeclaration: PropDeclaration[]): ts.Node[] {
@@ -351,17 +359,8 @@ function getPropsTypeDeclaration(propsDeclaration: PropDeclaration[]): ts.Node[]
           ),
         ]),
       ],
-      // []
       propsDeclaration.map(getPropTypeElementDeclaration)
     )
-    // ts.factory.createClassDeclaration(
-    //   [ts.factory.createToken(ts.SyntaxKind.DeclareKeyword)],
-    //   // TODO get back to that
-    //   'Props',
-    //   undefined,
-    //   undefined,
-    //   propsDeclaration.map(getPropPropertyDeclaration)
-    // )
   );
 }
 
@@ -463,6 +462,7 @@ export async function getGeneratedModuleTypesFileContent(
     getModuleTypesDeclarationsForModule(
       moduleClassDeclaration,
       fileTypeInformation.records,
+      fileTypeInformation.enums,
       fileTypeInformation.typeIdentifiers
     )
   );

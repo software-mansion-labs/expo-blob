@@ -9,6 +9,7 @@ import {
   ConstantDeclaration,
   ConstructorDeclaration,
   DictionaryType,
+  EnumType,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
@@ -195,6 +196,10 @@ function getStructureFromFile(file: FileType) {
   }
 }
 
+function isEnumStructure(structure: Structure): boolean {
+  return structure['key.kind'] === 'source.lang.swift.decl.enum';
+}
+
 function isRecordStructure(structure: Structure): boolean {
   return (
     structure['key.kind'] === 'source.lang.swift.decl.struct' &&
@@ -215,28 +220,36 @@ function parseStructure(
 ): {
   modulesStructures: { structure: Structure; name: string }[];
   recordsStructures: Structure[];
+  enumsStructures: Structure[];
 } {
   let resultModulesStructures: { structure: Structure; name: string }[] = [];
   let resultRecordsStructures: Structure[] = [];
+  let resultEnumsStructures: Structure[] = [];
   const substructure = structure['key.substructure'];
 
   if (isModuleStructure(structure)) {
     resultModulesStructures.push({ structure, name });
   } else if (isRecordStructure(structure)) {
     resultRecordsStructures.push(structure);
-    console.log('!! RECORD !!');
+  } else if (isEnumStructure(structure)) {
+    resultEnumsStructures.push(structure);
   } else if (Array.isArray(substructure) && substructure.length > 0) {
     for (const substructure of structure['key.substructure']) {
-      const { modulesStructures, recordsStructures } = parseStructure(
+      const { modulesStructures, recordsStructures, enumsStructures } = parseStructure(
         substructure,
         structure['key.name'] ?? name
       );
       resultModulesStructures = resultModulesStructures.concat(modulesStructures);
       resultRecordsStructures = resultRecordsStructures.concat(recordsStructures);
+      resultEnumsStructures = resultEnumsStructures.concat(enumsStructures);
     }
   }
 
-  return { modulesStructures: resultModulesStructures, recordsStructures: resultRecordsStructures };
+  return {
+    modulesStructures: resultModulesStructures,
+    recordsStructures: resultRecordsStructures,
+    enumsStructures: resultEnumsStructures,
+  };
 }
 
 // Read string straight from file – needed since we can't get cursorinfo for modulename
@@ -493,6 +506,23 @@ function parseModuleViewDeclaration(substructure: Structure, file: FileType): Vi
   );
 }
 
+function parseEnumDefinition(enumDefinition: Structure): EnumType {
+  const enumcases: string[] = [];
+  for (const substructure of enumDefinition['key.substructure']) {
+    // TODO handle val also
+    if (substructure['key.kind'] === 'source.lang.swift.decl.enumcase') {
+      for (const caseSubstructure of substructure['key.substructure']) {
+        enumcases.push(caseSubstructure['key.name']);
+      }
+    }
+  }
+
+  return {
+    name: enumDefinition['key.name'],
+    cases: enumcases,
+  };
+}
+
 function parseRecordDefinition(
   recordDefinition: Structure,
   typeIdentifiers: Set<string>
@@ -627,7 +657,13 @@ function collectModuleTypeIdentifiers(
 export function getSwiftFileTypeInformation(filePath: string): FileTypeInformation | null {
   const file = { path: filePath, content: fs.readFileSync(filePath, 'utf8') };
 
-  const { modulesStructures, recordsStructures } = parseStructure(getStructureFromFile(file), '');
+  const { modulesStructures, recordsStructures, enumsStructures } = parseStructure(
+    getStructureFromFile(file),
+    ''
+  );
+
+  const enums: EnumType[] = enumsStructures.map(parseEnumDefinition);
+  console.log(JSON.stringify(enums));
 
   const recordTypeIdentifiers: Set<string> = new Set<string>();
   const recordMap = (rd: Structure) => parseRecordDefinition(rd, recordTypeIdentifiers);
@@ -647,6 +683,7 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
   return {
     moduleClasses,
     records,
+    enums,
     functions: [],
     typeIdentifiers: moduleTypeIdentifiers.union(recordTypeIdentifiers),
   };

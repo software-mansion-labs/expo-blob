@@ -17,6 +17,13 @@ export type RecordType = {
   fields: Field[];
 };
 
+export type EnumCase = string;
+
+export type EnumType = {
+  name: string;
+  cases: EnumCase[];
+};
+
 export type SumType = {
   types: Type[];
 };
@@ -118,6 +125,7 @@ export type FileTypeInformation = {
   functions: FunctionDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
   records: RecordType[];
+  enums: EnumType[];
 };
 
 export function getFileTypeInformation(absoluteFilePath: string): FileTypeInformation | null {
