@@ -12,6 +12,7 @@ import {
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
+  ParametrizedType,
   PropDeclaration,
   PropertyDeclaration,
   RecordType,
@@ -218,6 +219,11 @@ function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
         mapTypeToTsTypeNode(type.type as Type),
         mapBasicTypeToTsNode(BasicType.UNDEFINED),
       ]);
+    case TypeKind.PARAMETRIZED:
+      return ts.factory.createTypeReferenceNode(
+        (type.type as ParametrizedType).name,
+        (type.type as ParametrizedType).types.map(mapTypeToTsTypeNode)
+      );
   }
   return mapBasicTypeToTsNode(BasicType.ANY);
 }

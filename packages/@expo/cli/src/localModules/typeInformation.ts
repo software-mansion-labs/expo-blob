@@ -1,9 +1,9 @@
 import { getSwiftFileTypeInformation } from './swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
 
-// type ParametrizedType = {
-//   typeIdentifier: TypeIdentifier;
-//   parameterTypes: Type[];
-// };
+export type ParametrizedType = {
+  name: TypeIdentifier;
+  types: Type[];
+};
 
 // export type ProductType = {
 //   types: Type[];
@@ -38,7 +38,7 @@ export type ArrayType = Type;
 
 export type TypeIdentifier = string;
 export type AnonymousType =
-  // | ParametrizedType
+  | ParametrizedType
   | SumType
   // | FunctionType
   | OptionalType
@@ -50,7 +50,7 @@ export enum TypeKind {
   IDENTIFIER,
   SUM,
   // FUNCTION,
-  // PARAMETRIZED,
+  PARAMETRIZED,
   OPTIONAL,
   ARRAY,
   DICTIONARY,

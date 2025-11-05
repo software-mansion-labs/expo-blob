@@ -13,6 +13,7 @@ import {
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
+  ParametrizedType,
   PropDeclaration,
   RecordType,
   SumType,
@@ -86,24 +87,25 @@ function isSwiftOptional(type: string): boolean {
   return type.endsWith('?');
 }
 
-function isEither(type: string) {
-  return (
-    type.endsWith('>') &&
-    (type.startsWith('Either<') ||
-      type.startsWith('EitherOfThree<') ||
-      type.startsWith('EitherOfFour<'))
-  );
+function isParametrizedType(type: string): boolean {
+  return type.endsWith('>');
 }
 
-// "Either<TypeOne, TypeTwo>" -> ["TypeOne", "TypeTwo"]
-function unwrapEither(type: string): Type[] {
+function unwrapParametrizedType(type: string): ParametrizedType {
+  // const typeSplit = type.split('<', 2);
+  // return {
+  //   name: typeSplit[0],
+  //   types: typeSplit[1].slice(0, -1).split(',').map(mapSwiftTypeToTsType),
+  // };
   let openBracketCount = 0;
   let start = 0;
   const innerTypes: Type[] = [];
+  let name: string = '';
   for (let i = 0; i < type.length; i += 1) {
     if (type[i] === '<') {
       openBracketCount += 1;
       if (openBracketCount === 1) {
+        name = type.substring(0, i);
         start = i + 1;
       }
     } else if (type[i] === '>') {
@@ -117,7 +119,15 @@ function unwrapEither(type: string): Type[] {
       start = i + 1;
     }
   }
-  return innerTypes;
+  return { name, types: innerTypes };
+}
+
+function isEitherTypeIdentifier(typeIdentifier: string): boolean {
+  return (
+    typeIdentifier === 'Either' ||
+    typeIdentifier === 'EitherOfThree' ||
+    typeIdentifier === 'EitherOfFour'
+  );
 }
 
 function mapSwiftTypeToTsType(type?: string): Type {
@@ -146,11 +156,17 @@ function mapSwiftTypeToTsType(type?: string): Type {
       type: unwrapSwiftArray(type),
     };
   }
-  // Custom handling for the Either convertible
-  if (isEither(type)) {
+  if (isParametrizedType(type)) {
+    const parametrizedType = unwrapParametrizedType(type);
+    if (isEitherTypeIdentifier(parametrizedType.name)) {
+      return {
+        kind: TypeKind.SUM,
+        type: parametrizedType as SumType,
+      };
+    }
     return {
-      kind: TypeKind.SUM,
-      type: { types: unwrapEither(type) },
+      kind: TypeKind.PARAMETRIZED,
+      type: parametrizedType,
     };
   }
 
@@ -520,7 +536,6 @@ function parseRecordDefinition(
   const fields: { name: string; type: Type }[] = [];
 
   for (const substructure of recordDefinition['key.substructure']) {
-    // TODO handle val also
     if (substructure['key.kind'] === 'source.lang.swift.decl.var.instance') {
       const type: Type = mapSwiftTypeToTsType(substructure['key.typename'] as string);
       fields.push({
@@ -611,6 +626,12 @@ function collectTypeIdentifiers(type: Type, typeIdentiers: Set<string>) {
       break;
     case TypeKind.IDENTIFIER:
       typeIdentiers.add(type.type as TypeIdentifier);
+      break;
+    case TypeKind.PARAMETRIZED:
+      typeIdentiers.add((type.type as ParametrizedType).name);
+      for (const t of (type.type as ParametrizedType).types) {
+        collectTypeIdentifiers(t, typeIdentiers);
+      }
       break;
   }
 }
