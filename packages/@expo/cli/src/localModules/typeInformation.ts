@@ -122,6 +122,7 @@ export type ModuleClassDeclaration = {
 
 export type FileTypeInformation = {
   typeIdentifiers: Set<string>;
+  declaredTypeIdentifiers: Set<string>;
   functions: FunctionDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
   records: RecordType[];

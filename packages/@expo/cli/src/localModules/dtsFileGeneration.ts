@@ -320,14 +320,14 @@ function getModuleTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
   recordTypes: RecordType[],
   enumTypes: EnumType[],
-  typeIdentifiers: Set<string>
+  undeclaredTypeIdentifiers: Set<string>
 ): ts.Node[] {
   return ([] as ts.Node[]).concat(
     getPrefix(),
     newlineIdentifier,
     getOneNamedImport('NativeModule', 'expo'),
     newlineIdentifier,
-    [...typeIdentifiers].map(getIdentifierAnyDeclaration),
+    [...undeclaredTypeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
     recordTypes.flatMap(getRecordDeclaration),
     newlineIdentifier,
@@ -469,7 +469,7 @@ export async function getGeneratedModuleTypesFileContent(
       moduleClassDeclaration,
       fileTypeInformation.records,
       fileTypeInformation.enums,
-      fileTypeInformation.typeIdentifiers
+      fileTypeInformation.typeIdentifiers.difference(fileTypeInformation.declaredTypeIdentifiers)
     )
   );
 }

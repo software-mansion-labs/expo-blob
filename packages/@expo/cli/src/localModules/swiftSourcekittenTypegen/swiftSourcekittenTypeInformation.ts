@@ -656,6 +656,7 @@ function collectModuleTypeIdentifiers(
   );
   moduleClassDeclaration.props.forEach((p) => p.arguments.forEach(collectArg));
   moduleClassDeclaration.classes.forEach((c) => {
+    declaredTypeIdentifiers.add(c.name);
     c.asyncMethods.forEach(collectFunction);
     c.methods.forEach(collectFunction);
     c.constructor?.arguments.forEach(collectArg);
@@ -686,6 +687,14 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
   const moduleClasses: ModuleClassDeclaration[] = [];
   const moduleTypeIdentifiers: Set<string> = new Set<string>();
   const declaredTypeIdentifiers: Set<string> = new Set<string>();
+
+  enums.forEach(({ name }) => {
+    declaredTypeIdentifiers.add(name);
+  });
+  records.forEach(({ name }) => {
+    declaredTypeIdentifiers.add(name);
+  });
+
   for (const { structure, name } of modulesStructures) {
     if (!structure['key.substructure']) {
       continue;
@@ -705,5 +714,6 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
     enums,
     functions: [],
     typeIdentifiers: moduleTypeIdentifiers.union(recordTypeIdentifiers),
+    declaredTypeIdentifiers,
   };
 }
