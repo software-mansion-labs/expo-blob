@@ -535,7 +535,9 @@ function parseEnumStructure(enumStructure: Structure): EnumType {
   for (const substructure of enumStructure['key.substructure']) {
     if (substructure['key.kind'] === 'source.lang.swift.decl.enumcase') {
       for (const caseSubstructure of substructure['key.substructure']) {
-        enumcases.push(caseSubstructure['key.name']);
+        // enum case in Swift can have values: case somecase(Int, String)
+        // for now we ignore these values
+        enumcases.push(caseSubstructure['key.name'].split('(', 1)[0]);
       }
     }
   }
