@@ -344,7 +344,6 @@ function getViewTypes(
 )[] {
   return nestedClassDefinitions.flatMap((definition) => {
     if (!definition) {
-      console.log('!!! RIP NO DEFINITION');
       return [] as (
         | ts.TypeAliasDeclaration
         | ts.VariableDeclaration

@@ -92,11 +92,6 @@ function isParametrizedType(type: string): boolean {
 }
 
 function unwrapParametrizedType(type: string): ParametrizedType {
-  // const typeSplit = type.split('<', 2);
-  // return {
-  //   name: typeSplit[0],
-  //   types: typeSplit[1].slice(0, -1).split(',').map(mapSwiftTypeToTsType),
-  // };
   let openBracketCount = 0;
   let start = 0;
   const innerTypes: Type[] = [];
@@ -380,24 +375,25 @@ function mapParameterToType(parameter: { name: string; typename: string }): {
   };
 }
 
-function parseModuleFunctionSubstructure(
+function parseModuleConstructorDeclaration(
   substructure: Structure,
   file: FileType
-): FunctionDeclaration {
+): ConstructorDeclaration {
   const definitionParams = substructure['key.substructure'];
-  const name = getIdentifierFromOffsetObject(definitionParams[0], file);
   let types = null;
+
+  // TODO rethink this maybe split based on what closure is expected
+  // Maybe this should be the last substructure
   if (hasSubstructure(definitionParams[1])) {
     types = parseClosureTypes(definitionParams[1]);
+  } else if (hasSubstructure(definitionParams[0])) {
+    types = parseClosureTypes(definitionParams[0]);
   } else {
     types = getTypeFromOffsetObject(definitionParams[1], file);
   }
 
   return {
-    name,
-    returnType: mapSwiftTypeToTsType(types?.returnType), // any or void ? Probably any
-    parameters: [], // TODO Module function is not generic. I think so. Check it
-    arguments: types?.parameters?.map(mapParameterToType) ?? [],
+    arguments: types?.parameters.map(mapParameterToType) ?? [],
   };
 }
 
@@ -421,12 +417,12 @@ function parseModuleConstantSubstructure(
 }
 
 function parseModuleClassSubstructure(substructure: Structure, file: FileType): ClassDeclaration {
-  const nestedModuleDefinition =
+  const nestedModuleStructure =
     substructure['key.substructure']?.[1]?.['key.substructure']?.[0]?.['key.substructure']?.[0]?.[
       'key.substructure'
     ];
 
-  if (!nestedModuleDefinition) {
+  if (!nestedModuleStructure) {
     console.warn("Couldn't parse class definition!");
     return {
       name: '',
@@ -441,8 +437,8 @@ function parseModuleClassSubstructure(substructure: Structure, file: FileType): 
     ''
   );
 
-  const classTypeInfo = parseModuleDefinition(
-    nestedModuleDefinition,
+  const classTypeInfo = parseModuleStructure(
+    nestedModuleStructure,
     file,
     'GREPME Does Not Matter :)'
   );
@@ -455,29 +451,28 @@ function parseModuleClassSubstructure(substructure: Structure, file: FileType): 
   };
 }
 
-const parseModulePropertySubstructure = parseModuleConstantSubstructure;
-
-function parseModuleConstructorDeclaration(
+function parseModuleFunctionSubstructure(
   substructure: Structure,
   file: FileType
-): ConstructorDeclaration {
+): FunctionDeclaration {
   const definitionParams = substructure['key.substructure'];
+  const name = getIdentifierFromOffsetObject(definitionParams[0], file);
   let types = null;
-
-  // TODO rethink this maybe split based on what closure is expected
-  // Maybe this should be the last substructure
   if (hasSubstructure(definitionParams[1])) {
     types = parseClosureTypes(definitionParams[1]);
-  } else if (hasSubstructure(definitionParams[0])) {
-    types = parseClosureTypes(definitionParams[0]);
   } else {
     types = getTypeFromOffsetObject(definitionParams[1], file);
   }
 
   return {
-    arguments: types?.parameters.map(mapParameterToType) ?? [],
+    name,
+    returnType: mapSwiftTypeToTsType(types?.returnType), // any or void ? Probably any
+    parameters: [], // TODO Module function is not generic. I think so. Check it
+    arguments: types?.parameters?.map(mapParameterToType) ?? [],
   };
 }
+
+const parseModulePropertySubstructure = parseModuleConstantSubstructure;
 
 function parseModulePropDeclaration(substructure: Structure, file: FileType): PropDeclaration {
   const definitionParams = substructure['key.substructure'];
@@ -503,7 +498,7 @@ function parseModuleViewDeclaration(substructure: Structure, file: FileType): Vi
     -suffixLength
   );
 
-  return parseModuleDefinition(
+  return parseModuleStructure(
     substructure['key.substructure'][1]['key.substructure'][0]['key.substructure'][0][
       'key.substructure'
     ],
@@ -512,30 +507,13 @@ function parseModuleViewDeclaration(substructure: Structure, file: FileType): Vi
   );
 }
 
-function parseEnumDefinition(enumDefinition: Structure): EnumType {
-  const enumcases: string[] = [];
-  for (const substructure of enumDefinition['key.substructure']) {
-    // TODO handle val also
-    if (substructure['key.kind'] === 'source.lang.swift.decl.enumcase') {
-      for (const caseSubstructure of substructure['key.substructure']) {
-        enumcases.push(caseSubstructure['key.name']);
-      }
-    }
-  }
-
-  return {
-    name: enumDefinition['key.name'],
-    cases: enumcases,
-  };
-}
-
-function parseRecordDefinition(
-  recordDefinition: Structure,
+function parseRecordStructure(
+  recordStructure: Structure,
   typeIdentifiers: Set<string>
 ): RecordType {
   const fields: { name: string; type: Type }[] = [];
 
-  for (const substructure of recordDefinition['key.substructure']) {
+  for (const substructure of recordStructure['key.substructure']) {
     if (substructure['key.kind'] === 'source.lang.swift.decl.var.instance') {
       const type: Type = mapSwiftTypeToTsType(substructure['key.typename'] as string);
       fields.push({
@@ -547,13 +525,29 @@ function parseRecordDefinition(
   }
 
   return {
-    name: recordDefinition['key.name'],
+    name: recordStructure['key.name'],
     fields,
   };
 }
 
-function parseModuleDefinition(
-  moduleDefinition: Structure[],
+function parseEnumStructure(enumStructure: Structure): EnumType {
+  const enumcases: string[] = [];
+  for (const substructure of enumStructure['key.substructure']) {
+    if (substructure['key.kind'] === 'source.lang.swift.decl.enumcase') {
+      for (const caseSubstructure of substructure['key.substructure']) {
+        enumcases.push(caseSubstructure['key.name']);
+      }
+    }
+  }
+
+  return {
+    name: enumStructure['key.name'],
+    cases: enumcases,
+  };
+}
+
+function parseModuleStructure(
+  moduleStructure: Structure[],
   file: FileType,
   name: string
 ): ModuleClassDeclaration {
@@ -569,7 +563,7 @@ function parseModuleDefinition(
     views: [],
   };
 
-  for (const md of moduleDefinition) {
+  for (const md of moduleStructure) {
     switch (md['key.name']) {
       case 'Name':
         mcd.name = getIdentifierFromOffsetObject(md['key.substructure']?.[0], file);
@@ -638,7 +632,8 @@ function collectTypeIdentifiers(type: Type, typeIdentiers: Set<string>) {
 
 function collectModuleTypeIdentifiers(
   moduleClassDeclaration: ModuleClassDeclaration,
-  typeIdentifiers: Set<string>
+  typeIdentifiers: Set<string>,
+  declaredTypeIdentifiers: Set<string>
 ) {
   const collect = (type: Type) => {
     collectTypeIdentifiers(type, typeIdentifiers);
@@ -656,7 +651,9 @@ function collectModuleTypeIdentifiers(
   moduleClassDeclaration.constants.forEach(collectArg);
   moduleClassDeclaration.properties.forEach(collectArg);
   moduleClassDeclaration.constructor?.arguments.forEach(collectArg);
-  moduleClassDeclaration.views.forEach((v) => collectModuleTypeIdentifiers(v, typeIdentifiers));
+  moduleClassDeclaration.views.forEach((v) =>
+    collectModuleTypeIdentifiers(v, typeIdentifiers, declaredTypeIdentifiers)
+  );
   moduleClassDeclaration.props.forEach((p) => p.arguments.forEach(collectArg));
   moduleClassDeclaration.classes.forEach((c) => {
     c.asyncMethods.forEach(collectFunction);
@@ -680,22 +677,26 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
     enumsStructures
   );
 
-  const enums: EnumType[] = enumsStructures.map(parseEnumDefinition);
-  console.log(JSON.stringify(enums));
+  const enums: EnumType[] = enumsStructures.map(parseEnumStructure);
 
   const recordTypeIdentifiers: Set<string> = new Set<string>();
-  const recordMap = (rd: Structure) => parseRecordDefinition(rd, recordTypeIdentifiers);
+  const recordMap = (rd: Structure) => parseRecordStructure(rd, recordTypeIdentifiers);
   const records = recordsStructures.map(recordMap);
 
   const moduleClasses: ModuleClassDeclaration[] = [];
   const moduleTypeIdentifiers: Set<string> = new Set<string>();
+  const declaredTypeIdentifiers: Set<string> = new Set<string>();
   for (const { structure, name } of modulesStructures) {
     if (!structure['key.substructure']) {
       continue;
     }
-    const moduleClassDeclaration = parseModuleDefinition(structure['key.substructure'], file, name);
+    const moduleClassDeclaration = parseModuleStructure(structure['key.substructure'], file, name);
     moduleClasses.push(moduleClassDeclaration);
-    collectModuleTypeIdentifiers(moduleClassDeclaration, moduleTypeIdentifiers);
+    collectModuleTypeIdentifiers(
+      moduleClassDeclaration,
+      moduleTypeIdentifiers,
+      declaredTypeIdentifiers
+    );
   }
 
   return {
