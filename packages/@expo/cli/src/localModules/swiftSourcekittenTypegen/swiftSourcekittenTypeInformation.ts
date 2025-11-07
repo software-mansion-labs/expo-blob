@@ -432,20 +432,21 @@ function parseModuleClassSubstructure(substructure: Structure, file: FileType): 
       'key.substructure'
     ];
 
+  const name = getIdentifierFromOffsetObject(substructure['key.substructure']?.[0], file).replace(
+    '.self',
+    ''
+  );
+
   if (!nestedModuleStructure) {
-    console.warn("Couldn't parse class definition!");
+    console.warn(name + " class is empty or couldn't parse its definition!");
     return {
-      name: '',
+      name,
+      constructor: null,
       methods: [],
       asyncMethods: [],
       properties: [],
     };
   }
-
-  const name = getIdentifierFromOffsetObject(substructure['key.substructure']?.[0], file).replace(
-    '.self',
-    ''
-  );
 
   const classTypeInfo = parseModuleStructure(
     nestedModuleStructure,
