@@ -462,6 +462,7 @@ export async function getGeneratedModuleTypesFileContent(
     views: [],
     constants: [],
     props: [],
+    events: [],
   };
   return prettyPrintTSNodesToString(
     file,

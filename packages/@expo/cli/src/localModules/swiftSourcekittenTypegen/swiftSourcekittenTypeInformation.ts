@@ -519,6 +519,16 @@ function parseModuleViewDeclaration(substructure: Structure, file: FileType): Vi
   );
 }
 
+function parseModuleEventDeclaration(structure: Structure, file: FileType, events: string[]): void {
+  if (!structure) {
+    return;
+  }
+
+  return structure['key.substructure'].forEach((substructure) =>
+    events.push(getIdentifierFromOffsetObject(substructure, file))
+  );
+}
+
 function extractDeclarationType(structure: Structure, file: FileType): Type {
   if (structure['key.typename']) {
     return mapSwiftTypeToTsType(structure['key.typename'] as string);
@@ -585,6 +595,7 @@ function parseModuleStructure(
     properties: [],
     props: [],
     views: [],
+    events: [],
   };
 
   for (const md of moduleStructure) {
@@ -615,6 +626,9 @@ function parseModuleStructure(
         break;
       case 'View':
         mcd.views.push(parseModuleViewDeclaration(md, file));
+        break;
+      case 'Events':
+        parseModuleEventDeclaration(md, file, mcd.events);
         break;
       default:
         console.warn('Module substructure not supported');

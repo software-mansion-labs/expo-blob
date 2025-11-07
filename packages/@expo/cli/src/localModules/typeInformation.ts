@@ -71,8 +71,8 @@ export type Type = {
 };
 
 export type PropertyDeclaration = ConstantDeclaration;
-
 export type ViewDeclaration = ModuleClassDeclaration;
+export type EventDeclaration = string;
 
 export type ConstantDeclaration = {
   name: string;
@@ -118,6 +118,7 @@ export type ModuleClassDeclaration = {
   properties: PropertyDeclaration[];
   props: PropDeclaration[];
   views: ViewDeclaration[];
+  events: EventDeclaration[];
 };
 
 export type FileTypeInformation = {

@@ -10,6 +10,7 @@ export type Structure = {
   'key.kind': string;
   'key.offset': number;
   'key.length': number;
+  'key.nameoffset': number;
   'key.inheritedtypes': { 'key.name': string }[];
 };
 
