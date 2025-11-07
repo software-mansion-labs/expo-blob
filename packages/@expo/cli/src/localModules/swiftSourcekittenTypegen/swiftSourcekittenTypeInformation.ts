@@ -318,7 +318,11 @@ function getTypeOfByteOffsetVariable(byteOffset: number, file: FileType): string
   const command = 'sourcekitten request --yaml "' + yamlRequest + '"';
   try {
     const output = JSON.parse(execSync(command, { stdio: 'pipe' }).toString());
-    return output['key.typename'];
+
+    const inferredType = output['key.typename'];
+    if (inferredType === '<<error type>>') {
+      return null;
+    }
     // return parseXMLAnnotatedDeclarations(JSON.parse(output.toString()));
   } catch (error) {
     console.error('An error occurred while executing the command:', error);
