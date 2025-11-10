@@ -122,13 +122,58 @@ export type ModuleClassDeclaration = {
 };
 
 export type FileTypeInformation = {
-  typeIdentifiers: Set<string>;
+  usedTypeIdentifiers: Set<string>;
   declaredTypeIdentifiers: Set<string>;
   functions: FunctionDeclaration[];
   moduleClasses: ModuleClassDeclaration[];
   records: RecordType[];
   enums: EnumType[];
 };
+
+export type FileTypeInformationSerialized = {
+  usedTypeIdentifiersList: string[];
+  declaredTypeIdentifiersList: string[];
+  functions: FunctionDeclaration[];
+  moduleClasses: ModuleClassDeclaration[];
+  records: RecordType[];
+  enums: EnumType[];
+};
+
+export function serializeTypeInformation({
+  usedTypeIdentifiers,
+  declaredTypeIdentifiers,
+  functions,
+  moduleClasses,
+  records,
+  enums,
+}: FileTypeInformation): FileTypeInformationSerialized {
+  return {
+    usedTypeIdentifiersList: [...usedTypeIdentifiers],
+    declaredTypeIdentifiersList: [...declaredTypeIdentifiers],
+    functions,
+    moduleClasses,
+    records,
+    enums,
+  };
+}
+
+export function deserializeTypeInformation({
+  usedTypeIdentifiersList,
+  declaredTypeIdentifiersList,
+  functions,
+  moduleClasses,
+  records,
+  enums,
+}: FileTypeInformationSerialized): FileTypeInformation {
+  return {
+    usedTypeIdentifiers: new Set<string>(usedTypeIdentifiersList),
+    declaredTypeIdentifiers: new Set<string>(declaredTypeIdentifiersList),
+    functions,
+    moduleClasses,
+    records,
+    enums,
+  };
+}
 
 export function getFileTypeInformation(absoluteFilePath: string): FileTypeInformation | null {
   if (absoluteFilePath.endsWith('.swift')) {

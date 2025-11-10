@@ -7,7 +7,7 @@ import {
   getGeneratedModuleTypesFileContent,
   getGeneratedViewTypesFileContent,
 } from '../localModules/dtsFileGeneration';
-import { getFileTypeInformation } from '../localModules/typeInformation';
+import { getFileTypeInformation, serializeTypeInformation } from '../localModules/typeInformation';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
 
@@ -72,7 +72,12 @@ export const expoStart: Command = async (argv) => {
   if (args['--typeinfo']) {
     const fileName = args['--typeinfo'];
     const typeInfo = getFileTypeInformation(fileName);
-    console.log(JSON.stringify(typeInfo, null, 2));
+    if (typeInfo) {
+      const typeInfoSerialized = serializeTypeInformation(typeInfo);
+      console.log(JSON.stringify(typeInfoSerialized, null, 2));
+    } else {
+      console.log(`Provided file: ${fileName} couldn't be parsed for type infromation!`);
+    }
     return;
   }
 

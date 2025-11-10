@@ -497,7 +497,7 @@ function extractDeclarationType(structure: Structure, file: FileType): Type {
 
 function parseRecordStructure(
   recordStructure: Structure,
-  typeIdentifiers: Set<string>,
+  usedTypeIdentifiers: Set<string>,
   file: FileType
 ): RecordType {
   const fields: { name: string; type: Type }[] = [];
@@ -509,7 +509,7 @@ function parseRecordStructure(
         name: substructure['key.name'],
         type,
       });
-      collectTypeIdentifiers(type, typeIdentifiers);
+      collectTypeIdentifiers(type, usedTypeIdentifiers);
     }
   }
 
@@ -627,11 +627,11 @@ function collectTypeIdentifiers(type: Type, typeIdentiers: Set<string>) {
 
 function collectModuleTypeIdentifiers(
   moduleClassDeclaration: ModuleClassDeclaration,
-  typeIdentifiers: Set<string>,
+  usedTypeIdentifiers: Set<string>,
   declaredTypeIdentifiers: Set<string>
 ) {
   const collect = (type: Type) => {
-    collectTypeIdentifiers(type, typeIdentifiers);
+    collectTypeIdentifiers(type, usedTypeIdentifiers);
   };
   const collectArg = (arg: { name: string; type: Type }) => {
     collect(arg.type);
@@ -647,7 +647,7 @@ function collectModuleTypeIdentifiers(
   moduleClassDeclaration.properties.forEach(collectArg);
   moduleClassDeclaration.constructor?.arguments.forEach(collectArg);
   moduleClassDeclaration.views.forEach((v) =>
-    collectModuleTypeIdentifiers(v, typeIdentifiers, declaredTypeIdentifiers)
+    collectModuleTypeIdentifiers(v, usedTypeIdentifiers, declaredTypeIdentifiers)
   );
   moduleClassDeclaration.props.forEach((p) => p.arguments.forEach(collectArg));
   moduleClassDeclaration.classes.forEach((c) => {
@@ -708,7 +708,7 @@ export function getSwiftFileTypeInformation(filePath: string): FileTypeInformati
     records,
     enums,
     functions: [],
-    typeIdentifiers: moduleTypeIdentifiers.union(recordTypeIdentifiers),
+    usedTypeIdentifiers: moduleTypeIdentifiers.union(recordTypeIdentifiers),
     declaredTypeIdentifiers,
   };
 }

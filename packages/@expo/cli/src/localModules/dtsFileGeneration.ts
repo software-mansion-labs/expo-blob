@@ -388,7 +388,7 @@ function getViewDefaultValueExport(view: ViewDeclaration): ts.Node[] {
 
 function getViewTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
-  typeIdentifiers: Set<string>
+  usedTypeIdentifiers: Set<string>
 ): ts.Node[] {
   if (moduleClassDeclaration.views.length === 0) {
     return [];
@@ -400,7 +400,7 @@ function getViewTypesDeclarationsForModule(
     newlineIdentifier,
     getOneNamedImport('ViewProps', 'react-native'),
     newlineIdentifier,
-    [...typeIdentifiers].map(getIdentifierAnyDeclaration),
+    [...usedTypeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
     getPropsTypeDeclaration(moduleClassDeclaration.views[0].props),
     newlineIdentifier,
@@ -443,7 +443,10 @@ export async function getGeneratedViewTypesFileContent(
   const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
   return prettyPrintTSNodesToString(
     file,
-    getViewTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation.typeIdentifiers)
+    getViewTypesDeclarationsForModule(
+      outputModuleDefinition,
+      fileTypeInformation.usedTypeIdentifiers
+    )
   );
 }
 
@@ -470,7 +473,9 @@ export async function getGeneratedModuleTypesFileContent(
       moduleClassDeclaration,
       fileTypeInformation.records,
       fileTypeInformation.enums,
-      fileTypeInformation.typeIdentifiers.difference(fileTypeInformation.declaredTypeIdentifiers)
+      fileTypeInformation.usedTypeIdentifiers.difference(
+        fileTypeInformation.declaredTypeIdentifiers
+      )
     )
   );
 }
