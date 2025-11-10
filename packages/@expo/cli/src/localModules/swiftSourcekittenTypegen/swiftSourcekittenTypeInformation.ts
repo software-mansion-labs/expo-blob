@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
-import XML from 'xml-js';
 import YAML from 'yaml';
 
 import {
@@ -22,7 +21,7 @@ import {
   TypeKind,
   ViewDeclaration,
 } from '../typeInformation';
-import { CursorInfoOutput, FileType, FullyAnnotatedDecl, Structure } from '../types';
+import { FileType, Structure } from '../types';
 
 /*
 The Swift object type can have nested objects as the type of it's values (or maybe even keys).
@@ -281,11 +280,11 @@ function parseClosureTypes(structureObject: Structure) {
 }
 
 let cachedSDKPath: string | null = null;
-function getSDKPath() {
+function getSDKPath(): string {
   if (cachedSDKPath) {
     return cachedSDKPath;
   }
-  const sdkPath = execSync('xcrun --sdk iphoneos --show-sdk-path').toString().trim();
+  const sdkPath = execSync('xcrun --sdk iphoneos --show-sdk-path').toString().trim() as string;
   cachedSDKPath = sdkPath;
   return cachedSDKPath;
 }
@@ -328,53 +327,6 @@ function getTypeOfByteOffsetVariable(byteOffset: number, file: FileType): string
     console.error('An error occurred while executing the command:', error);
   }
   return null;
-}
-
-function maybeWrapArray<T>(itemOrItems: T[] | T | null) {
-  if (!itemOrItems) {
-    return null;
-  }
-  if (Array.isArray(itemOrItems)) {
-    return itemOrItems;
-  } else {
-    return [itemOrItems];
-  }
-}
-
-function maybeUnwrapXMLStructs(
-  type: string | Partial<{ _text: string; 'ref.struct': string }>
-): string {
-  if (!type) {
-    return type;
-  }
-  if (typeof type === 'string') {
-    return type;
-  }
-  if (type['_text']) {
-    return type['_text'];
-  }
-  if (type['ref.struct']) {
-    return maybeUnwrapXMLStructs(type['ref.struct']);
-  }
-  return type + ''; // TODO check this, this had no + '' and it made TS have problems
-}
-
-function parseXMLAnnotatedDeclarations(cursorInfoOutput: CursorInfoOutput) {
-  const xml = cursorInfoOutput['key.fully_annotated_decl'];
-  if (!xml) {
-    return null;
-  }
-  const parsed = XML.xml2js(xml, { compact: true }) as FullyAnnotatedDecl;
-
-  const parameters =
-    maybeWrapArray(parsed?.['decl.function.free']?.['decl.var.parameter'])?.map((p) => ({
-      name: maybeUnwrapXMLStructs(p['decl.var.parameter.argument_label']),
-      typename: maybeUnwrapXMLStructs(p['decl.var.parameter.type']),
-    })) ?? [];
-  const returnType = maybeUnwrapXMLStructs(
-    parsed?.['decl.function.free']?.['decl.function.returntype']
-  );
-  return { parameters, returnType };
 }
 
 function mapParameterToType(parameter: { name: string; typename: string }): {
