@@ -23,12 +23,11 @@ import {
 } from './typeInformation';
 import {
   getArgumentDeclaration,
-  getClassConstructorDeclaration,
   getEnumDeclaration,
   getIdentifierAnyDeclaration,
   getPropsTypeDeclaration,
   getRecordDeclaration,
-  getTsFunction,
+  getTsClass,
   getViewPropsTypeName,
   mapTypeToTsTypeNode,
   wrapWithPromise,
@@ -198,7 +197,7 @@ function getPrefix() {
 
 const newlineIdentifier = ts.factory.createIdentifier('\n\n') as any;
 
-function getMockedFunctionDeclration(
+function getMockedFunctionDeclaration(
   functionDeclaration: FunctionDeclaration,
   fileTypeInformation: FileTypeInformation,
   async: boolean,
@@ -226,32 +225,11 @@ function getMockedFunctionDeclration(
   );
 }
 
-function getAsyncMethodDefinition(
+function getFunctionReturnBlock(
   functionDeclaration: FunctionDeclaration,
   fileTypeInformation: FileTypeInformation
-): ts.MethodDeclaration {
-  return getTsFunction(
-    functionDeclaration,
-    true,
-    true,
-    false,
-    false,
-    maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation)
-  ) as ts.MethodDeclaration;
-}
-
-function getSyncMethodDefinition(
-  functionDeclaration: FunctionDeclaration,
-  fileTypeInformation: FileTypeInformation
-): ts.MethodDeclaration {
-  return getTsFunction(
-    functionDeclaration,
-    false,
-    true,
-    false,
-    false,
-    maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation)
-  ) as ts.MethodDeclaration;
+): ts.ReturnStatement[] {
+  return maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation);
 }
 
 // function getNParameters(n: number): ts.TypeParameterDeclaration[] {
@@ -265,23 +243,8 @@ function getSyncMethodDefinition(
 function getMockedClass(
   classDeclaration: ClassDeclaration,
   fileTypeInformation: FileTypeInformation
-): ts.Node {
-  const constructorDeclaration = classDeclaration.constructor
-    ? getClassConstructorDeclaration(classDeclaration.constructor, false)
-    : undefined;
-  return ts.factory.createClassDeclaration(
-    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    ts.factory.createIdentifier(classDeclaration.name),
-    undefined,
-    undefined,
-    ([] as (ts.ClassElement | undefined)[])
-      .concat(
-        classDeclaration.methods.map((f) => getSyncMethodDefinition(f, fileTypeInformation)),
-        classDeclaration.asyncMethods.map((f) => getAsyncMethodDefinition(f, fileTypeInformation)),
-        constructorDeclaration
-      )
-      .filter((v) => !!v)
-  );
+): ts.ClassDeclaration {
+  return getTsClass(classDeclaration, fileTypeInformation, true, false, getFunctionReturnBlock);
 }
 
 function getMockedView(viewDeclaration: ViewDeclaration): ts.Node[] {
@@ -329,9 +292,11 @@ function getMockForModule(
       newlineIdentifier,
       fileTypeInformation.enums.flatMap(getEnumDeclaration),
       newlineIdentifier,
-      module.functions.map((f) => getMockedFunctionDeclration(f, fileTypeInformation, false, true)),
+      module.functions.map((f) =>
+        getMockedFunctionDeclaration(f, fileTypeInformation, false, true)
+      ),
       module.asyncFunctions.map((f) =>
-        getMockedFunctionDeclration(f, fileTypeInformation, true, true)
+        getMockedFunctionDeclaration(f, fileTypeInformation, true, true)
       ),
       module.classes.map((c) => getMockedClass(c, fileTypeInformation)),
       module.views.map((v) => getMockedView(v)).flat()

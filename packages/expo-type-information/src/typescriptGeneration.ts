@@ -197,7 +197,7 @@ export function getTsFunction(
   method: boolean,
   exported: boolean,
   declaration: boolean,
-  returnStatement?: ts.ReturnStatement[]
+  returnStatement?: null | ts.ReturnStatement[]
 ): ts.FunctionDeclaration | ts.MethodDeclaration {
   const functionModifiers: ts.ModifierLike[] = [];
   const customReturn = !!returnStatement;
@@ -323,33 +323,81 @@ export function getClassConstructorDeclaration(
   );
 }
 
-function getExportedClassDeclaration(classDeclaration: ClassDeclaration): ts.Node[] {
+// TODO figure out what about inheritance, should or should not inherit SharedObject
+export function getTsClass(
+  classDeclaration: ClassDeclaration,
+  fileTypeInformation: FileTypeInformation,
+  exported: boolean,
+  declaration: boolean,
+  getFunctionReturnBlock:
+    | null
+    | ((
+        functionDeclaration: FunctionDeclaration,
+        fileTypeInformation: FileTypeInformation
+      ) => ts.ReturnStatement[])
+): ts.ClassDeclaration {
+  const classModifiers: ts.ModifierLike[] = [];
+  if (exported) {
+    classModifiers.push(ts.factory.createModifier(ts.SyntaxKind.ExportKeyword));
+  }
+  if (declaration) {
+    classModifiers.push(ts.factory.createModifier(ts.SyntaxKind.DeclareKeyword));
+  }
   const constructorDeclaration = classDeclaration.constructor
-    ? getClassConstructorDeclaration(classDeclaration.constructor)
+    ? getClassConstructorDeclaration(classDeclaration.constructor, declaration)
     : undefined;
-  return ([] as ts.Node[]).concat(
-    ts.factory.createClassDeclaration(
-      getExportDeclareModifiers(),
-      ts.factory.createIdentifier(classDeclaration.name),
-      undefined,
-      [
-        ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-          ts.factory.createExpressionWithTypeArguments(
-            ts.factory.createIdentifier('SharedObject'),
-            undefined
-          ),
-        ]),
-      ],
-      ([] as (ts.ClassElement | undefined)[])
-        .concat(
-          classDeclaration.methods.map(getSyncMethodDeclaration),
-          classDeclaration.asyncMethods.map(getAsyncMethodDeclaration),
-          classDeclaration.properties.map(getClassPropertyDeclaration),
-          constructorDeclaration
-        )
-        .filter((v) => !!v)
-    )
+  return ts.factory.createClassDeclaration(
+    classModifiers,
+    ts.factory.createIdentifier(classDeclaration.name),
+    undefined,
+    [
+      ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.factory.createExpressionWithTypeArguments(
+          ts.factory.createIdentifier('SharedObject'),
+          undefined
+        ),
+      ]),
+    ],
+    ([] as (ts.ClassElement | undefined)[])
+      .concat(
+        classDeclaration.methods.map(
+          (method) =>
+            getTsFunction(
+              method,
+              false,
+              true,
+              false,
+              declaration,
+              !declaration && getFunctionReturnBlock
+                ? getFunctionReturnBlock(method, fileTypeInformation)
+                : null
+            ) as ts.MethodDeclaration
+        ),
+        classDeclaration.asyncMethods.map(
+          (method) =>
+            getTsFunction(
+              method,
+              true,
+              true,
+              false,
+              declaration,
+              !declaration && getFunctionReturnBlock
+                ? getFunctionReturnBlock(method, fileTypeInformation)
+                : null
+            ) as ts.MethodDeclaration
+        ),
+        declaration ? classDeclaration.properties.map(getClassPropertyDeclaration) : [],
+        constructorDeclaration
+      )
+      .filter((v) => !!v)
   );
+}
+
+function getExportedClassDeclaration(
+  classDeclaration: ClassDeclaration,
+  fileTypeInformation: FileTypeInformation
+): ts.ClassDeclaration {
+  return getTsClass(classDeclaration, fileTypeInformation, true, true, null);
 }
 
 function getModuleDefaultValueExport(defaultValueTypename: string): ts.Node[] {
@@ -405,6 +453,7 @@ export function getEnumDeclaration(enumType: EnumType): ts.Node {
 
 function getModuleTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
+  fileTypeInformation: FileTypeInformation,
   recordTypes: RecordType[],
   enumTypes: EnumType[],
   undeclaredTypeIdentifiers: Set<string>
@@ -420,7 +469,7 @@ function getModuleTypesDeclarationsForModule(
     newlineIdentifier,
     enumTypes.flatMap(getEnumDeclaration),
     newlineIdentifier,
-    moduleClassDeclaration.classes.flatMap(getExportedClassDeclaration),
+    moduleClassDeclaration.classes.map((c) => getExportedClassDeclaration(c, fileTypeInformation)),
     newlineIdentifier,
     getExportedModuleDeclaration(moduleClassDeclaration),
     newlineIdentifier,
@@ -535,6 +584,7 @@ export async function getGeneratedModuleTypesFileContent(
     file,
     getModuleTypesDeclarationsForModule(
       moduleClassDeclaration,
+      fileTypeInformation,
       fileTypeInformation.records,
       fileTypeInformation.enums,
       fileTypeInformation.usedTypeIdentifiers.difference(

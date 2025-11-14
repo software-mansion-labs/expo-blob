@@ -62,15 +62,15 @@ export function TestFunctionReturningEnum(): TestEnum { return TestEnum.simpleCa
  }
 export async function TestSimpleAsyncFunction(a: string, b: string): Promise<string> { return ""; // Should see the type {"kind":0,"type":1}.
  }
-export class TestClassWithConstructor {
+export class TestClassWithConstructor extends SharedObject {
     constructor(a: number) { }
 }
-export class TestBasicClass {
+export class TestBasicClass extends SharedObject {
     async TestAsyncFunction(a: number): Promise<string> { return ""; // Should see the type {"kind":0,"type":1}.
      }
     constructor(a: number, b: string, c: string | TestRecord) { }
 }
-export class TestEmptyClass {
+export class TestEmptyClass extends SharedObject {
 }
 export type ExpoWebViewProps = {
     testProp: URL;
