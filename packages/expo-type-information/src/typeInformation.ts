@@ -1,4 +1,7 @@
-import { getSwiftFileTypeInformation } from './swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
+import {
+  getSwiftFileTypeInformation,
+  getSwiftFileTypeInformationForFile,
+} from './swiftSourcekittenTypegen/swiftSourcekittenTypeInformation';
 
 export type ParametrizedType = {
   name: TypeIdentifier;
@@ -181,9 +184,21 @@ export function deserializeTypeInformation({
   };
 }
 
-export function getFileTypeInformation(absoluteFilePath: string): FileTypeInformation | null {
+export function getFileTypeInformation(
+  fileContent: string,
+  language: 'swift'
+): FileTypeInformation | null {
+  if (language === 'swift') {
+    return getSwiftFileTypeInformation(fileContent);
+  }
+  return null;
+}
+
+export function getFileTypeInformationForFile(
+  absoluteFilePath: string
+): FileTypeInformation | null {
   if (absoluteFilePath.endsWith('.swift')) {
-    return getSwiftFileTypeInformation(absoluteFilePath);
+    return getSwiftFileTypeInformationForFile(absoluteFilePath);
   }
   return null;
 }

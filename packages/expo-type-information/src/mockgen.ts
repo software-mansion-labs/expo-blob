@@ -12,7 +12,7 @@ import {
   EnumType,
   FileTypeInformation,
   FunctionDeclaration,
-  getFileTypeInformation,
+  getFileTypeInformationForFile,
   ModuleClassDeclaration,
   OptionalType,
   RecordType,
@@ -353,6 +353,6 @@ const pattern = `${rootDir}/**/*.swift`;
 export function getAllExpoModulesInWorkingDirectory(): FileTypeInformation[] {
   const files = globSync(pattern);
   return files
-    .map((file) => getFileTypeInformation(fs.realpathSync(file)))
+    .map((file) => getFileTypeInformationForFile(fs.realpathSync(file)))
     .filter((f) => f) as FileTypeInformation[];
 }
