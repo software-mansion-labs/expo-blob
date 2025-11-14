@@ -255,8 +255,7 @@ function getMockedView(viewDeclaration: ViewDeclaration): ts.Node[] {
 
 function getMockForModule(
   module: ModuleClassDeclaration,
-  fileTypeInformation: FileTypeInformation,
-  includeTypes: boolean
+  fileTypeInformation: FileTypeInformation
 ) {
   const undeclaredTypeIdentifiers: Set<string> = fileTypeInformation.usedTypeIdentifiers.difference(
     fileTypeInformation.declaredTypeIdentifiers
@@ -299,9 +298,7 @@ export function generateTSMockForModule(
   includeTypes: boolean
 ): string {
   const mockFileName = module.name + (includeTypes ? '.ts' : '.js');
-  const mock = ts.factory.createNodeArray(
-    getMockForModule(module, fileTypeInformation, includeTypes)
-  );
+  const mock = ts.factory.createNodeArray(getMockForModule(module, fileTypeInformation));
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   // get ts nodearray from getMockForModule(m) array
@@ -317,7 +314,16 @@ export function generateTSMockForModule(
     mock,
     resultFile
   );
-  return printedTs;
+
+  if (includeTypes) {
+    return printedTs;
+  }
+  return ts.transpileModule(printedTs, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ESNext,
+    },
+  }).outputText;
 }
 
 export async function generateMocks(
@@ -332,21 +338,15 @@ export async function generateMocks(
     for (const module of file.moduleClasses) {
       const mockFileName = module.name + (outputLanguage === 'typescript' ? '.ts' : '.js');
       const mockFilePath = path.join(directoryPath, 'mocks', mockFileName);
-      const printedTs = generateTSMockForModule(module, file, outputLanguage === 'typescript');
+      const printedCode = generateTSMockForModule(module, file, outputLanguage === 'typescript');
 
       if (outputLanguage === 'javascript') {
-        const compiledJs = ts.transpileModule(printedTs, {
-          compilerOptions: {
-            module: ts.ModuleKind.ESNext,
-            target: ts.ScriptTarget.ESNext,
-          },
-        }).outputText;
-        // const prettifiedJs = await prettifyCode(compiledJs);
-        const prettifiedJs = compiledJs;
+        // const prettifiedJs = await prettifyCode(printedCode);
+        const prettifiedJs = printedCode;
         fs.writeFileSync(mockFilePath, prettifiedJs);
       } else {
-        // const prettifiedTs = await prettifyCode(printedTs, 'typescript');
-        const prettifiedTs = printedTs;
+        // const prettifiedTs = await prettifyCode(printedCode, 'typescript');
+        const prettifiedTs = printedCode;
         fs.writeFileSync(mockFilePath, prettifiedTs);
       }
     }

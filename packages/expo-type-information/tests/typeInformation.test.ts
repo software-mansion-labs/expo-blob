@@ -34,6 +34,13 @@ it('Same generated mock file', async () => {
     expect(generateTSMockForModule(fileInfo.moduleClasses[0], fileInfo, true)).toMatchSnapshot();
   }
 });
+it('Same generated mock file JS', async () => {
+  const fileInfo = getFileTypeInformation(swiftFile);
+  expect(fileInfo).toBeTruthy();
+  if (fileInfo) {
+    expect(generateTSMockForModule(fileInfo.moduleClasses[0], fileInfo, false)).toMatchSnapshot();
+  }
+});
 
 // const swiftTest = `import ExpoModulesCore
 // import WebKit
