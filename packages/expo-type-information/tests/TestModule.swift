@@ -27,9 +27,9 @@ public class TestModule: Module {
       return "test"
     }
 
-    // Function("TestParametrizedTypes") { (a: SomeParametrizedType<Either<Int, String>, Map<Set<Int>, Either<Set<Int>, Set<String>>>>) -> String in
-    //   return ""
-    // }
+    Function("TestParametrizedTypes") { (a: SomeParametrizedType<Either<Int, String>, Map<Set<Int>, Either<Set<Int>, Set<String>>>>) -> String in
+      return ""
+    }
 
     Function("TestTypeCombinations") { (a: [[[Int]]]) -> [[Either<String, [Int: String]>]] in 
       return [["test"]]

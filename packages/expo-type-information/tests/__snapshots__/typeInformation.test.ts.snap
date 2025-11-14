@@ -9,7 +9,7 @@ exports[`Same generated mock file 1`] = `
  *  */
 
 
-type any = any;
+type SomeParametrizedType<T0, T1> = any;
 type URL = any;
 
 
@@ -50,20 +50,21 @@ export function TestDictionaries(a: {
         [key: number]: string;
     };
 }): any { }
+export function TestParametrizedTypes(a: SomeParametrizedType<number | string, Map<Set<number>, Set<number> | Set<string>>>): string { return ""; }
 export function TestTypeCombinations(a: number[][][]): (string | {
     [key: number]: string;
 })[][] { return []; }
 export function TestFunctionReturningRecord(): TestRecord { return { basicString: "", basicStringInitialized: "", basicIntInferred: null, basicDoubleInferred: null, basicStringInferred: null, enumInferred: null, complexEnumInferred: null, recordInferred: null, optionalInt: 0, letDoubleBinding: 0, fieldWithoutAnnotation: 0 }; }
 export function TestFunctionReturningEnum(): TestEnum { return TestEnum.simpleCase; }
 export async function TestSimpleAsyncFunction(a: string, b: string): Promise<string> { return ""; }
-export class TestClassWithConstructor extends SharedObject {
+export class TestClassWithConstructor {
     constructor(a: number) { }
 }
-export class TestBasicClass extends SharedObject {
+export class TestBasicClass {
     async TestAsyncFunction(a: number): Promise<string> { return ""; }
     constructor(a: number, b: string, c: string | TestRecord) { }
 }
-export class TestEmptyClass extends SharedObject {
+export class TestEmptyClass {
 }
 export type ExpoWebViewProps = {
     testProp: URL;
@@ -94,18 +95,19 @@ var TestEnum;
 export function SimpleFunction(a, b) { return 0; }
 export function TestArrays(a) { return []; }
 export function TestDictionaries(a, b) { }
+export function TestParametrizedTypes(a) { return ""; }
 export function TestTypeCombinations(a) { return []; }
 export function TestFunctionReturningRecord() { return { basicString: "", basicStringInitialized: "", basicIntInferred: null, basicDoubleInferred: null, basicStringInferred: null, enumInferred: null, complexEnumInferred: null, recordInferred: null, optionalInt: 0, letDoubleBinding: 0, fieldWithoutAnnotation: 0 }; }
 export function TestFunctionReturningEnum() { return TestEnum.simpleCase; }
 export async function TestSimpleAsyncFunction(a, b) { return ""; }
-export class TestClassWithConstructor extends SharedObject {
+export class TestClassWithConstructor {
     constructor(a) { }
 }
-export class TestBasicClass extends SharedObject {
+export class TestBasicClass {
     async TestAsyncFunction(a) { return ""; }
     constructor(a, b, c) { }
 }
-export class TestEmptyClass extends SharedObject {
+export class TestEmptyClass {
 }
 export function ExpoWebView(props) { }
 "
@@ -123,7 +125,7 @@ exports[`Same generated module file 1`] = `
 import { NativeModule } from "expo";
 
 
-type any = any;
+type SomeParametrizedType<T0, T1> = any;
 type URL = any;
 
 
@@ -155,10 +157,10 @@ enum TestEnum {
 }
 
 
-export declare class TestClassWithConstructor extends SharedObject {
+export declare class TestClassWithConstructor {
     constructor(a: number);
 }
-export declare class TestBasicClass extends SharedObject {
+export declare class TestBasicClass {
     TestAsyncFunction(a: number): Promise<string> { }
     readonly TestIntProperty: number;
     readonly TestEitherProperty: number | string;
@@ -166,7 +168,7 @@ export declare class TestBasicClass extends SharedObject {
     readonly TestRecordProperty: TestRecord2;
     constructor(a: number, b: string, c: string | TestRecord);
 }
-export declare class TestEmptyClass extends SharedObject {
+export declare class TestEmptyClass {
 }
 
 
@@ -182,6 +184,7 @@ export declare class TestModule extends NativeModule {
             [key: number]: string;
         };
     }): any { }
+    TestParametrizedTypes(a: SomeParametrizedType<number | string, Map<Set<number>, Set<number> | Set<string>>>): string { }
     TestTypeCombinations(a: number[][][]): (string | {
         [key: number]: string;
     })[][] { }
@@ -214,11 +217,8 @@ import { SharedObject } from "expo";
 import { ViewProps } from "react-native";
 
 
-type TestRecord = any;
-type TestEnum = any;
-type any = any;
+type SomeParametrizedType<T0, T1> = any;
 type URL = any;
-type TestRecord2 = any;
 
 
 type ExpoWebViewProps = {
@@ -539,6 +539,95 @@ exports[`Same type information 1`] = `
             {
               "name": "a",
               "type": {
+                "kind": 3,
+                "type": {
+                  "name": "SomeParametrizedType",
+                  "types": [
+                    {
+                      "kind": 2,
+                      "type": {
+                        "name": "Either",
+                        "types": [
+                          {
+                            "kind": 0,
+                            "type": 2,
+                          },
+                          {
+                            "kind": 0,
+                            "type": 1,
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "kind": 3,
+                      "type": {
+                        "name": "Map",
+                        "types": [
+                          {
+                            "kind": 3,
+                            "type": {
+                              "name": "Set",
+                              "types": [
+                                {
+                                  "kind": 0,
+                                  "type": 2,
+                                },
+                              ],
+                            },
+                          },
+                          {
+                            "kind": 2,
+                            "type": {
+                              "name": "Either",
+                              "types": [
+                                {
+                                  "kind": 3,
+                                  "type": {
+                                    "name": "Set",
+                                    "types": [
+                                      {
+                                        "kind": 0,
+                                        "type": 2,
+                                      },
+                                    ],
+                                  },
+                                },
+                                {
+                                  "kind": 3,
+                                  "type": {
+                                    "name": "Set",
+                                    "types": [
+                                      {
+                                        "kind": 0,
+                                        "type": 1,
+                                      },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          "name": "TestParametrizedTypes",
+          "parameters": [],
+          "returnType": {
+            "kind": 0,
+            "type": 1,
+          },
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
+              "type": {
                 "kind": 5,
                 "type": {
                   "kind": 5,
@@ -756,7 +845,15 @@ exports[`Same type information 1`] = `
       "name": "TestRecord2",
     },
   ],
+  "typeParametersCount": Map {
+    "SomeParametrizedType" => 2,
+    "Map" => 2,
+    "Set" => 1,
+  },
   "usedTypeIdentifiers": Set {
+    "SomeParametrizedType",
+    "Map",
+    "Set",
     "TestRecord",
     "TestEnum",
     "any",

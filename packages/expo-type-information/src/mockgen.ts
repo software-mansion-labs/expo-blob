@@ -22,6 +22,7 @@ import {
   ViewDeclaration,
 } from './typeInformation';
 import {
+  basicTypesIdentifiers,
   getEnumDeclaration,
   getIdentifierAnyDeclaration,
   getPropsTypeDeclaration,
@@ -211,14 +212,6 @@ function getFunctionReturnBlock(
   return maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation);
 }
 
-// function getNParameters(n: number): ts.TypeParameterDeclaration[] {
-//   const params: ts.TypeParameterDeclaration[] = [];
-//   for (let i = 0; i < n; i += 1) {
-//     params.push(ts.factory.createTypeParameterDeclaration(undefined, 'T' + i));
-//   }
-//   return params;
-// }
-
 function getMockedClass(
   classDeclaration: ClassDeclaration,
   fileTypeInformation: FileTypeInformation
@@ -257,14 +250,16 @@ function getMockForModule(
   module: ModuleClassDeclaration,
   fileTypeInformation: FileTypeInformation
 ) {
-  const undeclaredTypeIdentifiers: Set<string> = fileTypeInformation.usedTypeIdentifiers.difference(
-    fileTypeInformation.declaredTypeIdentifiers
-  );
+  const undeclaredTypeIdentifiers: Set<string> = fileTypeInformation.usedTypeIdentifiers
+    .difference(fileTypeInformation.declaredTypeIdentifiers)
+    .difference(basicTypesIdentifiers());
   return ([] as ts.Node[])
     .concat(
       getPrefix(),
       newlineIdentifier,
-      [...undeclaredTypeIdentifiers].map(getIdentifierAnyDeclaration),
+      [...undeclaredTypeIdentifiers].map((identifier) =>
+        getIdentifierAnyDeclaration(identifier, fileTypeInformation.typeParametersCount)
+      ),
       newlineIdentifier,
       fileTypeInformation.records.flatMap(getRecordDeclaration),
       newlineIdentifier,

@@ -350,14 +350,15 @@ export function getTsClass(
     classModifiers,
     ts.factory.createIdentifier(classDeclaration.name),
     undefined,
-    [
-      ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        ts.factory.createExpressionWithTypeArguments(
-          ts.factory.createIdentifier('SharedObject'),
-          undefined
-        ),
-      ]),
-    ],
+    [],
+    // [
+    //   ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+    //     ts.factory.createExpressionWithTypeArguments(
+    //       ts.factory.createIdentifier('SharedObject'),
+    //       undefined
+    //     ),
+    //   ]),
+    // ],
     ([] as (ts.ClassElement | undefined)[])
       .concat(
         classDeclaration.methods.map(
@@ -414,11 +415,23 @@ function getModuleDefaultValueExport(defaultValueTypename: string): ts.Node[] {
   );
 }
 
-export function getIdentifierAnyDeclaration(identifier: string): ts.Node {
+function getNParameters(n: number): ts.TypeParameterDeclaration[] {
+  const params: ts.TypeParameterDeclaration[] = [];
+  for (let i = 0; i < n; i += 1) {
+    params.push(ts.factory.createTypeParameterDeclaration(undefined, 'T' + i));
+  }
+  return params;
+}
+
+export function getIdentifierAnyDeclaration(
+  identifier: string,
+  typeParametersCount: Map<string, number>
+): ts.Node {
+  const paramCount = typeParametersCount.get(identifier);
   return ts.factory.createTypeAliasDeclaration(
     undefined,
     identifier,
-    undefined,
+    paramCount === undefined ? undefined : getNParameters(paramCount),
     ts.factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
   );
 }
@@ -463,7 +476,9 @@ function getModuleTypesDeclarationsForModule(
     newlineIdentifier,
     getOneNamedImport('NativeModule', 'expo'),
     newlineIdentifier,
-    [...undeclaredTypeIdentifiers].map(getIdentifierAnyDeclaration),
+    [...undeclaredTypeIdentifiers].map((identifier) =>
+      getIdentifierAnyDeclaration(identifier, fileTypeInformation.typeParametersCount)
+    ),
     newlineIdentifier,
     recordTypes.flatMap(getRecordDeclaration),
     newlineIdentifier,
@@ -499,12 +514,15 @@ export function getViewPropsTypeName(view: ViewDeclaration): string {
 
 function getViewTypesDeclarationsForModule(
   moduleClassDeclaration: ModuleClassDeclaration,
-  usedTypeIdentifiers: Set<string>
+  fileTypeInformation: FileTypeInformation
 ): ts.Node[] {
   if (moduleClassDeclaration.views.length === 0) {
     return [];
   }
   const mainView = moduleClassDeclaration.views[0];
+  const undeclaredTypeIdentifiers: Set<string> = fileTypeInformation.usedTypeIdentifiers
+    .difference(fileTypeInformation.declaredTypeIdentifiers)
+    .difference(basicTypesIdentifiers());
   return ([] as ts.Node[]).concat(
     getPrefix(),
     newlineIdentifier,
@@ -512,7 +530,9 @@ function getViewTypesDeclarationsForModule(
     newlineIdentifier,
     getOneNamedImport('ViewProps', 'react-native'),
     newlineIdentifier,
-    [...usedTypeIdentifiers].map(getIdentifierAnyDeclaration),
+    [...undeclaredTypeIdentifiers].map((identifier) =>
+      getIdentifierAnyDeclaration(identifier, fileTypeInformation.typeParametersCount)
+    ),
     newlineIdentifier,
     getPropsTypeDeclaration(getViewPropsTypeName(mainView), mainView.props, mainView.events, false),
     newlineIdentifier,
@@ -549,6 +569,10 @@ async function prettyPrintTSNodesToString(file: string, elements: ts.Node[]) {
   // return await prettifyCode(printedTs, 'typescript');
 }
 
+export function basicTypesIdentifiers(): Set<string> {
+  return new Set<string>(['any', 'number', 'string', 'undefined', 'null', 'Map', 'Set']);
+}
+
 export async function getGeneratedViewTypesFileContent(
   file: string,
   fileTypeInformation: FileTypeInformation
@@ -556,10 +580,7 @@ export async function getGeneratedViewTypesFileContent(
   const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
   return prettyPrintTSNodesToString(
     file,
-    getViewTypesDeclarationsForModule(
-      outputModuleDefinition,
-      fileTypeInformation.usedTypeIdentifiers
-    )
+    getViewTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation)
   );
 }
 
@@ -587,9 +608,9 @@ export async function getGeneratedModuleTypesFileContent(
       fileTypeInformation,
       fileTypeInformation.records,
       fileTypeInformation.enums,
-      fileTypeInformation.usedTypeIdentifiers.difference(
-        fileTypeInformation.declaredTypeIdentifiers
-      )
+      fileTypeInformation.usedTypeIdentifiers
+        .difference(fileTypeInformation.declaredTypeIdentifiers)
+        .difference(basicTypesIdentifiers())
     )
   );
 }
