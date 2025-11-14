@@ -29,7 +29,7 @@ export type SumType = {
 };
 
 // export type FunctionType = {
-//   arguments: { name: string; type: Type }[];
+//   arguments: Argument[];
 //   returnType: Type;
 // };
 
@@ -82,17 +82,17 @@ export type ConstantDeclaration = {
 export type FunctionDeclaration = {
   name: string;
   returnType: Type;
-  arguments: { name: string; type: Type }[];
+  arguments: Argument[];
   parameters: Type[];
 };
 
 export type PropDeclaration = {
   name: string;
-  arguments: { name: string; type: Type }[];
+  arguments: Argument[];
 };
 
 export type ConstructorDeclaration = {
-  arguments: { name: string; type: Type }[];
+  arguments: Argument[];
 };
 
 export type DictionaryType = {

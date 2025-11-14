@@ -94,9 +94,9 @@ public class TestModule: Module {
     Class(TestEmptyClass.self) {
     }
 
-    View(TestView.self) {
+    // View(TestView.self) {
       // Prop("TestProp") 
-    }
+    // }
 
     // TODO check if multiple views should be allowed
     View(ExpoWebView.self) {

@@ -1,14 +1,16 @@
 'use strict';
-import prettier from 'prettier';
-import ts from 'typescript';
+// import prettier from 'prettier';
+import ts, { MethodDeclaration } from 'typescript';
 
 import {
+  Argument,
   ArrayType,
   BasicType,
   ClassDeclaration,
   ConstructorDeclaration,
   DictionaryType,
   EnumType,
+  EventDeclaration,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
@@ -53,7 +55,63 @@ function getOneNamedImport(importedName: string, importFromName: string) {
   );
 }
 
-function wrapWithPromise(typeNode: ts.TypeNode): ts.TypeNode {
+function getPropEventElementDeclaration(eventDeclaration: EventDeclaration): ts.TypeElement {
+  return ts.factory.createPropertySignature(
+    undefined,
+    eventDeclaration,
+    undefined,
+    ts.factory.createFunctionTypeNode(
+      undefined,
+      [
+        ts.factory.createParameterDeclaration(
+          undefined,
+          undefined,
+          'event',
+          undefined,
+          ts.factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+        ),
+      ],
+      ts.factory.createKeywordTypeNode(ts.SyntaxKind.VoidKeyword)
+    )
+  );
+}
+
+function getPropTypeElementDeclaration(
+  propDeclaration: PropDeclaration
+): ts.TypeElement | undefined {
+  if (!propDeclaration || !propDeclaration.arguments || propDeclaration.arguments.length < 2) {
+    return undefined;
+  }
+  return ts.factory.createPropertySignature(
+    undefined,
+    propDeclaration.name,
+    undefined,
+    mapTypeToTsTypeNode(propDeclaration.arguments[1].type)
+  );
+}
+
+export function getPropsTypeDeclaration(
+  propsTypeName: string,
+  propsDeclaration: PropDeclaration[],
+  events: EventDeclaration[],
+  exported: boolean = true
+): ts.Node[] {
+  return ([] as ts.Node[]).concat(
+    ts.factory.createTypeAliasDeclaration(
+      exported ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+      propsTypeName,
+      undefined,
+      ts.factory.createTypeLiteralNode([
+        ...(propsDeclaration
+          .map(getPropTypeElementDeclaration)
+          .filter((p) => p) as ts.PropertySignature[]),
+        ...events.map(getPropEventElementDeclaration),
+      ])
+    )
+  );
+}
+
+export function wrapWithPromise(typeNode: ts.TypeNode): ts.TypeNode {
   return ts.factory.createTypeReferenceNode('Promise', [typeNode]);
 }
 
@@ -111,7 +169,7 @@ function getExportedModuleDeclaration(moduleClassDeclaration: ModuleClassDeclara
   ];
 }
 
-function getArgumentDeclaration(arg: { name: string; type: Type }): ts.ParameterDeclaration {
+export function getArgumentDeclaration(arg: Argument): ts.ParameterDeclaration {
   const optional = arg.type.kind === TypeKind.OPTIONAL;
   const argType = optional ? (arg.type.type as Type) : arg.type;
 
@@ -126,30 +184,56 @@ function getArgumentDeclaration(arg: { name: string; type: Type }): ts.Parameter
 }
 
 function getAsyncMethodDeclaration(functionDeclaration: FunctionDeclaration): ts.MethodDeclaration {
-  return getMethodDeclration(functionDeclaration, true);
+  return getTsFunction(functionDeclaration, true, true, false, true) as ts.MethodDeclaration;
 }
 
 function getSyncMethodDeclaration(functionDeclaration: FunctionDeclaration): ts.MethodDeclaration {
-  return getMethodDeclration(functionDeclaration, false);
+  return getTsFunction(functionDeclaration, false, true, false, true) as MethodDeclaration;
 }
 
-function getMethodDeclration(
+export function getTsFunction(
   functionDeclaration: FunctionDeclaration,
-  async: boolean
-): ts.MethodDeclaration {
+  async: boolean,
+  method: boolean,
+  exported: boolean,
+  declaration: boolean,
+  returnStatement?: ts.ReturnStatement[]
+): ts.FunctionDeclaration | ts.MethodDeclaration {
+  const functionModifiers: ts.ModifierLike[] = [];
+  const customReturn = !!returnStatement;
   let returnTypeNode = mapTypeToTsTypeNode(functionDeclaration.returnType);
+
+  if (exported) {
+    functionModifiers.push(ts.factory.createModifier(ts.SyntaxKind.ExportKeyword));
+  }
+
   if (async) {
     returnTypeNode = wrapWithPromise(returnTypeNode);
+    if (!declaration) {
+      functionModifiers.push(ts.factory.createModifier(ts.SyntaxKind.AsyncKeyword));
+    }
   }
-  return ts.factory.createMethodDeclaration(
-    [],
+
+  if (method) {
+    return ts.factory.createMethodDeclaration(
+      functionModifiers,
+      undefined,
+      functionDeclaration.name,
+      undefined,
+      undefined,
+      functionDeclaration.arguments.map(getArgumentDeclaration),
+      returnTypeNode,
+      ts.factory.createBlock(customReturn ? returnStatement : [])
+    );
+  }
+  return ts.factory.createFunctionDeclaration(
+    functionModifiers,
     undefined,
     functionDeclaration.name,
     undefined,
-    undefined,
     functionDeclaration.arguments.map(getArgumentDeclaration),
     returnTypeNode,
-    undefined
+    ts.factory.createBlock(customReturn ? returnStatement : [])
   );
 }
 
@@ -228,11 +312,14 @@ export function mapTypeToTsTypeNode(type: Type): ts.TypeNode {
   return mapBasicTypeToTsNode(BasicType.ANY);
 }
 
-function getClassConstructorDeclaration(constructor: ConstructorDeclaration): ts.ClassElement {
+export function getClassConstructorDeclaration(
+  constructor: ConstructorDeclaration,
+  declaration: boolean = true
+): ts.ClassElement {
   return ts.factory.createConstructorDeclaration(
     undefined,
     constructor.arguments.map(getArgumentDeclaration),
-    undefined
+    declaration ? undefined : ts.factory.createBlock([])
   );
 }
 
@@ -279,7 +366,7 @@ function getModuleDefaultValueExport(defaultValueTypename: string): ts.Node[] {
   );
 }
 
-function getIdentifierAnyDeclaration(identifier: string): ts.Node {
+export function getIdentifierAnyDeclaration(identifier: string): ts.Node {
   return ts.factory.createTypeAliasDeclaration(
     undefined,
     identifier,
@@ -288,7 +375,7 @@ function getIdentifierAnyDeclaration(identifier: string): ts.Node {
   );
 }
 
-function getRecordDeclaration(recordType: RecordType): ts.Node {
+export function getRecordDeclaration(recordType: RecordType): ts.Node {
   return ts.factory.createTypeAliasDeclaration(
     undefined,
     recordType.name,
@@ -308,7 +395,7 @@ function getRecordDeclaration(recordType: RecordType): ts.Node {
   );
 }
 
-function getEnumDeclaration(enumType: EnumType): ts.Node {
+export function getEnumDeclaration(enumType: EnumType): ts.Node {
   return ts.factory.createEnumDeclaration(
     undefined,
     enumType.name,
@@ -341,35 +428,6 @@ function getModuleTypesDeclarationsForModule(
   );
 }
 
-function getPropTypeElementDeclaration(propDeclaration: PropDeclaration): ts.TypeElement {
-  return ts.factory.createPropertySignature(
-    [],
-    propDeclaration.name,
-    undefined,
-    mapTypeToTsTypeNode(propDeclaration.arguments[1].type)
-  );
-}
-
-function getPropsTypeDeclaration(propsDeclaration: PropDeclaration[]): ts.Node[] {
-  return ([] as ts.Node[]).concat(
-    ts.factory.createInterfaceDeclaration(
-      // [ts.factory.createModifier([ts.SyntaxKind.ExportKeyword])],
-      [],
-      'Props',
-      undefined,
-      [
-        ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-          ts.factory.createExpressionWithTypeArguments(
-            ts.factory.createIdentifier('ViewProps'),
-            []
-          ),
-        ]),
-      ],
-      propsDeclaration.map(getPropTypeElementDeclaration)
-    )
-  );
-}
-
 function getViewDefaultValueExport(view: ViewDeclaration): ts.Node[] {
   return ([] as ts.Node[]).concat(
     ts.factory.createParameterDeclaration(
@@ -378,12 +436,16 @@ function getViewDefaultValueExport(view: ViewDeclaration): ts.Node[] {
       '_default',
       undefined,
       ts.factory.createTypeReferenceNode('React.JSXElementConstructor', [
-        ts.factory.createTypeReferenceNode('Props'),
+        ts.factory.createTypeReferenceNode(getViewPropsTypeName(view)),
       ]),
       undefined
     ),
     ts.factory.createExportDefault(ts.factory.createIdentifier('_default'))
   );
+}
+
+export function getViewPropsTypeName(view: ViewDeclaration): string {
+  return view.name + (view.name.endsWith('View') ? 'Props' : 'ViewProps');
 }
 
 function getViewTypesDeclarationsForModule(
@@ -393,6 +455,7 @@ function getViewTypesDeclarationsForModule(
   if (moduleClassDeclaration.views.length === 0) {
     return [];
   }
+  const mainView = moduleClassDeclaration.views[0];
   return ([] as ts.Node[]).concat(
     getPrefix(),
     newlineIdentifier,
@@ -402,21 +465,21 @@ function getViewTypesDeclarationsForModule(
     newlineIdentifier,
     [...usedTypeIdentifiers].map(getIdentifierAnyDeclaration),
     newlineIdentifier,
-    getPropsTypeDeclaration(moduleClassDeclaration.views[0].props),
+    getPropsTypeDeclaration(getViewPropsTypeName(mainView), mainView.props, mainView.events, false),
     newlineIdentifier,
     getViewDefaultValueExport(moduleClassDeclaration.views[0])
   );
 }
 
-async function prettifyCode(text: string, parser: 'babel' | 'typescript' = 'babel') {
-  return await prettier.format(text, {
-    parser,
-    tabWidth: 2,
-    printWidth: 100,
-    trailingComma: 'none',
-    singleQuote: true,
-  });
-}
+// async function prettifyCode(text: string, parser: 'babel' | 'typescript' = 'babel') {
+//   return await prettier.format(text, {
+//     parser,
+//     tabWidth: 2,
+//     printWidth: 100,
+//     trailingComma: 'none',
+//     singleQuote: true,
+//   });
+// }
 
 async function prettyPrintTSNodesToString(file: string, elements: ts.Node[]) {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
@@ -433,7 +496,8 @@ async function prettyPrintTSNodesToString(file: string, elements: ts.Node[]) {
     viewTypes,
     resultFile
   );
-  return await prettifyCode(printedTs, 'typescript');
+  return printedTs;
+  // return await prettifyCode(printedTs, 'typescript');
 }
 
 export async function getGeneratedViewTypesFileContent(
