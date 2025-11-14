@@ -41,10 +41,8 @@ enum TestEnum {
 }
 
 
-export function SimpleFunction(a: number, b: number): number { return 0; // Should see the type {"kind":0,"type":2}.
- }
-export function TestArrays(a: number[]): string[][] { return []; // Should see the type {"kind":5,"type":{"kind":5,"type":{"kind":0,"type":1}}}.
- }
+export function SimpleFunction(a: number, b: number): number { return 0; }
+export function TestArrays(a: number[]): string[][] { return []; }
 export function TestDictionaries(a: {
     [key: number]: string;
 }, b: {
@@ -54,20 +52,15 @@ export function TestDictionaries(a: {
 }): any { }
 export function TestTypeCombinations(a: number[][][]): (string | {
     [key: number]: string;
-})[][] { return []; // Should see the type {"kind":5,"type":{"kind":5,"type":{"kind":2,"type":{"name":"Either","types":[{"kind":0,"type":1},{"kind":6,"type":{"key":{"kind":0,"type":2},"value":{"kind":0,"type":1}}}]}}}}.
- }
-export function TestFunctionReturningRecord(): TestRecord { return { basicString: "", basicStringInitialized: "", basicIntInferred: null, basicDoubleInferred: null, basicStringInferred: null, enumInferred: null, complexEnumInferred: null, recordInferred: null, optionalInt: 0, letDoubleBinding: 0, fieldWithoutAnnotation: 0 }; // Should see the type {"kind":1,"type":"TestRecord"}.
- }
-export function TestFunctionReturningEnum(): TestEnum { return TestEnum.simpleCase; // Should see the type {"kind":1,"type":"TestEnum"}.
- }
-export async function TestSimpleAsyncFunction(a: string, b: string): Promise<string> { return ""; // Should see the type {"kind":0,"type":1}.
- }
+})[][] { return []; }
+export function TestFunctionReturningRecord(): TestRecord { return { basicString: "", basicStringInitialized: "", basicIntInferred: null, basicDoubleInferred: null, basicStringInferred: null, enumInferred: null, complexEnumInferred: null, recordInferred: null, optionalInt: 0, letDoubleBinding: 0, fieldWithoutAnnotation: 0 }; }
+export function TestFunctionReturningEnum(): TestEnum { return TestEnum.simpleCase; }
+export async function TestSimpleAsyncFunction(a: string, b: string): Promise<string> { return ""; }
 export class TestClassWithConstructor extends SharedObject {
     constructor(a: number) { }
 }
 export class TestBasicClass extends SharedObject {
-    async TestAsyncFunction(a: number): Promise<string> { return ""; // Should see the type {"kind":0,"type":1}.
-     }
+    async TestAsyncFunction(a: number): Promise<string> { return ""; }
     constructor(a: number, b: string, c: string | TestRecord) { }
 }
 export class TestEmptyClass extends SharedObject {

@@ -22,15 +22,13 @@ import {
   ViewDeclaration,
 } from './typeInformation';
 import {
-  getArgumentDeclaration,
   getEnumDeclaration,
   getIdentifierAnyDeclaration,
   getPropsTypeDeclaration,
   getRecordDeclaration,
   getTsClass,
+  getTsFunction,
   getViewPropsTypeName,
-  mapTypeToTsTypeNode,
-  wrapWithPromise,
 } from './typescriptGeneration';
 
 const directoryPath = process.cwd();
@@ -181,14 +179,7 @@ function maybeWrapWithReturnStatement(
     }
   }
   // TODO Maybe add a fallback similar to original, when we cannot provide return statement
-  return [
-    ts.addSyntheticTrailingComment(
-      ts.factory.createReturnStatement(getMockedValueForType(type, fileTypeInformation)),
-      ts.SyntaxKind.SingleLineCommentTrivia,
-      ` Should see the type ${JSON.stringify(type)}.`,
-      true
-    ),
-  ];
+  return [ts.factory.createReturnStatement(getMockedValueForType(type, fileTypeInformation))];
 }
 
 function getPrefix() {
@@ -203,26 +194,14 @@ function getMockedFunctionDeclaration(
   async: boolean,
   exported: boolean
 ): ts.FunctionDeclaration {
-  const functionModifiers: ts.ModifierLike[] = exported
-    ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)]
-    : [];
-
-  let returnTypeNode = mapTypeToTsTypeNode(functionDeclaration.returnType);
-  if (async) {
-    returnTypeNode = wrapWithPromise(returnTypeNode);
-    functionModifiers.push(ts.factory.createModifier(ts.SyntaxKind.AsyncKeyword));
-  }
-  return ts.factory.createFunctionDeclaration(
-    functionModifiers,
-    undefined,
-    functionDeclaration.name,
-    undefined,
-    functionDeclaration.arguments.map(getArgumentDeclaration),
-    returnTypeNode,
-    ts.factory.createBlock(
-      maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation)
-    )
-  );
+  return getTsFunction(
+    functionDeclaration,
+    async,
+    false,
+    exported,
+    false,
+    maybeWrapWithReturnStatement(functionDeclaration.returnType, fileTypeInformation)
+  ) as ts.FunctionDeclaration;
 }
 
 function getFunctionReturnBlock(

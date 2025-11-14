@@ -3,12 +3,14 @@ import fs from 'fs';
 import YAML from 'yaml';
 
 import {
+  Argument,
   BasicType,
   ClassDeclaration,
   ConstantDeclaration,
   ConstructorDeclaration,
   DictionaryType,
   EnumType,
+  Field,
   FileTypeInformation,
   FunctionDeclaration,
   ModuleClassDeclaration,
@@ -502,7 +504,7 @@ function parseRecordStructure(
   usedTypeIdentifiers: Set<string>,
   file: FileType
 ): RecordType {
-  const fields: { name: string; type: Type }[] = [];
+  const fields: Field[] = [];
 
   for (const substructure of recordStructure['key.substructure']) {
     if (substructure['key.kind'] === 'source.lang.swift.decl.var.instance') {
@@ -635,7 +637,7 @@ function collectModuleTypeIdentifiers(
   const collect = (type: Type) => {
     collectTypeIdentifiers(type, usedTypeIdentifiers);
   };
-  const collectArg = (arg: { name: string; type: Type }) => {
+  const collectArg = (arg: Argument) => {
     collect(arg.type);
   };
   const collectFunction = (functionDeclaration: FunctionDeclaration) => {
