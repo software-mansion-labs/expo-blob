@@ -414,6 +414,12 @@ export const ScreensList: ScreenConfig[] = [
   },
   {
     getComponent() {
+      return optionalRequire(() => require('../screens/TypeInformation'));
+    },
+    name: 'TypeInformation',
+  },
+  {
+    getComponent() {
       return optionalRequire(() => require('../screens/StoreReview'));
     },
     name: 'StoreReview',

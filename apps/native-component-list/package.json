@@ -68,6 +68,7 @@
     "expo-background-task": "~1.0.7",
     "expo-battery": "~10.0.7",
     "expo-blob": "~0.1.6",
+    "expo-type-information": "~0.0.1",
     "expo-blur": "~15.0.7",
     "expo-brightness": "~14.0.7",
     "expo-calendar": "~15.0.7",
