@@ -195,10 +195,10 @@ export function deserializeTypeInformation({
   };
 }
 
-export function getFileTypeInformation(
+export async function getFileTypeInformation(
   absoluteFilePath: string,
   preprocessFile: boolean = false
-): FileTypeInformation | null {
+): Promise<FileTypeInformation | null> {
   if (absoluteFilePath.endsWith('.swift')) {
     if (preprocessFile) {
       return getFileTypeInformationForString(fs.readFileSync(absoluteFilePath, 'utf-8'), 'swift');
@@ -208,17 +208,17 @@ export function getFileTypeInformation(
   return null;
 }
 
-export function getFileTypeInformationForString(
+export async function getFileTypeInformationForString(
   content: string,
   language: 'swift'
-): FileTypeInformation | null {
+): Promise<FileTypeInformation | null> {
   if (language === 'swift') {
     const tmp = os.tmpdir();
     const filePath = path.resolve(tmp, 'TypeInformationTemporaryFile.swift');
     const preprocessedContent = preprocessSwiftFile(content);
     fs.writeFileSync(filePath, preprocessedContent, 'utf8');
-    const fileTypeInfo = getFileTypeInformation(filePath);
-    fs.rmSync(filePath);
+    const fileTypeInfo = await getFileTypeInformation(filePath);
+    // fs.rmSync(filePath);
     return fileTypeInfo;
   }
   return null;
