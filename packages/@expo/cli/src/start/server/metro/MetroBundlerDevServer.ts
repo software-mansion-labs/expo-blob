@@ -1436,21 +1436,21 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }
 
   public async startTypeScriptServices(): Promise<any> {
-    const { projectRoot, metro } = this;
     const startTypescriptTypeGenerationPromise = startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
       projectRoot: this.projectRoot,
     });
 
+    return startTypescriptTypeGenerationPromise;
+  }
+
+  public async inlineModules(): Promise<void> {
+    const { projectRoot, metro } = this;
     const { exp } = getConfig(this.projectRoot);
     if (exp.experiments?.inlineModules === true) {
-      return Promise.all([
-        startTypescriptTypeGenerationPromise,
-        startModuleGenerationAsync({ projectRoot, metro }),
-      ]);
+      return startModuleGenerationAsync({ projectRoot, metro });
     }
-    return startTypescriptTypeGenerationPromise;
   }
 
   protected getConfigModuleIds(): string[] {

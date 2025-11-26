@@ -106,6 +106,10 @@ export async function startAsync(
     await devServerManager.bootstrapTypeScriptAsync();
   }
 
+  if (exp.experiments?.inlineModules) {
+    await devServerManager.inlineModules();
+  }
+
   if (!env.EXPO_NO_DEPENDENCY_VALIDATION && !settings.webOnly && !options.devClient) {
     await profile(validateDependenciesVersionsAsync)(projectRoot, exp, pkg);
   }

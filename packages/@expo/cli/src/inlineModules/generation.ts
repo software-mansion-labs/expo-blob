@@ -1,9 +1,9 @@
 import { getConfig } from '@expo/config';
 import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import Server from '@expo/metro/metro/Server';
-import type MetroServer from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
 import { Event, EventsQueue } from './generation.types';
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
@@ -13,24 +13,14 @@ export interface ModuleGenerationArguments {
   metro: Server | null;
 }
 
-function findUpTSConfig(cwd: string): string | null {
-  const tsconfigPath = path.resolve(cwd, './tsconfig.json');
-  if (fs.existsSync(tsconfigPath)) {
-    return path.dirname(tsconfigPath);
+function findUpPackageJsonDirectory(cwd: string): string | null {
+  if (['.', path.sep].includes(cwd)) return null;
+
+  const found = resolveFrom.silent(cwd, './package.json');
+  if (found) {
+    return cwd;
   }
-
-  const parent = path.dirname(cwd);
-  if (parent === cwd) return null;
-
-  return findUpTSConfig(parent);
-}
-
-function findUpTSProjectRootOrThrow(dir: string): string {
-  const tsProjectRoot = findUpTSConfig(dir);
-  if (!tsProjectRoot) {
-    throw new Error('Local modules watched dir needs to be inside a TS project with tsconfig.json');
-  }
-  return tsProjectRoot;
+  return findUpPackageJsonDirectory(path.dirname(cwd));
 }
 
 const nativeExtensions = ['.kt', '.swift'];
@@ -102,8 +92,11 @@ function typesAndLocalModulePathsForFile(
   const fileName = path.basename(absoluteFilePath);
   const moduleName = trimExtension(fileName);
 
-  const watchedDirTSProjectRoot = findUpTSProjectRootOrThrow(watchedDirRootAbolutePath);
-  const filePathRelativeToTSProjectRoot = path.relative(watchedDirTSProjectRoot, absoluteFilePath);
+  const watchedDirProjectRoot = findUpPackageJsonDirectory(watchedDirRootAbolutePath);
+  if (!watchedDirProjectRoot) {
+    throw Error('Watched directory is not inside a project with package.json!');
+  }
+  const filePathRelativeToTSProjectRoot = path.relative(watchedDirProjectRoot, absoluteFilePath);
   const filePathRelativeToTSProjectRootWithoutExtension = trimExtension(
     filePathRelativeToTSProjectRoot
   );
