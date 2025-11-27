@@ -1445,12 +1445,17 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     return startTypescriptTypeGenerationPromise;
   }
 
-  public async inlineModules(): Promise<void> {
+  private async inlineModulesSetup(): Promise<void> {
     const { projectRoot, metro } = this;
     const { exp } = getConfig(this.projectRoot);
     if (exp.experiments?.inlineModules === true) {
       return startModuleGenerationAsync({ projectRoot, metro });
     }
+  }
+
+  protected async postStartAsync(options: BundlerStartOptions): Promise<void> {
+    await super.postStartAsync(options);
+    return this.inlineModulesSetup();
   }
 
   protected getConfigModuleIds(): string[] {

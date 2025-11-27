@@ -189,15 +189,6 @@ export class DevServerManager {
     return exp;
   }
 
-  async inlineModules(): Promise<void> {
-    const metro = this.devServers.find(
-      (server) => server.name === 'metro'
-    ) as MetroBundlerDevServer;
-    if (metro) {
-      return metro.inlineModules();
-    }
-  }
-
   async bootstrapTypeScriptAsync() {
     const typescriptPrerequisite = await this.ensureProjectPrerequisiteAsync(
       TypeScriptProjectPrerequisite

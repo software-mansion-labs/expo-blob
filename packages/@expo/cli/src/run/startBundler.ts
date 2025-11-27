@@ -32,7 +32,6 @@ export async function startBundlerAsync(
   };
 
   const devServerManager = await DevServerManager.startMetroAsync(projectRoot, options);
-  await devServerManager.inlineModules();
 
   // Present the Terminal UI.
   if (!headless && isInteractive()) {

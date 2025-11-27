@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -14,7 +47,7 @@ const metro_cache_1 = require("@expo/metro/metro-cache");
 const chalk_1 = __importDefault(require("chalk"));
 const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
-const path_1 = __importDefault(require("path"));
+const path_1 = __importStar(require("path"));
 const resolve_from_1 = __importDefault(require("resolve-from"));
 const customizeFrame_1 = require("./customizeFrame");
 Object.defineProperty(exports, "INTERNAL_CALLSITES_REGEX", { enumerable: true, get: function () { return customizeFrame_1.INTERNAL_CALLSITES_REGEX; } });
@@ -87,8 +120,11 @@ function memoize(fn) {
     });
 }
 function findUpPackageJsonDirectory(cwd) {
-    const suffixLenth = 12;
-    return findUpPackageJson(cwd)?.slice(0, -suffixLenth);
+    const packageDirectory = findUpPackageJson(cwd);
+    if (packageDirectory) {
+        return path_1.default.dirname(packageDirectory);
+    }
+    return null;
 }
 function resolveInlineModules(projectRoot, context, moduleName, platform) {
     const inlineModulesModulesPath = path_1.default.resolve(projectRoot, './.expo/inlineModules/modules');
@@ -100,10 +136,10 @@ function resolveInlineModules(projectRoot, context, moduleName, platform) {
         inlineModuleFileExtension = '.view.js';
     }
     if (inlineModuleFileExtension) {
-        // let moduleProjectRoot: string | undefined = projectRoot;
-        // if (matchesGlob(context.originModulePath, path.resolve(projectRoot, './*'))) {
-        const moduleProjectRoot = findUpPackageJsonDirectory(path_1.default.dirname(context.originModulePath));
-        // }
+        let moduleProjectRoot = projectRoot;
+        if (!(0, path_1.matchesGlob)(context.originModulePath, path_1.default.resolve(projectRoot, './**/*'))) {
+            moduleProjectRoot = findUpPackageJsonDirectory(path_1.default.dirname(context.originModulePath));
+        }
         if (!moduleProjectRoot) {
             return { type: 'empty' };
         }
