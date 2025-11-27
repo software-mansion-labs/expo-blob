@@ -26,15 +26,22 @@ config.watchFolders = [
   path.join(monorepoRoot, 'apps/test-suite'), // Workaround for Yarn v1 workspace issue where workspace dependencies aren't properly linked, should be at `<root>/node_modules/apps/test-suite`
 ];
 
-function findUpPackageJsonDirectory(cwd) {
-  if (['.', path.sep].includes(cwd)) return null;
+function findUpPackageJsonDirectory(cwd, directoryToPackage) {
+  if (['.', path.sep].includes(cwd)) return undefined;
+  if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
 
   const found = resolveFrom.silent(cwd, './package.json');
   if (found) {
+    directoryToPackage.set(cwd, cwd);
     return cwd;
   }
-  return findUpPackageJsonDirectory(path.dirname(cwd));
+  const packageRoot = findUpPackageJsonDirectory(path.dirname(cwd), directoryToPackage);
+  if (packageRoot) {
+    directoryToPackage.set(cwd, packageRoot);
+  }
+  return packageRoot;
 }
+const directoryToPackage = new Map();
 
 // When testing on MacOS we need to swap out `react-native` for `react-native-macos`
 config.resolver.resolveRequest = (context, moduleName, platform) => {
@@ -55,15 +62,20 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     inlineModuleFileExtension = '.view.js';
   }
   if (inlineModuleFileExtension) {
-    let moduleProjectRoot = __dirname;
-    if (!path.matchesGlob(context.originModulePath, path.resolve(__dirname, './**/*'))) {
-      moduleProjectRoot = findUpPackageJsonDirectory(path.dirname(context.originModulePath));
+    console.log('!!!' + JSON.stringify([...directoryToPackage]));
+    const originModuleDirname = path.dirname(context.originModulePath);
+    let modulePackageRoot = directoryToPackage.get(originModuleDirname);
+    if (!modulePackageRoot) {
+      modulePackageRoot = findUpPackageJsonDirectory(
+        path.dirname(context.originModulePath),
+        directoryToPackage
+      );
     }
-    if (!moduleProjectRoot) {
+    if (!modulePackageRoot) {
       return { type: 'empty' };
     }
     const modulePathRelativeToItsPackageRoot = path.relative(
-      moduleProjectRoot,
+      modulePackageRoot,
       fs.realpathSync(path.dirname(context.originModulePath))
     );
     const modulePath = path.resolve(
@@ -72,6 +84,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       moduleName.substring(0, moduleName.lastIndexOf('.')) + inlineModuleFileExtension
     );
 
+    console.log('!!!' + JSON.stringify([...directoryToPackage]));
     return {
       filePath: modulePath,
       type: 'sourceFile',

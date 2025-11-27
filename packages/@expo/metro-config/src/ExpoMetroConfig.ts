@@ -143,16 +143,28 @@ function memoize<T extends (...args: any[]) => any>(fn: T): T {
   }) as T;
 }
 
-function findUpPackageJsonDirectory(cwd: string): string | null {
-  const packageDirectory = findUpPackageJson(cwd);
-  if (packageDirectory) {
-    return path.dirname(packageDirectory);
+function findUpPackageJsonDirectory(
+  cwd: string,
+  directoryToPackage: Map<string, string>
+): string | undefined {
+  if (['.', path.sep].includes(cwd)) return undefined;
+  if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
+
+  const found = resolveFrom.silent(cwd, './package.json');
+  if (found) {
+    directoryToPackage.set(cwd, cwd);
+    return cwd;
   }
-  return null;
+  const packageRoot = findUpPackageJsonDirectory(path.dirname(cwd), directoryToPackage);
+  if (packageRoot) {
+    directoryToPackage.set(cwd, packageRoot);
+  }
+  return packageRoot;
 }
 
 function resolveInlineModules(
   projectRoot: string,
+  directoryToPackage: Map<string, string>,
   context: CustomResolutionContext,
   moduleName: string,
   platform: string | null
@@ -167,15 +179,19 @@ function resolveInlineModules(
   }
 
   if (inlineModuleFileExtension) {
-    let moduleProjectRoot: string | null = projectRoot;
-    if (!matchesGlob(context.originModulePath, path.resolve(projectRoot, './**/*'))) {
-      moduleProjectRoot = findUpPackageJsonDirectory(path.dirname(context.originModulePath));
+    const originModuleDirname = path.dirname(context.originModulePath);
+    let modulePackageRoot: string | undefined = directoryToPackage.get(originModuleDirname);
+    if (!modulePackageRoot) {
+      modulePackageRoot = findUpPackageJsonDirectory(
+        path.dirname(context.originModulePath),
+        directoryToPackage
+      );
     }
-    if (!moduleProjectRoot) {
+    if (!modulePackageRoot) {
       return { type: 'empty' };
     }
     const modulePathRelativeToItsPackageRoot = path.relative(
-      moduleProjectRoot,
+      modulePackageRoot,
       fs.realpathSync(path.dirname(context.originModulePath))
     );
 
@@ -338,12 +354,13 @@ export function getDefaultConfig(
 
   const serverRoot = getMetroServerRoot(projectRoot);
   const expoConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const resolveInlineModulesWithRoot = (
+  const directoryToPackage = new Map<string, string>();
+  const resolveInlineModulesWithAdditionalConfig = (
     context: CustomResolutionContext,
     moduleName: string,
     platform: string | null
   ) => {
-    return resolveInlineModules(projectRoot, context, moduleName, platform);
+    return resolveInlineModules(projectRoot, directoryToPackage, context, moduleName, platform);
   };
 
   const contextResolveRequest = (
@@ -379,7 +396,7 @@ export function getDefaultConfig(
       nodeModulesPaths,
       resolveRequest:
         expoConfig.exp.experiments?.inlineModules === true
-          ? resolveInlineModulesWithRoot
+          ? resolveInlineModulesWithAdditionalConfig
           : defaultResolveRequest,
       blockList: [
         // .expo/types contains generated declaration files which are not and should not be processed by Metro.

@@ -13,16 +13,24 @@ export interface ModuleGenerationArguments {
   metro: Server | null;
 }
 
-function findUpPackageJsonDirectory(cwd: string): string | null {
-  if (['.', path.sep].includes(cwd)) return null;
+function findUpPackageJsonDirectory(
+  cwd: string,
+  directoryToPackage: Map<string, string>
+): string | undefined {
+  if (['.', path.sep].includes(cwd)) return undefined;
+  if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
 
   const found = resolveFrom.silent(cwd, './package.json');
   if (found) {
+    directoryToPackage.set(cwd, cwd);
     return cwd;
   }
-  return findUpPackageJsonDirectory(path.dirname(cwd));
+  const packageRoot = findUpPackageJsonDirectory(path.dirname(cwd), directoryToPackage);
+  if (packageRoot) {
+    directoryToPackage.set(cwd, packageRoot);
+  }
+  return packageRoot;
 }
-
 const nativeExtensions = ['.kt', '.swift'];
 
 function isValidLocalModuleFileName(fileName: string): boolean {
@@ -80,7 +88,8 @@ function trimExtension(fileName: string): string {
 function typesAndLocalModulePathsForFile(
   projectRoot: string,
   watchedDirRootAbolutePath: string,
-  absoluteFilePath: string
+  absoluteFilePath: string,
+  directoryToPackage: Map<string, string>
 ): {
   moduleTypesFilePath: string;
   viewTypesFilePath: string;
@@ -92,7 +101,10 @@ function typesAndLocalModulePathsForFile(
   const fileName = path.basename(absoluteFilePath);
   const moduleName = trimExtension(fileName);
 
-  const watchedDirProjectRoot = findUpPackageJsonDirectory(watchedDirRootAbolutePath);
+  const watchedDirProjectRoot = findUpPackageJsonDirectory(
+    watchedDirRootAbolutePath,
+    directoryToPackage
+  );
   if (!watchedDirProjectRoot) {
     throw Error('Watched directory is not inside a project with package.json!');
   }
@@ -224,10 +236,16 @@ function onSourceFileCreated(
   projectRoot: string,
   watchedDirRootAbolutePath: string,
   absoluteFilePath: string,
+  directoryToPackage: Map<string, string>,
   filesWatched?: Set<string>
 ): void {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
-    typesAndLocalModulePathsForFile(projectRoot, watchedDirRootAbolutePath, absoluteFilePath);
+    typesAndLocalModulePathsForFile(
+      projectRoot,
+      watchedDirRootAbolutePath,
+      absoluteFilePath,
+      directoryToPackage
+    );
 
   if (filesWatched && fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
     filesWatched.add(absoluteFilePath);
@@ -263,7 +281,8 @@ export default _default`
 
 async function generateMirrorDirectories(
   projectRoot: string,
-  filesWatched?: Set<string>
+  filesWatched?: Set<string>,
+  directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
   createFreshMirrorDirectories(projectRoot);
 
@@ -289,6 +308,7 @@ async function generateMirrorDirectories(
           projectRoot,
           watchedDirRootAbolutePath,
           absoluteDirentPath,
+          directoryToPackage,
           filesWatched
         );
       } else if (dirent.isDirectory()) {
@@ -329,6 +349,7 @@ export async function startModuleGenerationAsync({
 }: ModuleGenerationArguments): Promise<void> {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const filesWatched = new Set<string>();
+  const directoryToPackage: Map<string, string> = new Map<string, string>();
 
   const isFileExcluded = (absolutePath: string) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
@@ -352,7 +373,12 @@ export async function startModuleGenerationAsync({
 
   const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbolutePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
-      typesAndLocalModulePathsForFile(projectRoot, watchedDirRootAbolutePath, absoluteFilePath);
+      typesAndLocalModulePathsForFile(
+        projectRoot,
+        watchedDirRootAbolutePath,
+        absoluteFilePath,
+        directoryToPackage
+      );
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
@@ -388,7 +414,13 @@ export async function startModuleGenerationAsync({
       ) {
         const { filePath } = event;
         if (event.type === 'add') {
-          onSourceFileCreated(projectRoot, watchedDirAncestor, filePath, filesWatched);
+          onSourceFileCreated(
+            projectRoot,
+            watchedDirAncestor,
+            filePath,
+            directoryToPackage,
+            filesWatched
+          );
         } else if (event.type === 'delete') {
           onSourceFileRemoved(filePath, watchedDirAncestor);
         }
@@ -398,5 +430,5 @@ export async function startModuleGenerationAsync({
 
   watcher?.addListener('change', listener);
 
-  await generateMirrorDirectories(projectRoot, filesWatched);
+  await generateMirrorDirectories(projectRoot, filesWatched, directoryToPackage);
 }
