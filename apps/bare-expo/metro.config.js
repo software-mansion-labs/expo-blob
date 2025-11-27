@@ -62,7 +62,6 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     inlineModuleFileExtension = '.view.js';
   }
   if (inlineModuleFileExtension) {
-    console.log('!!!' + JSON.stringify([...directoryToPackage]));
     const originModuleDirname = path.dirname(context.originModulePath);
     let modulePackageRoot = directoryToPackage.get(originModuleDirname);
     if (!modulePackageRoot) {
@@ -84,7 +83,6 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       moduleName.substring(0, moduleName.lastIndexOf('.')) + inlineModuleFileExtension
     );
 
-    console.log('!!!' + JSON.stringify([...directoryToPackage]));
     return {
       filePath: modulePath,
       type: 'sourceFile',
