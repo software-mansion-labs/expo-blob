@@ -13,7 +13,6 @@ import { TypeScriptProjectPrerequisite } from '../doctor/typescript/TypeScriptPr
 import { printItem } from '../interface/commandsTable';
 import * as AndroidDebugBridge from '../platforms/android/adb';
 import { resolveSchemeAsync } from '../resolveOptions';
-import { MetroBundlerDevServer } from './metro/MetroBundlerDevServer';
 
 const debug = require('debug')('expo:start:server:devServerManager') as typeof console.log;
 
