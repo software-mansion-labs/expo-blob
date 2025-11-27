@@ -3,7 +3,6 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const fs = require('node:fs');
 const path = require('node:path');
-const resolveFrom = require('resolve-from');
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
@@ -30,8 +29,8 @@ function findUpPackageJsonDirectory(cwd, directoryToPackage) {
   if (['.', path.sep].includes(cwd)) return undefined;
   if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
 
-  const found = resolveFrom.silent(cwd, './package.json');
-  if (found) {
+  const packageFound = fs.existsSync(path.resolve(cwd, './package.json'));
+  if (packageFound) {
     directoryToPackage.set(cwd, cwd);
     return cwd;
   }

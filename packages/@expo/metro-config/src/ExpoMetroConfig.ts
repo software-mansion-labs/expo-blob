@@ -16,7 +16,7 @@ import { CustomResolutionContext, Resolution } from '@expo/metro/metro-resolver/
 import chalk from 'chalk';
 import fs from 'fs';
 import os from 'os';
-import path, { matchesGlob } from 'path';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { getDefaultCustomizeFrame, INTERNAL_CALLSITES_REGEX } from './customizeFrame';
@@ -150,8 +150,8 @@ function findUpPackageJsonDirectory(
   if (['.', path.sep].includes(cwd)) return undefined;
   if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
 
-  const found = resolveFrom.silent(cwd, './package.json');
-  if (found) {
+  const packageFound = fs.existsSync(path.resolve(cwd, './package.json'));
+  if (packageFound) {
     directoryToPackage.set(cwd, cwd);
     return cwd;
   }

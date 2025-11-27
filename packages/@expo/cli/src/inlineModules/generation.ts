@@ -3,7 +3,6 @@ import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import Server from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
-import resolveFrom from 'resolve-from';
 
 import { Event, EventsQueue } from './generation.types';
 import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
@@ -20,8 +19,8 @@ function findUpPackageJsonDirectory(
   if (['.', path.sep].includes(cwd)) return undefined;
   if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
 
-  const found = resolveFrom.silent(cwd, './package.json');
-  if (found) {
+  const packageFound = fs.existsSync(path.resolve(cwd, './package.json'));
+  if (packageFound) {
     directoryToPackage.set(cwd, cwd);
     return cwd;
   }

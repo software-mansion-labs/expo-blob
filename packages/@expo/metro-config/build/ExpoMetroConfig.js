@@ -91,8 +91,8 @@ function findUpPackageJsonDirectory(cwd, directoryToPackage) {
         return undefined;
     if (directoryToPackage.has(cwd))
         return directoryToPackage.get(cwd);
-    const found = resolve_from_1.default.silent(cwd, './package.json');
-    if (found) {
+    const packageFound = fs_1.default.existsSync(path_1.default.resolve(cwd, './package.json'));
+    if (packageFound) {
         directoryToPackage.set(cwd, cwd);
         return cwd;
     }
