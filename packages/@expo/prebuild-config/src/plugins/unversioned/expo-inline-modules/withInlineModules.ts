@@ -7,10 +7,6 @@ export const withInlineModules = (config: ExpoConfig, props: any) => {
   config = createBuildGradlePropsConfigPlugin(
     [
       {
-        propName: 'expo.inlineModules.enabled',
-        propValueGetter: (conf) => (!!conf.experiments?.inlineModules).toString(),
-      },
-      {
         propName: 'expo.inlineModules.watchedDirectories',
         propValueGetter: (conf) => {
           if (!conf.experiments?.inlineModules) {
@@ -25,10 +21,6 @@ export const withInlineModules = (config: ExpoConfig, props: any) => {
 
   config = createBuildPodfilePropsConfigPlugin(
     [
-      {
-        propName: 'expo.inlineModules.enabled',
-        propValueGetter: (conf) => (!!conf.experiments?.inlineModules).toString(),
-      },
       {
         propName: 'expo.inlineModules.watchedDirectories',
         propValueGetter: (conf) => {

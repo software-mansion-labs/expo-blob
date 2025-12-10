@@ -135,12 +135,10 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
-    if (findProperty('expo.inlineModules.enabled') == 'true') {
-        sourceSets {
-            main {
-                java {
-                    srcDirs += [file('build/inline/modules/').absolutePath]
-                }
+    sourceSets {
+        main {
+            java {
+                srcDirs += [file('build/inline/modules/').absolutePath]
             }
         }
     }
@@ -212,20 +210,18 @@ class ExecuteSetupAndroidProject implements Plugin<Project> {
 apply plugin: ExecuteSetupAndroidProject
 
 gradle.projectsEvaluated {
-  if (findProperty('expo.inlineModules.enabled') == 'true') {
-    providers.exec {
-      workingDir(projectRoot)
-      commandLine(
-        'node',
-        '--no-warnings',
-        '--eval',
-        'require(\'expo/bin/autolinking\')',
-        'expo-modules-autolinking',
-        'mirror-kotlin-inline-modules',
-        file('src/main/java/inline/modules/').absolutePath,
-        file('build/inline/modules/').absolutePath,
-        findProperty('expo.inlineModules.watchedDirectories')
-      )
-    }.standardOutput.asText.get()
-  }
+  providers.exec {
+    workingDir(projectRoot)
+    commandLine(
+      'node',
+      '--no-warnings',
+      '--eval',
+      'require(\'expo/bin/autolinking\')',
+      'expo-modules-autolinking',
+      'mirror-kotlin-inline-modules',
+      file('src/main/java/inline/modules/').absolutePath,
+      file('build/inline/modules/').absolutePath,
+      findProperty('expo.inlineModules.watchedDirectories') ?: []
+    )
+  }.standardOutput.asText.get()
 }

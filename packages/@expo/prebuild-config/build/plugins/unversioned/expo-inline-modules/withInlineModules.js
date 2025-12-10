@@ -19,9 +19,6 @@ const {
 } = _configPlugins().IOSConfig.BuildProperties;
 const withInlineModules = (config, props) => {
   config = createBuildGradlePropsConfigPlugin([{
-    propName: 'expo.inlineModules.enabled',
-    propValueGetter: conf => (!!conf.experiments?.inlineModules).toString()
-  }, {
     propName: 'expo.inlineModules.watchedDirectories',
     propValueGetter: conf => {
       if (!conf.experiments?.inlineModules) {
@@ -31,9 +28,6 @@ const withInlineModules = (config, props) => {
     }
   }], 'withAndroidInlineModules')(config);
   config = createBuildPodfilePropsConfigPlugin([{
-    propName: 'expo.inlineModules.enabled',
-    propValueGetter: conf => (!!conf.experiments?.inlineModules).toString()
-  }, {
     propName: 'expo.inlineModules.watchedDirectories',
     propValueGetter: conf => {
       if (!conf.experiments?.inlineModules) {
