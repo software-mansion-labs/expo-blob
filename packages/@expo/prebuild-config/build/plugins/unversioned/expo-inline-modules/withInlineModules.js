@@ -20,26 +20,26 @@ const {
 const withInlineModules = (config, props) => {
   config = createBuildGradlePropsConfigPlugin([{
     propName: 'expo.inlineModules.enabled',
-    propValueGetter: conf => (conf.experiments?.inlineModules === true).toString()
+    propValueGetter: conf => (!!conf.experiments?.inlineModules).toString()
   }, {
     propName: 'expo.inlineModules.watchedDirectories',
     propValueGetter: conf => {
-      if (conf.experiments?.inlineModules !== true) {
+      if (!conf.experiments?.inlineModules) {
         return JSON.stringify([]);
       }
-      return JSON.stringify(conf.inlineModules?.watchedDirectories ?? []);
+      return JSON.stringify(conf.experiments?.inlineModules?.watchedDirectories ?? []);
     }
   }], 'withAndroidInlineModules')(config);
   config = createBuildPodfilePropsConfigPlugin([{
     propName: 'expo.inlineModules.enabled',
-    propValueGetter: conf => (conf.experiments?.inlineModules === true).toString()
+    propValueGetter: conf => (!!conf.experiments?.inlineModules).toString()
   }, {
     propName: 'expo.inlineModules.watchedDirectories',
     propValueGetter: conf => {
-      if (conf.experiments?.inlineModules !== true) {
+      if (!conf.experiments?.inlineModules) {
         return JSON.stringify([]);
       }
-      return JSON.stringify(conf.inlineModules?.watchedDirectories ?? []);
+      return JSON.stringify(conf.experiments?.inlineModules?.watchedDirectories ?? []);
     }
   }], 'withIosInlineModules')(config);
   return config;

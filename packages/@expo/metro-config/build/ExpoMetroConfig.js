@@ -268,7 +268,7 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
                 .filter((assetExt) => !sourceExts.includes(assetExt)),
             sourceExts,
             nodeModulesPaths,
-            resolveRequest: expoConfig.exp.experiments?.inlineModules === true
+            resolveRequest: expoConfig.exp.experiments?.inlineModules
                 ? resolveInlineModulesWithAdditionalConfig
                 : defaultResolveRequest,
             blockList: [

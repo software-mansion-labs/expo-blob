@@ -8,15 +8,15 @@ export const withInlineModules = (config: ExpoConfig, props: any) => {
     [
       {
         propName: 'expo.inlineModules.enabled',
-        propValueGetter: (conf) => (conf.experiments?.inlineModules === true).toString(),
+        propValueGetter: (conf) => (!!conf.experiments?.inlineModules).toString(),
       },
       {
         propName: 'expo.inlineModules.watchedDirectories',
         propValueGetter: (conf) => {
-          if (conf.experiments?.inlineModules !== true) {
+          if (!conf.experiments?.inlineModules) {
             return JSON.stringify([]);
           }
-          return JSON.stringify(conf.inlineModules?.watchedDirectories ?? []);
+          return JSON.stringify(conf.experiments?.inlineModules?.watchedDirectories ?? []);
         },
       },
     ],
@@ -27,15 +27,15 @@ export const withInlineModules = (config: ExpoConfig, props: any) => {
     [
       {
         propName: 'expo.inlineModules.enabled',
-        propValueGetter: (conf) => (conf.experiments?.inlineModules === true).toString(),
+        propValueGetter: (conf) => (!!conf.experiments?.inlineModules).toString(),
       },
       {
         propName: 'expo.inlineModules.watchedDirectories',
         propValueGetter: (conf) => {
-          if (conf.experiments?.inlineModules !== true) {
+          if (!conf.experiments?.inlineModules) {
             return JSON.stringify([]);
           }
-          return JSON.stringify(conf.inlineModules?.watchedDirectories ?? []);
+          return JSON.stringify(conf.experiments?.inlineModules?.watchedDirectories ?? []);
         },
       },
     ],
