@@ -162,7 +162,7 @@ function findUpPackageJsonDirectory(
   return packageRoot;
 }
 
-function resolveInlineModules(
+export function resolveInlineModules(
   projectRoot: string,
   directoryToPackage: Map<string, string>,
   context: CustomResolutionContext,
