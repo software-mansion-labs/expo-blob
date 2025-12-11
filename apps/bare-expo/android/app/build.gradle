@@ -135,13 +135,6 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
-    sourceSets {
-        main {
-            java {
-                srcDirs += [file('build/inline/modules/').absolutePath]
-            }
-        }
-    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -208,20 +201,3 @@ class ExecuteSetupAndroidProject implements Plugin<Project> {
 }
 
 apply plugin: ExecuteSetupAndroidProject
-
-gradle.projectsEvaluated {
-  providers.exec {
-    workingDir(projectRoot)
-    commandLine(
-      'node',
-      '--no-warnings',
-      '--eval',
-      'require(\'expo/bin/autolinking\')',
-      'expo-modules-autolinking',
-      'mirror-kotlin-inline-modules',
-      file('src/main/java/inline/modules/').absolutePath,
-      file('build/inline/modules/').absolutePath,
-      findProperty('expo.inlineModules.watchedDirectories') ?: []
-    )
-  }.standardOutput.asText.get()
-}
