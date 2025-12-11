@@ -375,8 +375,6 @@ export async function createMetroServerAndBundleRequestAsync(
     watch: false,
   });
 
-  // This is needed for the CI, as it runs `Executing expo-updates Pods/EXUpdates » [CP-User] Generate updates resources for expo-updates`
-  // Which in turn leads to this function.
   if (exp.experiments?.inlineModules) {
     await startModuleGenerationAsync({ projectRoot, metro: server });
   }

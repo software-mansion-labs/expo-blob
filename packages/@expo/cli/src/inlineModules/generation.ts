@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { getPbxproj } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
+import { IOSConfig } from '@expo/config-plugins';
 import Server from '@expo/metro/metro/Server';
 import fs from 'fs';
 import path from 'path';
@@ -32,23 +32,8 @@ function findUpPackageJsonDirectory(
 }
 const nativeExtensions = ['.kt', '.swift'];
 
-function isValidLocalModuleFileName(fileName: string): boolean {
-  let numberOfDots = 0;
-  for (const character of fileName) {
-    if (character === '.') {
-      numberOfDots += 1;
-    }
-  }
-
-  let hasNativeExtension: boolean = false;
-  for (const extension of nativeExtensions) {
-    if (fileName.endsWith(extension)) {
-      hasNativeExtension = true;
-      break;
-    }
-  }
-
-  return hasNativeExtension && numberOfDots === 1;
+function isValidInlineModuleFileName(fileName: string): boolean {
+  return nativeExtensions.includes(path.extname(fileName));
 }
 
 function getMirrorDirectories(projectRoot: string): {
@@ -67,24 +52,28 @@ function getMirrorDirectories(projectRoot: string): {
   };
 }
 
-function createFreshMirrorDirectories(projectRoot: string): void {
+async function createFreshMirrorDirectories(projectRoot: string): Promise<void> {
   const { inlineModulesModulesPath, inlineModulesTypesPath } = getMirrorDirectories(projectRoot);
 
+  const rmPromises = [];
   if (fs.existsSync(inlineModulesModulesPath)) {
-    fs.rmSync(inlineModulesModulesPath, { recursive: true, force: true });
+    rmPromises.push(fs.promises.rm(inlineModulesModulesPath, { recursive: true, force: true }));
   }
   if (fs.existsSync(inlineModulesTypesPath)) {
-    fs.rmSync(inlineModulesTypesPath, { recursive: true, force: true });
+    rmPromises.push(fs.promises.rm(inlineModulesTypesPath, { recursive: true, force: true }));
   }
-  fs.mkdirSync(inlineModulesModulesPath, { recursive: true });
-  fs.mkdirSync(inlineModulesTypesPath, { recursive: true });
+  await Promise.all(rmPromises);
+  await Promise.all([
+    fs.promises.mkdir(inlineModulesModulesPath, { recursive: true }),
+    fs.promises.mkdir(inlineModulesTypesPath, { recursive: true }),
+  ]);
 }
 
 function trimExtension(fileName: string): string {
   return fileName.substring(0, fileName.lastIndexOf('.'));
 }
 
-function typesAndLocalModulePathsForFile(
+function typesAndModulePathsForFile(
   projectRoot: string,
   watchedDirRootAbolutePath: string,
   absoluteFilePath: string,
@@ -151,8 +140,8 @@ function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
-export function updateXCodeProject(projectRoot: string): void {
-  const pbxProject = getPbxproj(projectRoot);
+export async function updateXCodeProject(projectRoot: string): Promise<void> {
+  const pbxProject = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
   const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
   const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
   const iosFolderPath = path.resolve(projectRoot, 'ios');
@@ -213,7 +202,7 @@ export function updateXCodeProject(projectRoot: string): void {
     nativeTargetGroup.fileSystemSynchronizedGroups.push({ value: newUUID, comment: dir });
   }
 
-  fs.writeFileSync(pbxProject.filepath, pbxProject.writeSync());
+  await fs.promises.writeFile(pbxProject.filepath, pbxProject.writeSync());
 }
 
 function getWatchedDirAncestorAbsolutePath(
@@ -232,15 +221,15 @@ function getWatchedDirAncestorAbsolutePath(
   return null;
 }
 
-function onSourceFileCreated(
+async function onSourceFileCreated(
   projectRoot: string,
   watchedDirRootAbolutePath: string,
   absoluteFilePath: string,
   directoryToPackage: Map<string, string>,
   filesWatched?: Set<string>
-): void {
+): Promise<void> {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
-    typesAndLocalModulePathsForFile(
+    typesAndModulePathsForFile(
       projectRoot,
       watchedDirRootAbolutePath,
       absoluteFilePath,
@@ -255,28 +244,34 @@ function onSourceFileCreated(
     filesWatched.add(absoluteFilePath);
   }
 
-  fs.mkdirSync(path.dirname(moduleExportPath), { recursive: true });
-  fs.mkdirSync(path.dirname(moduleTypesFilePath), { recursive: true });
+  await Promise.all([
+    fs.promises.mkdir(path.dirname(moduleExportPath), { recursive: true }),
+    fs.promises.mkdir(path.dirname(moduleTypesFilePath), { recursive: true }),
+  ]);
 
-  fs.writeFileSync(
-    viewExportPath,
-    `import { requireNativeView } from 'expo';
+  await Promise.all([
+    fs.promises.writeFile(
+      viewExportPath,
+      `import { requireNativeView } from 'expo';
 export default requireNativeView("${moduleName}");`
-  );
-
-  fs.writeFileSync(
-    moduleExportPath,
-    `import { requireNativeModule } from 'expo';
+    ),
+    fs.promises.writeFile(
+      moduleExportPath,
+      `import { requireNativeModule } from 'expo';
 export default requireNativeModule("${moduleName}");`
-  );
-
-  fs.writeFileSync(
-    viewTypesFilePath,
-    `import React from "react"
+    ),
+    fs.promises.writeFile(
+      viewTypesFilePath,
+      `import React from "react"
 const _default: React.JSX.ElementType
 export default _default`
-  );
-  fs.writeFileSync(moduleTypesFilePath, 'const _default: any\nexport default _default');
+    ),
+    fs.promises.writeFile(
+      moduleTypesFilePath,
+      `const _default: any
+export default _default`
+    ),
+  ]);
 }
 
 async function generateMirrorDirectories(
@@ -284,7 +279,7 @@ async function generateMirrorDirectories(
   filesWatched?: Set<string>,
   directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
-  createFreshMirrorDirectories(projectRoot);
+  await createFreshMirrorDirectories(projectRoot);
 
   const generateExportsAndTypesForDirectory = async (
     absoluteDirPath: string,
@@ -296,12 +291,12 @@ async function generateMirrorDirectories(
       }
     }
 
-    const dir = fs.opendirSync(absoluteDirPath);
+    const dir = await fs.promises.opendir(absoluteDirPath);
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       if (
         dirent.isFile() &&
-        isValidLocalModuleFileName(dirent.name) &&
+        isValidInlineModuleFileName(dirent.name) &&
         absoluteDirentPath.startsWith(watchedDirRootAbolutePath)
       ) {
         onSourceFileCreated(
@@ -322,26 +317,21 @@ async function generateMirrorDirectories(
   for (const watchedDirectory of watchedDirectories) {
     await generateExportsAndTypesForDirectory(
       path.resolve(projectRoot, watchedDirectory),
-      fs.realpathSync(watchedDirectory)
+      await fs.promises.realpath(watchedDirectory)
     );
   }
 }
 
+const EXCLUDE_GLOBS = [
+  '.expo/**/*',
+  'node_modules/**/*',
+  'android/**/*',
+  'ios/**/*',
+  'modules/**/*',
+];
+
 function excludePathsGlobs(projectRoot: string): string[] {
-  return [
-    path.resolve(projectRoot, '.expo'),
-    path.resolve(projectRoot, '.expo', './**/*'),
-    path.resolve(projectRoot, 'node_modules'),
-    path.resolve(projectRoot, 'node_modules', './**/*'),
-    path.resolve(projectRoot, 'inlineModules'),
-    path.resolve(projectRoot, 'inlineModules', './**/*'),
-    path.resolve(projectRoot, 'android'),
-    path.resolve(projectRoot, 'android', './**/*'),
-    path.resolve(projectRoot, 'ios'),
-    path.resolve(projectRoot, 'ios', './**/*'),
-    path.resolve(projectRoot, 'modules'),
-    path.resolve(projectRoot, 'modules', './**/*'),
-  ];
+  return EXCLUDE_GLOBS.map((glob) => path.resolve(projectRoot, glob));
 }
 
 export async function startModuleGenerationAsync({
@@ -361,20 +351,20 @@ export async function startModuleGenerationAsync({
     return false;
   };
 
-  createFreshMirrorDirectories(projectRoot);
+  await createFreshMirrorDirectories(projectRoot);
 
-  const removeFileAndEmptyDirectories = (absoluteFilePath: string) => {
-    fs.rmSync(absoluteFilePath);
+  const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
+    await fs.promises.rm(absoluteFilePath);
     let dirNow: string = path.dirname(absoluteFilePath);
-    while (fs.readdirSync(dirNow).length === 0 && dirNow !== dotExpoDir) {
-      fs.rmdirSync(dirNow);
+    while ((await fs.promises.readdir(dirNow)).length === 0 && dirNow !== dotExpoDir) {
+      await fs.promises.rmdir(dirNow);
       dirNow = path.dirname(dirNow);
     }
   };
 
   const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbolutePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
-      typesAndLocalModulePathsForFile(
+      typesAndModulePathsForFile(
         projectRoot,
         watchedDirRootAbolutePath,
         absoluteFilePath,
@@ -395,8 +385,7 @@ export async function startModuleGenerationAsync({
 
   const isWatchedFileEvent = (event: Event, watchedDirAncestor: string | null): boolean => {
     return (
-      event.metadata?.type !== 'd' &&
-      isValidLocalModuleFileName(path.basename(event.filePath)) &&
+      isValidInlineModuleFileName(path.basename(event.filePath)) &&
       !isFileExcluded(event.filePath) &&
       !!watchedDirAncestor
     );

@@ -1495,14 +1495,12 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     });
   }
 
-  public async startTypeScriptServices(): Promise<any> {
-    const startTypescriptTypeGenerationPromise = startTypescriptTypeGenerationAsync({
+  public async startTypeScriptServices() {
+    return startTypescriptTypeGenerationAsync({
       server: this.instance?.server,
       metro: this.metro,
       projectRoot: this.projectRoot,
     });
-
-    return startTypescriptTypeGenerationPromise;
   }
 
   private async inlineModulesSetup(): Promise<void> {
