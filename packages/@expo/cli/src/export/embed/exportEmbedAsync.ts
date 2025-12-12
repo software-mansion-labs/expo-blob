@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { getConfig } from '@expo/config';
+import { startModuleGenerationAsync } from '@expo/inline-modules';
 import Server from '@expo/metro/metro/Server';
 import splitBundleOptions from '@expo/metro/metro/lib/splitBundleOptions';
 import * as output from '@expo/metro/metro/shared/output/bundle';
@@ -33,7 +34,6 @@ import { persistMetroAssetsAsync } from '../persistMetroAssets';
 import { copyPublicFolderAsync } from '../publicFolder';
 import { BundleAssetWithFileHashes, ExportAssetMap, persistMetroFilesAsync } from '../saveAssets';
 import { exportStandaloneServerAsync } from './exportServer';
-import { startModuleGenerationAsync } from '../../inlineModules/generation';
 import { ensureProcessExitsAfterDelay } from '../../utils/exit';
 import { resolveRealEntryFilePath } from '../../utils/filePath';
 

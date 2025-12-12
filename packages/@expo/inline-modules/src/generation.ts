@@ -1,46 +1,29 @@
+import { ensureDotExpoProjectDirectoryInitialized } from '@expo/cli/build/src/start/project/dotExpo';
 import { getConfig } from '@expo/config';
-import { IOSConfig } from '@expo/config-plugins';
 import Server from '@expo/metro/metro/Server';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { Event, EventsQueue } from './generation.types';
-import { ensureDotExpoProjectDirectoryInitialized } from '../start/project/dotExpo';
 
 export interface ModuleGenerationArguments {
   projectRoot: string;
   metro: Server | null;
 }
 
-function findUpPackageJsonDirectory(
-  cwd: string,
-  directoryToPackage: Map<string, string>
-): string | undefined {
-  if (['.', path.sep].includes(cwd)) return undefined;
-  if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
-
-  const packageFound = fs.existsSync(path.resolve(cwd, './package.json'));
-  if (packageFound) {
-    directoryToPackage.set(cwd, cwd);
-    return cwd;
-  }
-  const packageRoot = findUpPackageJsonDirectory(path.dirname(cwd), directoryToPackage);
-  if (packageRoot) {
-    directoryToPackage.set(cwd, packageRoot);
-  }
-  return packageRoot;
-}
 const nativeExtensions = ['.kt', '.swift'];
-
 function isValidInlineModuleFileName(fileName: string): boolean {
   return nativeExtensions.includes(path.extname(fileName));
 }
 
-function getMirrorDirectories(projectRoot: string): {
+function trimExtension(fileName: string): string {
+  return fileName.substring(0, fileName.lastIndexOf('.'));
+}
+
+function getMirrorDirectoriesPaths(dotExpoDir: string): {
   inlineModulesModulesPath: string;
   inlineModulesTypesPath: string;
 } {
-  const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   const inlineModulesPath = path.resolve(dotExpoDir, './inlineModules/');
 
   const inlineModulesModulesPath = path.resolve(inlineModulesPath, 'modules');
@@ -52,8 +35,28 @@ function getMirrorDirectories(projectRoot: string): {
   };
 }
 
-async function createFreshMirrorDirectories(projectRoot: string): Promise<void> {
-  const { inlineModulesModulesPath, inlineModulesTypesPath } = getMirrorDirectories(projectRoot);
+export function findUpPackageJsonDirectoryCached(
+  cwd: string,
+  directoryToPackage: Map<string, string>
+): string | undefined {
+  if (['.', path.sep].includes(cwd)) return undefined;
+  if (directoryToPackage.has(cwd)) return directoryToPackage.get(cwd);
+
+  const packageFound = fs.existsSync(path.resolve(cwd, './package.json'));
+  if (packageFound) {
+    directoryToPackage.set(cwd, cwd);
+    return cwd;
+  }
+  const packageRoot = findUpPackageJsonDirectoryCached(path.dirname(cwd), directoryToPackage);
+  if (packageRoot) {
+    directoryToPackage.set(cwd, packageRoot);
+  }
+  return packageRoot;
+}
+
+async function createFreshMirrorDirectories(dotExpoDir: string): Promise<void> {
+  const { inlineModulesModulesPath, inlineModulesTypesPath } =
+    getMirrorDirectoriesPaths(dotExpoDir);
 
   const rmPromises = [];
   if (fs.existsSync(inlineModulesModulesPath)) {
@@ -69,13 +72,9 @@ async function createFreshMirrorDirectories(projectRoot: string): Promise<void> 
   ]);
 }
 
-function trimExtension(fileName: string): string {
-  return fileName.substring(0, fileName.lastIndexOf('.'));
-}
-
 function typesAndModulePathsForFile(
-  projectRoot: string,
-  watchedDirRootAbolutePath: string,
+  dotExpoDir: string,
+  watchedDirRootAbsolutePath: string,
   absoluteFilePath: string,
   directoryToPackage: Map<string, string>
 ): {
@@ -85,12 +84,13 @@ function typesAndModulePathsForFile(
   moduleExportPath: string;
   moduleName: string;
 } {
-  const { inlineModulesModulesPath, inlineModulesTypesPath } = getMirrorDirectories(projectRoot);
+  const { inlineModulesModulesPath, inlineModulesTypesPath } =
+    getMirrorDirectoriesPaths(dotExpoDir);
   const fileName = path.basename(absoluteFilePath);
   const moduleName = trimExtension(fileName);
 
-  const watchedDirProjectRoot = findUpPackageJsonDirectory(
-    watchedDirRootAbolutePath,
+  const watchedDirProjectRoot = findUpPackageJsonDirectoryCached(
+    watchedDirRootAbsolutePath,
     directoryToPackage
   );
   if (!watchedDirProjectRoot) {
@@ -140,71 +140,6 @@ function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
-export async function updateXCodeProject(projectRoot: string): Promise<void> {
-  const pbxProject = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
-  const mainGroupUUID = pbxProject.getFirstProject().firstProject.mainGroup;
-  const mainTargetUUID = pbxProject.getFirstProject().firstProject.targets[0].value;
-  const iosFolderPath = path.resolve(projectRoot, 'ios');
-
-  const objects = pbxProject.hash.project.objects;
-
-  const dirEntryExists = (dir: string): boolean => {
-    if (!objects.PBXFileSystemSynchronizedRootGroup) {
-      return false;
-    }
-    for (const key of Object.keys(objects.PBXFileSystemSynchronizedRootGroup)) {
-      if (key.endsWith('_comment')) {
-        continue;
-      }
-      if (
-        path.relative(iosFolderPath, path.resolve(projectRoot, dir)) ===
-        objects.PBXFileSystemSynchronizedRootGroup[key].path
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const swiftWatchedDirectories =
-    getConfig(projectRoot).exp.experiments?.inlineModules?.watchedDirectories ?? [];
-  for (const dir of swiftWatchedDirectories) {
-    if (dirEntryExists(dir)) {
-      continue;
-    }
-
-    const newUUID = pbxProject.generateUuid();
-    objects.PBXGroup[mainGroupUUID].children.push({
-      value: newUUID,
-      comment: dir,
-    });
-
-    if (!objects.PBXFileSystemSynchronizedRootGroup) {
-      objects.PBXFileSystemSynchronizedRootGroup = {};
-    }
-
-    objects.PBXFileSystemSynchronizedRootGroup[newUUID] = {
-      isa: 'PBXFileSystemSynchronizedRootGroup',
-      explicitFileTypes: {},
-      explicitFolders: [],
-      name: dir,
-      path: path.relative(iosFolderPath, path.resolve(projectRoot, dir)),
-      sourceTree: 'SOURCE_ROOT',
-    };
-
-    //@ts-ignore
-    objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
-
-    const nativeTargetGroup = objects.PBXNativeTarget[mainTargetUUID];
-    if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
-      nativeTargetGroup.fileSystemSynchronizedGroups = [];
-    }
-    nativeTargetGroup.fileSystemSynchronizedGroups.push({ value: newUUID, comment: dir });
-  }
-
-  await fs.promises.writeFile(pbxProject.filepath, pbxProject.writeSync());
-}
-
 function getWatchedDirAncestorAbsolutePath(
   projectRoot: string,
   filePathAbsolute: string
@@ -222,16 +157,16 @@ function getWatchedDirAncestorAbsolutePath(
 }
 
 async function onSourceFileCreated(
-  projectRoot: string,
-  watchedDirRootAbolutePath: string,
+  dotExpoDir: string,
+  watchedDirRootAbsolutePath: string,
   absoluteFilePath: string,
   directoryToPackage: Map<string, string>,
   filesWatched?: Set<string>
 ): Promise<void> {
   const { moduleTypesFilePath, viewTypesFilePath, viewExportPath, moduleExportPath, moduleName } =
     typesAndModulePathsForFile(
-      projectRoot,
-      watchedDirRootAbolutePath,
+      dotExpoDir,
+      watchedDirRootAbsolutePath,
       absoluteFilePath,
       directoryToPackage
     );
@@ -276,14 +211,15 @@ export default _default`
 
 async function generateMirrorDirectories(
   projectRoot: string,
+  dotExpoDir: string,
   filesWatched?: Set<string>,
   directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
-  await createFreshMirrorDirectories(projectRoot);
+  await createFreshMirrorDirectories(dotExpoDir);
 
   const generateExportsAndTypesForDirectory = async (
     absoluteDirPath: string,
-    watchedDirRootAbolutePath: string
+    watchedDirRootAbsolutePath: string
   ) => {
     for (const glob of excludePathsGlobs(projectRoot)) {
       if (path.matchesGlob(absoluteDirPath, glob)) {
@@ -297,17 +233,17 @@ async function generateMirrorDirectories(
       if (
         dirent.isFile() &&
         isValidInlineModuleFileName(dirent.name) &&
-        absoluteDirentPath.startsWith(watchedDirRootAbolutePath)
+        absoluteDirentPath.startsWith(watchedDirRootAbsolutePath)
       ) {
         onSourceFileCreated(
-          projectRoot,
-          watchedDirRootAbolutePath,
+          dotExpoDir,
+          watchedDirRootAbsolutePath,
           absoluteDirentPath,
           directoryToPackage,
           filesWatched
         );
       } else if (dirent.isDirectory()) {
-        await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRootAbolutePath);
+        await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRootAbsolutePath);
       }
     }
   };
@@ -351,7 +287,7 @@ export async function startModuleGenerationAsync({
     return false;
   };
 
-  await createFreshMirrorDirectories(projectRoot);
+  await createFreshMirrorDirectories(dotExpoDir);
 
   const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
     await fs.promises.rm(absoluteFilePath);
@@ -362,11 +298,11 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbolutePath: string) => {
+  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbsolutePath: string) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
       typesAndModulePathsForFile(
-        projectRoot,
-        watchedDirRootAbolutePath,
+        dotExpoDir,
+        watchedDirRootAbsolutePath,
         absoluteFilePath,
         directoryToPackage
       );
@@ -405,7 +341,7 @@ export async function startModuleGenerationAsync({
         const { filePath } = event;
         if (event.type === 'add') {
           onSourceFileCreated(
-            projectRoot,
+            dotExpoDir,
             watchedDirAncestor,
             filePath,
             directoryToPackage,
@@ -420,5 +356,5 @@ export async function startModuleGenerationAsync({
 
   watcher?.addListener('change', listener);
 
-  await generateMirrorDirectories(projectRoot, filesWatched, directoryToPackage);
+  await generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, directoryToPackage);
 }

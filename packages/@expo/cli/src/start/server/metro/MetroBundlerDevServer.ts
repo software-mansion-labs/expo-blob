@@ -7,6 +7,7 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { getMetroServerRoot } from '@expo/config/paths';
 import * as runtimeEnv from '@expo/env';
+import { startModuleGenerationAsync } from '@expo/inline-modules';
 import baseJSBundle from '@expo/metro/metro/DeltaBundler/Serializers/baseJSBundle';
 import {
   sourceMapGeneratorNonBlocking,
@@ -62,7 +63,6 @@ import type {
   ExportAssetDescriptor,
   ExportAssetMap,
 } from '../../../export/saveAssets';
-import { startModuleGenerationAsync } from '../../../inlineModules/generation';
 import { Log } from '../../../log';
 import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
