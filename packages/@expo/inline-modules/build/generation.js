@@ -33,7 +33,18 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isValidInlineModuleFileName = isValidInlineModuleFileName;
+exports.trimExtension = trimExtension;
+exports.getProjectExcludePathsGlobs = getProjectExcludePathsGlobs;
+exports.isFilePathExcluded = isFilePathExcluded;
+exports.getMirrorDirectoriesPaths = getMirrorDirectoriesPaths;
 exports.findUpPackageJsonDirectoryCached = findUpPackageJsonDirectoryCached;
+exports.createFreshMirrorDirectories = createFreshMirrorDirectories;
+exports.typesAndModulePathsForFile = typesAndModulePathsForFile;
+exports.fileWatchedWithAnyNativeExtension = fileWatchedWithAnyNativeExtension;
+exports.getWatchedDirAncestorAbsolutePath = getWatchedDirAncestorAbsolutePath;
+exports.onSourceFileCreated = onSourceFileCreated;
+exports.generateMirrorDirectories = generateMirrorDirectories;
 exports.startModuleGenerationAsync = startModuleGenerationAsync;
 const dotExpo_1 = require("@expo/cli/build/src/start/project/dotExpo");
 const config_1 = require("@expo/config");
@@ -44,7 +55,30 @@ function isValidInlineModuleFileName(fileName) {
     return nativeExtensions.includes(path.extname(fileName));
 }
 function trimExtension(fileName) {
-    return fileName.substring(0, fileName.lastIndexOf('.'));
+    const extensionStart = fileName.lastIndexOf('.');
+    if (extensionStart >= 0) {
+        return fileName.substring(0, extensionStart);
+    }
+    return fileName;
+}
+const EXCLUDE_GLOBS = [
+    '.expo/**/*',
+    'node_modules/**/*',
+    'android/**/*',
+    'ios/**/*',
+    'modules/**/*',
+    '*',
+];
+function getProjectExcludePathsGlobs(projectRoot) {
+    return EXCLUDE_GLOBS.map((glob) => path.resolve(projectRoot, glob));
+}
+function isFilePathExcluded(filePath, excludePathsGlobs) {
+    for (const glob of excludePathsGlobs) {
+        if (path.matchesGlob(filePath, glob)) {
+            return true;
+        }
+    }
+    return false;
 }
 function getMirrorDirectoriesPaths(dotExpoDir) {
     const inlineModulesPath = path.resolve(dotExpoDir, './inlineModules/');
@@ -157,10 +191,8 @@ export default _default`),
 async function generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, directoryToPackage = new Map()) {
     await createFreshMirrorDirectories(dotExpoDir);
     const generateExportsAndTypesForDirectory = async (absoluteDirPath, watchedDirRootAbsolutePath) => {
-        for (const glob of excludePathsGlobs(projectRoot)) {
-            if (path.matchesGlob(absoluteDirPath, glob)) {
-                return;
-            }
+        if (isFilePathExcluded(absoluteDirPath, getProjectExcludePathsGlobs(projectRoot))) {
+            return;
         }
         const dir = await fs.promises.opendir(absoluteDirPath);
         for await (const dirent of dir) {
@@ -180,28 +212,10 @@ async function generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, 
         await generateExportsAndTypesForDirectory(path.resolve(projectRoot, watchedDirectory), await fs.promises.realpath(watchedDirectory));
     }
 }
-const EXCLUDE_GLOBS = [
-    '.expo/**/*',
-    'node_modules/**/*',
-    'android/**/*',
-    'ios/**/*',
-    'modules/**/*',
-];
-function excludePathsGlobs(projectRoot) {
-    return EXCLUDE_GLOBS.map((glob) => path.resolve(projectRoot, glob));
-}
 async function startModuleGenerationAsync({ projectRoot, metro, }) {
     const dotExpoDir = (0, dotExpo_1.ensureDotExpoProjectDirectoryInitialized)(projectRoot);
     const filesWatched = new Set();
     const directoryToPackage = new Map();
-    const isFileExcluded = (absolutePath) => {
-        for (const glob of excludePathsGlobs(projectRoot)) {
-            if (path.matchesGlob(absolutePath, glob)) {
-                return true;
-            }
-        }
-        return false;
-    };
     await createFreshMirrorDirectories(dotExpoDir);
     const removeFileAndEmptyDirectories = async (absoluteFilePath) => {
         await fs.promises.rm(absoluteFilePath);
@@ -223,9 +237,10 @@ async function startModuleGenerationAsync({ projectRoot, metro, }) {
     };
     const watcher = metro?.getBundler().getBundler().getWatcher();
     const eventTypes = ['add', 'delete', 'change'];
+    const excludePathsGlobs = getProjectExcludePathsGlobs(projectRoot);
     const isWatchedFileEvent = (event, watchedDirAncestor) => {
         return (isValidInlineModuleFileName(path.basename(event.filePath)) &&
-            !isFileExcluded(event.filePath) &&
+            !isFilePathExcluded(event.filePath, excludePathsGlobs) &&
             !!watchedDirAncestor);
     };
     const listener = async ({ eventsQueue }) => {
