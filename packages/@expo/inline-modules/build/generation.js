@@ -33,7 +33,14 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isValidInlineModuleFileName = isValidInlineModuleFileName;
+exports.trimExtension = trimExtension;
+exports.getProjectExcludePathsGlobs = getProjectExcludePathsGlobs;
+exports.isFilePathExcluded = isFilePathExcluded;
+exports.getMirrorDirectoriesPaths = getMirrorDirectoriesPaths;
 exports.findUpPackageJsonDirectoryCached = findUpPackageJsonDirectoryCached;
+exports.createFreshMirrorDirectories = createFreshMirrorDirectories;
+exports.typesAndModulePathsForFile = typesAndModulePathsForFile;
 exports.generateMirrorDirectories = generateMirrorDirectories;
 exports.startInlineModulesMetroWatcherAsync = startInlineModulesMetroWatcherAsync;
 const dotExpo_1 = require("@expo/cli/build/src/start/project/dotExpo");
@@ -256,5 +263,5 @@ async function startInlineModulesMetroWatcherAsync({ projectRoot, metro }, files
             }
         }
     };
-    await watcher?.addListener('change', listener);
+    watcher?.addListener('change', listener);
 }
