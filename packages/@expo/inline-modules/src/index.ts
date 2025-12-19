@@ -1,2 +1,6 @@
-export { startModuleGenerationAsync, findUpPackageJsonDirectoryCached } from './generation';
+export {
+  startInlineModulesMetroWatcherAsync,
+  findUpPackageJsonDirectoryCached,
+  generateMirrorDirectories,
+} from './generation';
 export { updateXCodeProject } from './xcodeProjectUpdates';

@@ -30,7 +30,6 @@ const EXCLUDE_GLOBS = [
   'android/**/*',
   'ios/**/*',
   'modules/**/*',
-  '*',
 ];
 
 export function getProjectExcludePathsGlobs(projectRoot: string): string[] {
@@ -152,7 +151,7 @@ export function typesAndModulePathsForFile(
   };
 }
 
-export function fileWatchedWithAnyNativeExtension(
+function fileWatchedWithAnyNativeExtension(
   absoluteFilePath: string,
   filesWatched: Set<string>
 ): boolean {
@@ -166,7 +165,7 @@ export function fileWatchedWithAnyNativeExtension(
   return false;
 }
 
-export function getWatchedDirAncestorAbsolutePath(
+function getWatchedDirAncestorAbsolutePath(
   projectRoot: string,
   filePathAbsolute: string
 ): string | null {
@@ -182,7 +181,7 @@ export function getWatchedDirAncestorAbsolutePath(
   return null;
 }
 
-export async function onSourceFileCreated(
+async function onSourceFileCreated(
   dotExpoDir: string,
   watchedDirRootAbsolutePath: string,
   absoluteFilePath: string,
@@ -210,37 +209,50 @@ export async function onSourceFileCreated(
     fs.promises.mkdir(path.dirname(moduleTypesFilePath), { recursive: true }),
   ]);
 
-  await Promise.all([
-    fs.promises.writeFile(
-      viewExportPath,
-      `import { requireNativeView } from 'expo';
+  const writeFilePromises = [];
+  if (!fs.existsSync(viewExportPath)) {
+    writeFilePromises.push(
+      fs.promises.writeFile(
+        viewExportPath,
+        `import { requireNativeView } from 'expo';
 export default requireNativeView("${moduleName}");`
-    ),
-    fs.promises.writeFile(
-      moduleExportPath,
-      `import { requireNativeModule } from 'expo';
+      )
+    );
+  }
+  if (!fs.existsSync(moduleExportPath)) {
+    writeFilePromises.push(
+      fs.promises.writeFile(
+        moduleExportPath,
+        `import { requireNativeModule } from 'expo';
 export default requireNativeModule("${moduleName}");`
-    ),
+      )
+    );
+  }
+  if (!fs.existsSync(viewTypesFilePath)) {
     fs.promises.writeFile(
       viewTypesFilePath,
       `import React from "react"
 const _default: React.JSX.ElementType
 export default _default`
-    ),
+    );
+  }
+  if (!fs.existsSync(moduleTypesFilePath)) {
     fs.promises.writeFile(
       moduleTypesFilePath,
       `const _default: any
 export default _default`
-    ),
-  ]);
+    );
+  }
+
+  await Promise.all(writeFilePromises);
 }
 
 export async function generateMirrorDirectories(
   projectRoot: string,
-  dotExpoDir: string,
   filesWatched?: Set<string>,
   directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
+  const dotExpoDir: string = ensureDotExpoProjectDirectoryInitialized(projectRoot);
   await createFreshMirrorDirectories(dotExpoDir);
 
   const generateExportsAndTypesForDirectory = async (
@@ -259,7 +271,7 @@ export async function generateMirrorDirectories(
         isValidInlineModuleFileName(dirent.name) &&
         absoluteDirentPath.startsWith(watchedDirRootAbsolutePath)
       ) {
-        onSourceFileCreated(
+        await onSourceFileCreated(
           dotExpoDir,
           watchedDirRootAbsolutePath,
           absoluteDirentPath,
@@ -282,15 +294,12 @@ export async function generateMirrorDirectories(
   }
 }
 
-export async function startModuleGenerationAsync({
-  projectRoot,
-  metro,
-}: ModuleGenerationArguments): Promise<void> {
+export async function startInlineModulesMetroWatcherAsync(
+  { projectRoot, metro }: ModuleGenerationArguments,
+  filesWatched: Set<string> = new Set<string>(),
+  directoryToPackage: Map<string, string> = new Map<string, string>()
+): Promise<void> {
   const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-  const filesWatched = new Set<string>();
-  const directoryToPackage: Map<string, string> = new Map<string, string>();
-
-  await createFreshMirrorDirectories(dotExpoDir);
 
   const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
     await fs.promises.rm(absoluteFilePath);
@@ -301,7 +310,10 @@ export async function startModuleGenerationAsync({
     }
   };
 
-  const onSourceFileRemoved = (absoluteFilePath: string, watchedDirRootAbsolutePath: string) => {
+  const onSourceFileRemoved = async (
+    absoluteFilePath: string,
+    watchedDirRootAbsolutePath: string
+  ) => {
     const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } =
       typesAndModulePathsForFile(
         dotExpoDir,
@@ -312,15 +324,17 @@ export async function startModuleGenerationAsync({
 
     filesWatched.delete(absoluteFilePath);
     if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
-      removeFileAndEmptyDirectories(moduleTypesFilePath);
-      removeFileAndEmptyDirectories(moduleExportPath);
-      removeFileAndEmptyDirectories(viewExportPath);
-      removeFileAndEmptyDirectories(viewTypesFilePath);
+      await Promise.all([
+        removeFileAndEmptyDirectories(moduleTypesFilePath),
+        removeFileAndEmptyDirectories(moduleExportPath),
+        removeFileAndEmptyDirectories(viewExportPath),
+        removeFileAndEmptyDirectories(viewTypesFilePath),
+      ]);
     }
   };
 
   const watcher = metro?.getBundler().getBundler().getWatcher();
-  const eventTypes = ['add', 'delete', 'change'];
+  const eventTypes = ['add', 'delete'];
   const excludePathsGlobs = getProjectExcludePathsGlobs(projectRoot);
 
   const isWatchedFileEvent = (event: Event, watchedDirAncestor: string | null): boolean => {
@@ -344,7 +358,7 @@ export async function startModuleGenerationAsync({
       ) {
         const { filePath } = event;
         if (event.type === 'add') {
-          onSourceFileCreated(
+          await onSourceFileCreated(
             dotExpoDir,
             watchedDirAncestor,
             filePath,
@@ -352,13 +366,11 @@ export async function startModuleGenerationAsync({
             filesWatched
           );
         } else if (event.type === 'delete') {
-          onSourceFileRemoved(filePath, watchedDirAncestor);
+          await onSourceFileRemoved(filePath, watchedDirAncestor);
         }
       }
     }
   };
 
   watcher?.addListener('change', listener);
-
-  await generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, directoryToPackage);
 }

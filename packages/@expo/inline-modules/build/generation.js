@@ -33,19 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isValidInlineModuleFileName = isValidInlineModuleFileName;
-exports.trimExtension = trimExtension;
-exports.getProjectExcludePathsGlobs = getProjectExcludePathsGlobs;
-exports.isFilePathExcluded = isFilePathExcluded;
-exports.getMirrorDirectoriesPaths = getMirrorDirectoriesPaths;
 exports.findUpPackageJsonDirectoryCached = findUpPackageJsonDirectoryCached;
-exports.createFreshMirrorDirectories = createFreshMirrorDirectories;
-exports.typesAndModulePathsForFile = typesAndModulePathsForFile;
-exports.fileWatchedWithAnyNativeExtension = fileWatchedWithAnyNativeExtension;
-exports.getWatchedDirAncestorAbsolutePath = getWatchedDirAncestorAbsolutePath;
-exports.onSourceFileCreated = onSourceFileCreated;
 exports.generateMirrorDirectories = generateMirrorDirectories;
-exports.startModuleGenerationAsync = startModuleGenerationAsync;
+exports.startInlineModulesMetroWatcherAsync = startInlineModulesMetroWatcherAsync;
 const dotExpo_1 = require("@expo/cli/build/src/start/project/dotExpo");
 const config_1 = require("@expo/config");
 const fs = __importStar(require("fs"));
@@ -67,7 +57,6 @@ const EXCLUDE_GLOBS = [
     'android/**/*',
     'ios/**/*',
     'modules/**/*',
-    '*',
 ];
 function getProjectExcludePathsGlobs(projectRoot) {
     return EXCLUDE_GLOBS.map((glob) => path.resolve(projectRoot, glob));
@@ -176,19 +165,28 @@ async function onSourceFileCreated(dotExpoDir, watchedDirRootAbsolutePath, absol
         fs.promises.mkdir(path.dirname(moduleExportPath), { recursive: true }),
         fs.promises.mkdir(path.dirname(moduleTypesFilePath), { recursive: true }),
     ]);
-    await Promise.all([
-        fs.promises.writeFile(viewExportPath, `import { requireNativeView } from 'expo';
-export default requireNativeView("${moduleName}");`),
-        fs.promises.writeFile(moduleExportPath, `import { requireNativeModule } from 'expo';
-export default requireNativeModule("${moduleName}");`),
+    const writeFilePromises = [];
+    if (!fs.existsSync(viewExportPath)) {
+        writeFilePromises.push(fs.promises.writeFile(viewExportPath, `import { requireNativeView } from 'expo';
+export default requireNativeView("${moduleName}");`));
+    }
+    if (!fs.existsSync(moduleExportPath)) {
+        writeFilePromises.push(fs.promises.writeFile(moduleExportPath, `import { requireNativeModule } from 'expo';
+export default requireNativeModule("${moduleName}");`));
+    }
+    if (!fs.existsSync(viewTypesFilePath)) {
         fs.promises.writeFile(viewTypesFilePath, `import React from "react"
 const _default: React.JSX.ElementType
-export default _default`),
+export default _default`);
+    }
+    if (!fs.existsSync(moduleTypesFilePath)) {
         fs.promises.writeFile(moduleTypesFilePath, `const _default: any
-export default _default`),
-    ]);
+export default _default`);
+    }
+    await Promise.all(writeFilePromises);
 }
-async function generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, directoryToPackage = new Map()) {
+async function generateMirrorDirectories(projectRoot, filesWatched, directoryToPackage = new Map()) {
+    const dotExpoDir = (0, dotExpo_1.ensureDotExpoProjectDirectoryInitialized)(projectRoot);
     await createFreshMirrorDirectories(dotExpoDir);
     const generateExportsAndTypesForDirectory = async (absoluteDirPath, watchedDirRootAbsolutePath) => {
         if (isFilePathExcluded(absoluteDirPath, getProjectExcludePathsGlobs(projectRoot))) {
@@ -200,7 +198,7 @@ async function generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, 
             if (dirent.isFile() &&
                 isValidInlineModuleFileName(dirent.name) &&
                 absoluteDirentPath.startsWith(watchedDirRootAbsolutePath)) {
-                onSourceFileCreated(dotExpoDir, watchedDirRootAbsolutePath, absoluteDirentPath, directoryToPackage, filesWatched);
+                await onSourceFileCreated(dotExpoDir, watchedDirRootAbsolutePath, absoluteDirentPath, directoryToPackage, filesWatched);
             }
             else if (dirent.isDirectory()) {
                 await generateExportsAndTypesForDirectory(absoluteDirentPath, watchedDirRootAbsolutePath);
@@ -212,11 +210,8 @@ async function generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, 
         await generateExportsAndTypesForDirectory(path.resolve(projectRoot, watchedDirectory), await fs.promises.realpath(watchedDirectory));
     }
 }
-async function startModuleGenerationAsync({ projectRoot, metro, }) {
+async function startInlineModulesMetroWatcherAsync({ projectRoot, metro }, filesWatched = new Set(), directoryToPackage = new Map()) {
     const dotExpoDir = (0, dotExpo_1.ensureDotExpoProjectDirectoryInitialized)(projectRoot);
-    const filesWatched = new Set();
-    const directoryToPackage = new Map();
-    await createFreshMirrorDirectories(dotExpoDir);
     const removeFileAndEmptyDirectories = async (absoluteFilePath) => {
         await fs.promises.rm(absoluteFilePath);
         let dirNow = path.dirname(absoluteFilePath);
@@ -225,18 +220,20 @@ async function startModuleGenerationAsync({ projectRoot, metro, }) {
             dirNow = path.dirname(dirNow);
         }
     };
-    const onSourceFileRemoved = (absoluteFilePath, watchedDirRootAbsolutePath) => {
+    const onSourceFileRemoved = async (absoluteFilePath, watchedDirRootAbsolutePath) => {
         const { moduleTypesFilePath, moduleExportPath, viewExportPath, viewTypesFilePath } = typesAndModulePathsForFile(dotExpoDir, watchedDirRootAbsolutePath, absoluteFilePath, directoryToPackage);
         filesWatched.delete(absoluteFilePath);
         if (!fileWatchedWithAnyNativeExtension(absoluteFilePath, filesWatched)) {
-            removeFileAndEmptyDirectories(moduleTypesFilePath);
-            removeFileAndEmptyDirectories(moduleExportPath);
-            removeFileAndEmptyDirectories(viewExportPath);
-            removeFileAndEmptyDirectories(viewTypesFilePath);
+            await Promise.all([
+                removeFileAndEmptyDirectories(moduleTypesFilePath),
+                removeFileAndEmptyDirectories(moduleExportPath),
+                removeFileAndEmptyDirectories(viewExportPath),
+                removeFileAndEmptyDirectories(viewTypesFilePath),
+            ]);
         }
     };
     const watcher = metro?.getBundler().getBundler().getWatcher();
-    const eventTypes = ['add', 'delete', 'change'];
+    const eventTypes = ['add', 'delete'];
     const excludePathsGlobs = getProjectExcludePathsGlobs(projectRoot);
     const isWatchedFileEvent = (event, watchedDirAncestor) => {
         return (isValidInlineModuleFileName(path.basename(event.filePath)) &&
@@ -251,14 +248,13 @@ async function startModuleGenerationAsync({ projectRoot, metro, }) {
                 !!watchedDirAncestor) {
                 const { filePath } = event;
                 if (event.type === 'add') {
-                    onSourceFileCreated(dotExpoDir, watchedDirAncestor, filePath, directoryToPackage, filesWatched);
+                    await onSourceFileCreated(dotExpoDir, watchedDirAncestor, filePath, directoryToPackage, filesWatched);
                 }
                 else if (event.type === 'delete') {
-                    onSourceFileRemoved(filePath, watchedDirAncestor);
+                    await onSourceFileRemoved(filePath, watchedDirAncestor);
                 }
             }
         }
     };
-    watcher?.addListener('change', listener);
-    await generateMirrorDirectories(projectRoot, dotExpoDir, filesWatched, directoryToPackage);
+    await watcher?.addListener('change', listener);
 }
