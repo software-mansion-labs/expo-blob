@@ -43,7 +43,6 @@ exports.createFreshMirrorDirectories = createFreshMirrorDirectories;
 exports.typesAndModulePathsForFile = typesAndModulePathsForFile;
 exports.generateMirrorDirectories = generateMirrorDirectories;
 exports.startInlineModulesMetroWatcherAsync = startInlineModulesMetroWatcherAsync;
-const dotExpo_1 = require("@expo/cli/build/src/start/project/dotExpo");
 const config_1 = require("@expo/config");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -193,7 +192,7 @@ export default _default`);
     await Promise.all(writeFilePromises);
 }
 async function generateMirrorDirectories(projectRoot, filesWatched, directoryToPackage = new Map()) {
-    const dotExpoDir = (0, dotExpo_1.ensureDotExpoProjectDirectoryInitialized)(projectRoot);
+    const dotExpoDir = path.resolve(projectRoot, '.expo');
     await createFreshMirrorDirectories(dotExpoDir);
     const generateExportsAndTypesForDirectory = async (absoluteDirPath, watchedDirRootAbsolutePath) => {
         if (isFilePathExcluded(absoluteDirPath, getProjectExcludePathsGlobs(projectRoot))) {
@@ -218,7 +217,7 @@ async function generateMirrorDirectories(projectRoot, filesWatched, directoryToP
     }
 }
 async function startInlineModulesMetroWatcherAsync({ projectRoot, metro }, filesWatched = new Set(), directoryToPackage = new Map()) {
-    const dotExpoDir = (0, dotExpo_1.ensureDotExpoProjectDirectoryInitialized)(projectRoot);
+    const dotExpoDir = path.resolve(projectRoot, '.expo');
     const removeFileAndEmptyDirectories = async (absoluteFilePath) => {
         await fs.promises.rm(absoluteFilePath);
         let dirNow = path.dirname(absoluteFilePath);

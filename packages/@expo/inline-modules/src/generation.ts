@@ -1,4 +1,3 @@
-import { ensureDotExpoProjectDirectoryInitialized } from '@expo/cli/build/src/start/project/dotExpo';
 import { getConfig } from '@expo/config';
 import Server from '@expo/metro/metro/Server';
 import * as fs from 'fs';
@@ -252,7 +251,7 @@ export async function generateMirrorDirectories(
   filesWatched?: Set<string>,
   directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
-  const dotExpoDir: string = ensureDotExpoProjectDirectoryInitialized(projectRoot);
+  const dotExpoDir: string = path.resolve(projectRoot, '.expo');
   await createFreshMirrorDirectories(dotExpoDir);
 
   const generateExportsAndTypesForDirectory = async (
@@ -299,8 +298,7 @@ export async function startInlineModulesMetroWatcherAsync(
   filesWatched: Set<string> = new Set<string>(),
   directoryToPackage: Map<string, string> = new Map<string, string>()
 ): Promise<void> {
-  const dotExpoDir = ensureDotExpoProjectDirectoryInitialized(projectRoot);
-
+  const dotExpoDir = path.resolve(projectRoot, '.expo');
   const removeFileAndEmptyDirectories = async (absoluteFilePath: string) => {
     await fs.promises.rm(absoluteFilePath);
     let dirNow: string = path.dirname(absoluteFilePath);

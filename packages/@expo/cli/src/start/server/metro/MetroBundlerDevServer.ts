@@ -1524,19 +1524,19 @@ export class MetroBundlerDevServer extends BundlerDevServer {
 
   private async inlineModulesWatcherSetup(): Promise<void> {
     const { projectRoot, metro } = this;
-    const { exp } = getConfig(this.projectRoot);
-    if (exp.experiments?.inlineModules) {
-      return startInlineModulesMetroWatcherAsync(
-        { projectRoot, metro },
-        this.inlineModulesFilesWatched,
-        this.directoryToPackage
-      );
-    }
+    return startInlineModulesMetroWatcherAsync(
+      { projectRoot, metro },
+      this.inlineModulesFilesWatched,
+      this.directoryToPackage
+    );
   }
 
   protected async postStartAsync(options: BundlerStartOptions): Promise<void> {
     await super.postStartAsync(options);
-    return this.inlineModulesWatcherSetup();
+    const { exp } = getConfig(this.projectRoot);
+    if (exp.experiments?.inlineModules) {
+      return this.inlineModulesWatcherSetup();
+    }
   }
 
   protected getConfigModuleIds(): string[] {

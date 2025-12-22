@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { getConfig } from '@expo/config';
-import {
-  generateMirrorDirectories,
-  startInlineModulesMetroWatcherAsync,
-} from '@expo/inline-modules';
+import { generateMirrorDirectories } from '@expo/inline-modules';
 import Server from '@expo/metro/metro/Server';
 import splitBundleOptions from '@expo/metro/metro/lib/splitBundleOptions';
 import * as output from '@expo/metro/metro/shared/output/bundle';
