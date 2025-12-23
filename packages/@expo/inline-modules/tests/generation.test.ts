@@ -1,4 +1,5 @@
 import { it, expect, describe } from '@jest/globals';
+import * as fs from 'fs';
 import * as path from 'path';
 
 import {
@@ -35,10 +36,11 @@ describe('extensions, names, paths', () => {
     expect(isFileExcluded('/Projects/project1/android/app/src/Module.kt')).toBe(true);
     expect(isFileExcluded('/Projects/project1/ios/app/Module.swift')).toBe(true);
     expect(isFileExcluded('/Projects/project1/.expo/Module.kt')).toBe(true);
-    expect(isFileExcluded('/Projects/project1/Module.swift')).toBe(true);
     expect(isFileExcluded('/Projects/project1/node_modules/module/Module.kt')).toBe(true);
     expect(isFileExcluded('/Projects/project1/modules/module/Module.swift')).toBe(true);
 
+    // While not supported yet, don't exclude the modules in project root.
+    expect(isFileExcluded('/Projects/project1/Module.swift')).toBe(false);
     expect(isFileExcluded('/Projects/project1/app/Module.swift')).toBe(false);
     expect(isFileExcluded('/Projects/project1/src/something/Module.swift')).toBe(false);
     expect(isFileExcluded('/Projects/project1/weirdFolder/Module.swift')).toBe(false);
@@ -78,11 +80,32 @@ describe('extensions, names, paths', () => {
   });
 });
 
+const fsMocks = {
+  existsSync: jest.fn(),
+
+  promises: {
+    mkdir: jest.fn(),
+  },
+};
+
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+
+  promises: {
+    mkdir: jest.fn(),
+  },
+}));
+
 describe('find up package json', () => {
   const testProjectDirectory = path.resolve(__dirname, './testProjectStructure');
   const nonexistentPath = path.resolve(testProjectDirectory, './this/path/does/not/exist');
   const pathToPackage = path.resolve(testProjectDirectory, './somePackage/folder/anotherFolder/');
-  it('use the cache if possible', async () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('use the cache if possible, guarantee no necessary calls to fs happen.', async () => {
     expect(
       findUpPackageJsonDirectoryCached(
         nonexistentPath,
@@ -93,7 +116,46 @@ describe('find up package json', () => {
     expect(
       findUpPackageJsonDirectoryCached(nonexistentPath, new Map([[nonexistentPath, pathToPackage]]))
     ).toEqual(pathToPackage);
+
+    // Ensure no calls to fs happened
+    Object.values(fsMocks).forEach((mock) => {
+      if (jest.isMockFunction(mock)) {
+        expect(mock).not.toHaveBeenCalled();
+      }
+    });
+
+    Object.values(fsMocks.promises).forEach((mock) => {
+      if (jest.isMockFunction(mock)) {
+        expect(mock).not.toHaveBeenCalled();
+      }
+    });
+  });
+
+  it('expect only two calls to existSync.', async () => {
+    (fs.existsSync as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+    const result = await findUpPackageJsonDirectoryCached(pathToPackage, new Map());
+
+    expect(result).toEqual(path.dirname(pathToPackage));
+
+    expect(fs.existsSync).toHaveBeenCalledWith(path.resolve(pathToPackage, 'package.json'));
+    expect(fs.existsSync).toHaveBeenCalledWith(
+      path.resolve(path.dirname(pathToPackage), 'package.json')
+    );
+    expect(fs.existsSync).toHaveBeenCalledTimes(2);
+  });
+
+  it('expect only one call to existSync and resolution from cache.', async () => {
+    (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
+
+    const result = await findUpPackageJsonDirectoryCached(
+      pathToPackage,
+      new Map([[path.dirname(pathToPackage), path.dirname(pathToPackage)]])
+    );
+
+    expect(result).toEqual(path.dirname(pathToPackage));
+
+    expect(fs.existsSync).toHaveBeenCalledWith(path.resolve(pathToPackage, 'package.json'));
+    expect(fs.existsSync).toHaveBeenCalledTimes(1);
   });
 });
-
-describe('file system operations', () => {});
