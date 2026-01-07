@@ -200,7 +200,7 @@ export async function setupTestProjectWithOptionsAsync(
   // If you're testing this locally, you can set the projectRoot to a local project (you created with expo init) to save time.
   const projectRoot = await createFromFixtureAsync(TEMP_DIR, {
     dirName: name,
-    reuseExisting: false,
+    reuseExisting,
     fixtureName,
     linkExpoPackages,
     linkExpoPackagesDev,
