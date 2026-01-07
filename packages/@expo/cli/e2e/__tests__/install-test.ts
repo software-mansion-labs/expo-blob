@@ -236,7 +236,7 @@ describe('expo-router integration', () => {
       {
         reuseExisting: false,
         // TODO(@hassankhan): remove @expo/router-server after publishing
-        linkExpoPackages: ['expo-router', '@expo/router-server'],
+        linkExpoPackages: ['@expo/inline-modules', 'expo-router', '@expo/router-server'],
       }
     );
     const pkg = new JsonFile(path.resolve(projectRoot, 'package.json'));

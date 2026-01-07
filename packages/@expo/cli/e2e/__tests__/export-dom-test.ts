@@ -34,7 +34,9 @@ describe('Export DOM Components', () => {
   let projectRoot: string;
 
   beforeAll(async () => {
-    projectRoot = await setupTestProjectWithOptionsAsync('dom-export', 'with-dom');
+    projectRoot = await setupTestProjectWithOptionsAsync('dom-export', 'with-dom', {
+      linkExpoPackages: ['@expo/inline-modules'],
+    });
   });
 
   it('runs `npx expo export`', async () => {
