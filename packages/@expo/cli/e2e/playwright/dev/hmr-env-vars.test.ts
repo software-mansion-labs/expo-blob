@@ -38,6 +38,7 @@ test.describe('router-e2e with spaces', () => {
         linkExpoPackages: ['expo', '@expo/local-build-cache-provider'],
         // TODO(@hassankhan): remove @expo/router-server after publishing
         linkExpoPackagesDev: [
+          '@expo/inline-modules',
           '@expo/cli',
           '@expo/router-server',
           'babel-preset-expo',
