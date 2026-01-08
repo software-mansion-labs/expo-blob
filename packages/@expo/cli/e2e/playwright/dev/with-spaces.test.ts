@@ -35,7 +35,7 @@ test.describe('router-e2e with spaces', () => {
           'expo-router',
           '@expo/log-box',
         ],
-        linkExpoPackagesDev: ['@expo/inline-modules', '@expo/cli', 'expo-server'],
+        linkExpoPackagesDev: ['@expo/cli', 'expo-server'],
       }
     );
 

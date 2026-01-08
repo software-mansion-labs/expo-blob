@@ -228,9 +228,14 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     const resolveInlineModulesWithAdditionalConfig = (context, moduleName, platform) => {
         return resolveInlineModules(projectRoot, directoryToPackage, context, moduleName, platform);
     };
+    const contextResolveRequest = (context, moduleName, platform) => context.resolveRequest(context, moduleName, platform);
+    const defaultResolveRequest = metroDefaultValues.resolver.resolveRequest ?? contextResolveRequest;
     const routerPackageRoot = resolve_from_1.default.silent(projectRoot, 'expo-router');
-    const getCustomResolverConfig = () => {
-        const resolverConfig = {
+    // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
+    // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
+    const metroConfig = mergeConfig(metroDefaultValues, {
+        watchFolders,
+        resolver: {
             unstable_conditionsByPlatform: {
                 ios: ['react-native'],
                 android: ['react-native'],
@@ -248,22 +253,15 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
                 .filter((assetExt) => !sourceExts.includes(assetExt)),
             sourceExts,
             nodeModulesPaths,
+            resolveRequest: expoConfig.exp.experiments?.inlineModules
+                ? resolveInlineModulesWithAdditionalConfig
+                : defaultResolveRequest,
             blockList: [
                 // .expo/types contains generated declaration files which are not and should not be processed by Metro.
                 // This prevents unwanted fast refresh on the declaration files changes.
                 /\.expo[\\/]types/,
             ].concat(metroDefaultValues.resolver.blockList ?? []),
-        };
-        if (expoConfig.exp?.experiments?.inlineModules) {
-            resolverConfig.resolveRequest = resolveInlineModulesWithAdditionalConfig;
-        }
-        return resolverConfig;
-    };
-    // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
-    // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
-    const metroConfig = mergeConfig(metroDefaultValues, {
-        watchFolders,
-        resolver: getCustomResolverConfig(),
+        },
         cacheStores: [cacheStore],
         watcher: {
             // strip starting dot from env files. We only support watching development variants of env files as production is inlined using a different system.

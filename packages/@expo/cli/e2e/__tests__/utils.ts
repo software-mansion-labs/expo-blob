@@ -174,6 +174,10 @@ export async function createFromFixtureAsync(
     const srcMetroConfig = path.resolve(__dirname, '../../../metro-config/build');
     const destMetroConfig = path.join(projectRoot, 'node_modules/@expo/metro-config/build');
     await fs.promises.cp(srcMetroConfig, destMetroConfig, { recursive: true, force: true });
+
+    const srcInlineModules = path.resolve(__dirname, '../../../inline-modules/build');
+    const destInlineModules = path.join(projectRoot, 'node_modules/@expo/inline-modules/build');
+    await fs.promises.cp(srcInlineModules, destInlineModules, { recursive: true, force: true });
   } catch (error) {
     log.error(error);
     throw error;
