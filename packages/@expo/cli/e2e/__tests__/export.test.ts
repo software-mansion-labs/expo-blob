@@ -76,6 +76,7 @@ describe('server', () => {
 
   beforeAll(async () => {
     projectRoot = await setupTestProjectWithOptionsAsync('basic-export', 'with-assets', {
+      // TODO(@HubertBer): remove @expo/inline-modules after publishing
       linkExpoPackages: ['@expo/inline-modules'],
     });
   });

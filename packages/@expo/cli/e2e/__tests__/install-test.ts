@@ -236,6 +236,7 @@ describe('expo-router integration', () => {
       {
         reuseExisting: false,
         // TODO(@hassankhan): remove @expo/router-server after publishing
+        // TODO(@HubertBer): remove @expo/inline-modules after publishing
         linkExpoPackages: ['@expo/inline-modules', 'expo-router', '@expo/router-server'],
       }
     );

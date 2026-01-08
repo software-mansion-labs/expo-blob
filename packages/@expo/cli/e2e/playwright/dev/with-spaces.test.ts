@@ -29,6 +29,7 @@ test.describe('router-e2e with spaces', () => {
       // outside the Expo monorepo module
       {
         // TODO(@hassankhan, @krystofwoldrich): remove linked packages after publishing
+        // TODO(@HubertBer): remove @expo/inline-modules after publishing
         linkExpoPackages: [
           '@expo/inline-modules',
           '@expo/router-server',

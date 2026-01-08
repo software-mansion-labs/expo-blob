@@ -11,6 +11,7 @@ const expo = createExpoStart({
 beforeAll(async () => {
   expo.options.cwd = await setupTestProjectWithOptionsAsync('metro-server', 'with-assets', {
     linkExpoPackages: [
+      // TODO(@HubertBer): remove @expo/inline-modules after publishing
       '@expo/inline-modules',
       'expo',
       '@expo/log-box',

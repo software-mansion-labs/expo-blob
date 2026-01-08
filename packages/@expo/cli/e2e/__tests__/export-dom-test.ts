@@ -35,6 +35,7 @@ describe('Export DOM Components', () => {
 
   beforeAll(async () => {
     projectRoot = await setupTestProjectWithOptionsAsync('dom-export', 'with-dom', {
+      // TODO(@HubertBer): remove @expo/inline-modules after publishing
       linkExpoPackages: ['@expo/inline-modules'],
     });
   });
