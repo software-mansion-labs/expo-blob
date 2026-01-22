@@ -50,8 +50,6 @@ async function updateXCodeProject(projectRoot) {
             path: path_1.default.relative(iosFolderPath, path_1.default.resolve(projectRoot, dir)),
             sourceTree: 'SOURCE_ROOT',
         };
-        //@ts-ignore
-        objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
         const nativeTargetGroup = objects.PBXNativeTarget[mainTargetUUID];
         if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
             nativeTargetGroup.fileSystemSynchronizedGroups = [];

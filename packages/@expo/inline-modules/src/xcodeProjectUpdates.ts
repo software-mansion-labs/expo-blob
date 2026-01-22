@@ -55,9 +55,6 @@ export async function updateXCodeProject(projectRoot: string): Promise<void> {
       sourceTree: 'SOURCE_ROOT',
     };
 
-    //@ts-ignore
-    objects.PBXFileSystemSynchronizedRootGroup[newUUID + '_comment'] = dir;
-
     const nativeTargetGroup = objects.PBXNativeTarget[mainTargetUUID];
     if (!nativeTargetGroup.fileSystemSynchronizedGroups) {
       nativeTargetGroup.fileSystemSynchronizedGroups = [];
