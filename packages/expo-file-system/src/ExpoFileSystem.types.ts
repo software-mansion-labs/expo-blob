@@ -1,3 +1,5 @@
+type DOMFile = InstanceType<typeof globalThis.File>;
+
 export type FileCreateOptions = {
   /**
    * Whether to create intermediate directories if they do not exist.
@@ -347,6 +349,7 @@ export declare class File extends Blob {
   static pickFileAsync(initialUri?: string, mimeType?: string): Promise<File | File[]>;
   static pickFileAsync(options?: PickSingleFileOptions): Promise<File>;
   static pickFileAsync(options?: PickMultipleFilesOptions): Promise<File[]>;
+  static pickFileAsync(options?: PickSingleFileOptions): Promise<DOMFile>;
 
   /**
    * A size of the file in bytes. 0 if the file does not exist, or it cannot be read.

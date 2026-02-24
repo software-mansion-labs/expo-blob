@@ -86,7 +86,7 @@ internal func createFilePicker(initialUri: URL?, mimeTypes: [String]) -> UIDocum
       utTypes = [UTType.item]
     }
 
-    let picker = UIDocumentPickerViewController(forOpeningContentTypes: utTypes, asCopy: true)
+    let picker = UIDocumentPickerViewController(forOpeningContentTypes: utTypes, asCopy: false)
 
     if let initialUri = initialUri {
       picker.directoryURL = initialUri
