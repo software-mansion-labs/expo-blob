@@ -96,37 +96,39 @@ export async function getMirrorStateObject(
     files: [],
   };
 
-  const tasks: (() => Promise<void>)[] = [];
+  const taskInputs: string[] = [];
   for (const dir of watchedDirectories ?? []) {
     const absoluteDirPath = path.resolve(appRoot, dir);
-
-    tasks.push(async () => {
-      for await (const { name, path } of scanFilesRecursively(absoluteDirPath)) {
-        const { valid, ext } = inlineModuleFileNameInformation(name);
-        if (!valid) {
-          continue;
-        }
-
-        const absoluteFilePath = await maybeRealpath(path);
-        if (!absoluteFilePath) {
-          continue;
-        }
-
-        inlineModulesMirror.files.push({
-          filePath: absoluteFilePath,
-          watchedDirRoot: absoluteDirPath,
-        });
-        if (ext === '.kt') {
-          const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-          inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
-        } else {
-          const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
-          inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
-        }
-      }
-    });
+    taskInputs.push(absoluteDirPath);
   }
 
-  await taskAll(tasks, async (task) => await task());
+  await taskAll(taskInputs, async (absoluteDirPath) => {
+    for await (const { name, path } of scanFilesRecursively(absoluteDirPath)) {
+      const { valid, ext } = inlineModuleFileNameInformation(name);
+      if (!valid) {
+        continue;
+      }
+
+      const absoluteFilePath = await maybeRealpath(path);
+      if (!absoluteFilePath) {
+        continue;
+      }
+
+      inlineModulesMirror.files.push({
+        filePath: absoluteFilePath,
+        watchedDirRoot: absoluteDirPath,
+      });
+      if (ext === '.kt') {
+        const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
+        inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+      } else {
+        const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
+        inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
+      }
+    }
+  });
+  // Sort the kotlin and swift classes as later we want to use them to generate module providers and it's better to do it consistently for caching.
+  inlineModulesMirror.kotlinClasses.sort();
+  inlineModulesMirror.swiftModuleClassNames.sort();
   return inlineModulesMirror;
 }
