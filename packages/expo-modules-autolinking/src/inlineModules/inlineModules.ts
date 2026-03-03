@@ -40,10 +40,6 @@ function isValidInlineModuleFileName(fileName: string): boolean {
   return !baseName.includes('.');
 }
 
-function trimExtension(fileName: string) {
-  return fileName.substring(0, fileName.lastIndexOf('.'));
-}
-
 async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promise<string> {
   const HEADER_SIZE = 512;
   const buffer = Buffer.alloc(HEADER_SIZE);
@@ -60,14 +56,14 @@ async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promis
       return '';
     }
 
-    return `${packageMatch[1]}.${trimExtension(path.basename(absoluteFilePath))}`;
+    return `${packageMatch[1]}.${path.basename(absoluteFilePath, path.extname(absoluteFilePath))}`;
   } finally {
     await fileHandle.close();
   }
 }
 
 function getSwiftModuleClassName(absoluteFilePath: string): string {
-  return trimExtension(path.basename(absoluteFilePath));
+  return path.basename(absoluteFilePath, path.extname(absoluteFilePath));
 }
 
 export async function getMirrorStateObject(
@@ -81,7 +77,11 @@ export async function getMirrorStateObject(
   };
 
   const recursivelyScanDirectory = async (absoluteDirPath: string, watchedDirRoot: string) => {
-    const dir = await fs.promises.opendir(absoluteDirPath);
+    const dir: fs.Dir | null = await fs.promises.opendir(absoluteDirPath).catch(() => null);
+    // If we cannot open the directory then just return.
+    if (!dir) {
+      return;
+    }
     for await (const dirent of dir) {
       const absoluteDirentPath = path.resolve(absoluteDirPath, dirent.name);
       if (dirent.isDirectory()) {

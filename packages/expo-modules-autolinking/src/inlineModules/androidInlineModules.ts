@@ -23,7 +23,7 @@ export async function createSymlinksToKotlinFiles(
 
 function getClassName(classNameWithPackage: string): string {
   const index = classNameWithPackage.lastIndexOf('.');
-  if (index < 0 || index > classNameWithPackage.length) {
+  if (index < 0) {
     return classNameWithPackage;
   }
   return classNameWithPackage.substring(index + 1);

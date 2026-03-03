@@ -22,7 +22,7 @@ async function createSymlinksToKotlinFiles(mirrorPath, watchedDirectories) {
 }
 function getClassName(classNameWithPackage) {
     const index = classNameWithPackage.lastIndexOf('.');
-    if (index < 0 || index > classNameWithPackage.length) {
+    if (index < 0) {
         return classNameWithPackage;
     }
     return classNameWithPackage.substring(index + 1);
