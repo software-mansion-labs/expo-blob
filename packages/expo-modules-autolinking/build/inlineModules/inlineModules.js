@@ -7,6 +7,7 @@ exports.getAppRoot = getAppRoot;
 exports.getMirrorStateObject = getMirrorStateObject;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const concurrency_1 = require("../concurrency");
 const utils_1 = require("../utils");
 function findUpProjectRoot(cwd) {
     const packageJsonPath = path_1.default.resolve(cwd, './package.json');
@@ -75,31 +76,35 @@ async function getMirrorStateObject(watchedDirectories) {
         swiftModuleClassNames: [],
         files: [],
     };
+    const tasks = [];
     for (const dir of watchedDirectories ?? []) {
         const absoluteDirPath = path_1.default.resolve(appRoot, dir);
-        for await (const { name, path } of (0, utils_1.scanFilesRecursively)(absoluteDirPath)) {
-            const { valid, ext } = inlineModuleFileNameInformation(name);
-            if (!valid) {
-                continue;
+        tasks.push(async () => {
+            for await (const { name, path } of (0, utils_1.scanFilesRecursively)(absoluteDirPath)) {
+                const { valid, ext } = inlineModuleFileNameInformation(name);
+                if (!valid) {
+                    continue;
+                }
+                const absoluteFilePath = await (0, utils_1.maybeRealpath)(path);
+                if (!absoluteFilePath) {
+                    continue;
+                }
+                inlineModulesMirror.files.push({
+                    filePath: absoluteFilePath,
+                    watchedDirRoot: absoluteDirPath,
+                });
+                if (ext === '.kt') {
+                    const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
+                    inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+                }
+                else {
+                    const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
+                    inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
+                }
             }
-            const absoluteFilePath = await (0, utils_1.maybeRealpath)(path);
-            if (!absoluteFilePath) {
-                continue;
-            }
-            inlineModulesMirror.files.push({
-                filePath: absoluteFilePath,
-                watchedDirRoot: absoluteDirPath,
-            });
-            if (ext === '.kt') {
-                const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-                inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
-            }
-            else {
-                const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
-                inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
-            }
-        }
+        });
     }
+    await (0, concurrency_1.taskAll)(tasks, async (task) => await task());
     return inlineModulesMirror;
 }
 //# sourceMappingURL=inlineModules.js.map

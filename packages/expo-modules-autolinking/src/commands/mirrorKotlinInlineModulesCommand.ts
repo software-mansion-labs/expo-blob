@@ -14,6 +14,12 @@ type MirrorKotlinInlineModulesCommandArguments = {
   watchedDirectoriesSerialized: string;
 };
 
+/**
+ * A cli command which:
+ * - creates InlineModulesList.kt file
+ * - mirrors directory structure of watched directories
+ * - symlinks the original kotlin files in the new mirror directories.
+ */
 export function mirrorKotlinInlineModulesCommand(cli: commander.CommanderStatic) {
   return registerAutolinkingArguments(cli.command('mirror-kotlin-inline-modules'))
     .requiredOption(
@@ -53,8 +59,14 @@ export function mirrorKotlinInlineModulesCommand(cli: commander.CommanderStatic)
         );
       }
 
-      await fs.promises.rm(kotlinFilesMirrorDirectory, { recursive: true, force: true });
-      await createSymlinksToKotlinFiles(kotlinFilesMirrorDirectory, watchedDirectories);
-      await generateInlineModulesListFile(inlineModulesListDirectory, watchedDirectories);
+      const createMirrorStructurePromise = fs.promises
+        .rm(kotlinFilesMirrorDirectory, { recursive: true, force: true })
+        .then(() => createSymlinksToKotlinFiles(kotlinFilesMirrorDirectory, watchedDirectories));
+
+      const generateInlineModulesListPromise = generateInlineModulesListFile(
+        inlineModulesListDirectory,
+        watchedDirectories
+      );
+      await Promise.all([createMirrorStructurePromise, generateInlineModulesListPromise]);
     });
 }

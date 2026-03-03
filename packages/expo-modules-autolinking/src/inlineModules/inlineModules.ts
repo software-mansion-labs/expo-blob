@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { taskAll } from '../concurrency';
 import { maybeRealpath, scanFilesRecursively } from '../utils';
 
 /**
@@ -95,32 +96,37 @@ export async function getMirrorStateObject(
     files: [],
   };
 
+  const tasks: (() => Promise<void>)[] = [];
   for (const dir of watchedDirectories ?? []) {
     const absoluteDirPath = path.resolve(appRoot, dir);
 
-    for await (const { name, path } of scanFilesRecursively(absoluteDirPath)) {
-      const { valid, ext } = inlineModuleFileNameInformation(name);
-      if (!valid) {
-        continue;
-      }
+    tasks.push(async () => {
+      for await (const { name, path } of scanFilesRecursively(absoluteDirPath)) {
+        const { valid, ext } = inlineModuleFileNameInformation(name);
+        if (!valid) {
+          continue;
+        }
 
-      const absoluteFilePath = await maybeRealpath(path);
-      if (!absoluteFilePath) {
-        continue;
-      }
+        const absoluteFilePath = await maybeRealpath(path);
+        if (!absoluteFilePath) {
+          continue;
+        }
 
-      inlineModulesMirror.files.push({
-        filePath: absoluteFilePath,
-        watchedDirRoot: absoluteDirPath,
-      });
-      if (ext === '.kt') {
-        const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-        inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
-      } else {
-        const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
-        inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
+        inlineModulesMirror.files.push({
+          filePath: absoluteFilePath,
+          watchedDirRoot: absoluteDirPath,
+        });
+        if (ext === '.kt') {
+          const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
+          inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+        } else {
+          const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
+          inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
+        }
       }
-    }
+    });
   }
+
+  await taskAll(tasks, async (task) => await task());
   return inlineModulesMirror;
 }
