@@ -7,6 +7,7 @@ import {
   createSymlinksToKotlinFiles,
   generateInlineModulesListFile,
 } from '../inlineModules/androidInlineModules';
+import { getMirrorStateObject } from '../inlineModules/inlineModules';
 
 type MirrorKotlinInlineModulesCommandArguments = {
   kotlinFilesMirrorDirectory: string;
@@ -59,13 +60,15 @@ export function mirrorKotlinInlineModulesCommand(cli: commander.CommanderStatic)
         );
       }
 
+      const inlineModulesMirror = await getMirrorStateObject(watchedDirectories);
+
       const createMirrorStructurePromise = fs.promises
         .rm(kotlinFilesMirrorDirectory, { recursive: true, force: true })
-        .then(() => createSymlinksToKotlinFiles(kotlinFilesMirrorDirectory, watchedDirectories));
+        .then(() => createSymlinksToKotlinFiles(kotlinFilesMirrorDirectory, inlineModulesMirror));
 
       const generateInlineModulesListPromise = generateInlineModulesListFile(
         inlineModulesListDirectory,
-        watchedDirectories
+        inlineModulesMirror
       );
       await Promise.all([createMirrorStructurePromise, generateInlineModulesListPromise]);
     });

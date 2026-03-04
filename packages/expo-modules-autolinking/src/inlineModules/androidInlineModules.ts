@@ -1,22 +1,26 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getMirrorStateObject } from './inlineModules';
+import { InlineModulesMirror } from './inlineModules';
 import { taskAll } from '../concurrency';
+import { error } from 'console';
 
 export async function createSymlinksToKotlinFiles(
   mirrorPath: string,
-  watchedDirectories: string[]
+  inlineModulesMirror: InlineModulesMirror
 ) {
-  const inlineModulesObject = await getMirrorStateObject(watchedDirectories);
-  const kotlinFiles = inlineModulesObject.files.filter(({ filePath }) => filePath.endsWith('.kt'));
+  const kotlinFiles = inlineModulesMirror.files.filter(({ filePath }) => filePath.endsWith('.kt'));
 
   await taskAll(kotlinFiles, async ({ filePath, watchedDirRoot }) => {
     const filePathRelativeToWatchedDirRoot = path.relative(watchedDirRoot, filePath);
     const targetPath = path.resolve(mirrorPath, filePathRelativeToWatchedDirRoot);
 
-    await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
-    await fs.promises.symlink(filePath, targetPath);
+    try {
+      await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+      await fs.promises.symlink(filePath, targetPath);
+    } catch (e) {
+      error(`Couldn't symlink inline module: ${filePath}. Error: ${e}`);
+    }
   });
 }
 
@@ -30,9 +34,8 @@ function getClassName(classNameWithPackage: string): string {
 
 export async function generateInlineModulesListFile(
   inlineModulesListPath: string,
-  watchedDirectories: string[]
+  inlineModulesMirror: InlineModulesMirror
 ) {
-  const inlineModulesObject = await getMirrorStateObject(watchedDirectories);
   const fileContent = `package inline.modules;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +53,7 @@ public class ExpoInlineModulesList implements ModulesProvider {
   @Override
   public Map<Class<? extends Module>, String> getModulesMap() {
     return Map.of(
-${inlineModulesObject.kotlinClasses
+${inlineModulesMirror.kotlinClasses
   .map((moduleClass) => `      ${moduleClass}.class, "${getClassName(moduleClass)}"`)
   .join(',\n')}
     );

@@ -8,6 +8,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const autolinkingOptions_1 = require("./autolinkingOptions");
 const androidInlineModules_1 = require("../inlineModules/androidInlineModules");
+const inlineModules_1 = require("../inlineModules/inlineModules");
 /**
  * A cli command which:
  * - creates InlineModulesList.kt file
@@ -30,10 +31,11 @@ function mirrorKotlinInlineModulesCommand(cli) {
             !path_1.default.isAbsolute(inlineModulesListDirectory)) {
             throw new Error('Need to provide the absolute path to both the kotlin files mirror and inline modules list directories!');
         }
+        const inlineModulesMirror = await (0, inlineModules_1.getMirrorStateObject)(watchedDirectories);
         const createMirrorStructurePromise = fs_1.default.promises
             .rm(kotlinFilesMirrorDirectory, { recursive: true, force: true })
-            .then(() => (0, androidInlineModules_1.createSymlinksToKotlinFiles)(kotlinFilesMirrorDirectory, watchedDirectories));
-        const generateInlineModulesListPromise = (0, androidInlineModules_1.generateInlineModulesListFile)(inlineModulesListDirectory, watchedDirectories);
+            .then(() => (0, androidInlineModules_1.createSymlinksToKotlinFiles)(kotlinFilesMirrorDirectory, inlineModulesMirror));
+        const generateInlineModulesListPromise = (0, androidInlineModules_1.generateInlineModulesListFile)(inlineModulesListDirectory, inlineModulesMirror);
         await Promise.all([createMirrorStructurePromise, generateInlineModulesListPromise]);
     });
 }

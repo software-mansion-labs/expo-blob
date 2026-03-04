@@ -1,3 +1,4 @@
+import { warn } from 'console';
 import fs from 'fs';
 import path from 'path';
 
@@ -57,11 +58,17 @@ function inlineModuleFileNameInformation(fileName: string): { valid: boolean; ex
   return { valid: !baseName.includes('.'), ext };
 }
 
-async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promise<string> {
+async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promise<string | null> {
   const HEADER_SIZE = 512;
   const buffer = Buffer.alloc(HEADER_SIZE);
 
-  const fileHandle = await fs.promises.open(absoluteFilePath, 'r');
+  let fileHandle;
+  try {
+    fileHandle = await fs.promises.open(absoluteFilePath, 'r');
+  } catch (e) {
+    warn(`Kotlin inline module '${absoluteFilePath}' couldn't be opened.`);
+    return null;
+  }
   try {
     const { bytesRead } = await fileHandle.read(buffer, 0, HEADER_SIZE, 0);
     const header = buffer.toString('utf8', 0, bytesRead);
@@ -70,10 +77,14 @@ async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promis
     const pacakgeRegex = /^package\s+([\w.]+)/m;
     const packageMatch = header.match(pacakgeRegex);
     if (!packageMatch) {
-      return '';
+      warn(`Package name couldn't be found in ${absoluteFilePath}.`);
+      return null;
     }
 
     return `${packageMatch[1]}.${path.basename(absoluteFilePath, path.extname(absoluteFilePath))}`;
+  } catch (e) {
+    console.warn(`Couldn't read inline module '${absoluteFilePath}' package.`);
+    return null;
   } finally {
     await fileHandle.close();
   }
@@ -120,7 +131,9 @@ export async function getMirrorStateObject(
       });
       if (ext === '.kt') {
         const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-        inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+        if (kotlinFileWithPackage !== null) {
+          inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+        }
       } else {
         const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
         inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAppRoot = getAppRoot;
 exports.getMirrorStateObject = getMirrorStateObject;
+const console_1 = require("console");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const concurrency_1 = require("../concurrency");
@@ -47,7 +48,14 @@ function inlineModuleFileNameInformation(fileName) {
 async function getKotlinFileNameWithItsPackage(absoluteFilePath) {
     const HEADER_SIZE = 512;
     const buffer = Buffer.alloc(HEADER_SIZE);
-    const fileHandle = await fs_1.default.promises.open(absoluteFilePath, 'r');
+    let fileHandle;
+    try {
+        fileHandle = await fs_1.default.promises.open(absoluteFilePath, 'r');
+    }
+    catch (e) {
+        (0, console_1.warn)(`Kotlin inline module '${absoluteFilePath}' couldn't be opened.`);
+        return null;
+    }
     try {
         const { bytesRead } = await fileHandle.read(buffer, 0, HEADER_SIZE, 0);
         const header = buffer.toString('utf8', 0, bytesRead);
@@ -55,9 +63,14 @@ async function getKotlinFileNameWithItsPackage(absoluteFilePath) {
         const pacakgeRegex = /^package\s+([\w.]+)/m;
         const packageMatch = header.match(pacakgeRegex);
         if (!packageMatch) {
-            return '';
+            (0, console_1.warn)(`Package name couldn't be found in ${absoluteFilePath}.`);
+            return null;
         }
         return `${packageMatch[1]}.${path_1.default.basename(absoluteFilePath, path_1.default.extname(absoluteFilePath))}`;
+    }
+    catch (e) {
+        console.warn(`Couldn't read inline module '${absoluteFilePath}' package.`);
+        return null;
     }
     finally {
         await fileHandle.close();
@@ -97,7 +110,9 @@ async function getMirrorStateObject(watchedDirectories) {
             });
             if (ext === '.kt') {
                 const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-                inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+                if (kotlinFileWithPackage !== null) {
+                    inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+                }
             }
             else {
                 const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
