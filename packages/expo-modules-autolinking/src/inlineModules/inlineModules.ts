@@ -12,7 +12,7 @@ import { maybeRealpath, scanFilesRecursively } from '../utils';
  * - kotlinClasses: array of kotlin inline modules in format `<package>.<className>`
  */
 export interface InlineModulesMirror {
-  files: { filePath: string; watchedDirRoot: string }[];
+  files: { filePath: string; watchedDir: string }[];
   swiftModuleClassNames: string[];
   kotlinClasses: string[];
 }
@@ -48,7 +48,7 @@ const nativeExtensions = ['.kt', '.swift'];
  * Checks if the fileName is valid for an inline module.
  * It needs to have suported extension and no dots in the basename as the basename has to match the module name.
  */
-function inlineModuleFileNameInformation(fileName: string): { valid: boolean; ext: string } {
+export function inlineModuleFileNameInformation(fileName: string): { valid: boolean; ext: string } {
   const ext = path.extname(fileName);
   if (!nativeExtensions.includes(ext)) {
     return { valid: false, ext };
@@ -58,7 +58,9 @@ function inlineModuleFileNameInformation(fileName: string): { valid: boolean; ex
   return { valid: !baseName.includes('.'), ext };
 }
 
-async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promise<string | null> {
+export async function getKotlinFileNameWithItsPackage(
+  absoluteFilePath: string
+): Promise<string | null> {
   const HEADER_SIZE = 512;
   const buffer = Buffer.alloc(HEADER_SIZE);
 
@@ -90,7 +92,7 @@ async function getKotlinFileNameWithItsPackage(absoluteFilePath: string): Promis
   }
 }
 
-function getSwiftModuleClassName(absoluteFilePath: string): string {
+export function getSwiftModuleClassName(absoluteFilePath: string): string {
   return path.basename(absoluteFilePath, path.extname(absoluteFilePath));
 }
 
@@ -125,19 +127,20 @@ export async function getMirrorStateObject(
         continue;
       }
 
-      inlineModulesMirror.files.push({
-        filePath: absoluteFilePath,
-        watchedDirRoot: absoluteDirPath,
-      });
       if (ext === '.kt') {
         const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-        if (kotlinFileWithPackage !== null) {
-          inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+        if (kotlinFileWithPackage === null) {
+          continue;
         }
+        inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
       } else {
         const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
         inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
       }
+      inlineModulesMirror.files.push({
+        filePath: absoluteFilePath,
+        watchedDir: absoluteDirPath,
+      });
     }
   });
   // Sort the kotlin and swift classes as later we want to use them to generate module providers and it's better to do it consistently for caching.

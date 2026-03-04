@@ -4,6 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAppRoot = getAppRoot;
+exports.inlineModuleFileNameInformation = inlineModuleFileNameInformation;
+exports.getKotlinFileNameWithItsPackage = getKotlinFileNameWithItsPackage;
+exports.getSwiftModuleClassName = getSwiftModuleClassName;
 exports.getMirrorStateObject = getMirrorStateObject;
 const console_1 = require("console");
 const fs_1 = __importDefault(require("fs"));
@@ -104,20 +107,21 @@ async function getMirrorStateObject(watchedDirectories) {
             if (!absoluteFilePath) {
                 continue;
             }
-            inlineModulesMirror.files.push({
-                filePath: absoluteFilePath,
-                watchedDirRoot: absoluteDirPath,
-            });
             if (ext === '.kt') {
                 const kotlinFileWithPackage = await getKotlinFileNameWithItsPackage(absoluteFilePath);
-                if (kotlinFileWithPackage !== null) {
-                    inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
+                if (kotlinFileWithPackage === null) {
+                    continue;
                 }
+                inlineModulesMirror.kotlinClasses.push(kotlinFileWithPackage);
             }
             else {
                 const swiftClassName = getSwiftModuleClassName(absoluteFilePath);
                 inlineModulesMirror.swiftModuleClassNames.push(swiftClassName);
             }
+            inlineModulesMirror.files.push({
+                filePath: absoluteFilePath,
+                watchedDir: absoluteDirPath,
+            });
         }
     });
     // Sort the kotlin and swift classes as later we want to use them to generate module providers and it's better to do it consistently for caching.

@@ -4,16 +4,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSymlinksToKotlinFiles = createSymlinksToKotlinFiles;
+exports.getClassName = getClassName;
 exports.generateInlineModulesListFile = generateInlineModulesListFile;
+const console_1 = require("console");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const concurrency_1 = require("../concurrency");
-const console_1 = require("console");
 async function createSymlinksToKotlinFiles(mirrorPath, inlineModulesMirror) {
     const kotlinFiles = inlineModulesMirror.files.filter(({ filePath }) => filePath.endsWith('.kt'));
-    await (0, concurrency_1.taskAll)(kotlinFiles, async ({ filePath, watchedDirRoot }) => {
-        const filePathRelativeToWatchedDirRoot = path_1.default.relative(watchedDirRoot, filePath);
-        const targetPath = path_1.default.resolve(mirrorPath, filePathRelativeToWatchedDirRoot);
+    await (0, concurrency_1.taskAll)(kotlinFiles, async ({ filePath, watchedDir }) => {
+        const filePathRelativeToWatchedDir = path_1.default.relative(watchedDir, filePath);
+        const targetPath = path_1.default.resolve(mirrorPath, filePathRelativeToWatchedDir);
         try {
             await fs_1.default.promises.mkdir(path_1.default.dirname(targetPath), { recursive: true });
             await fs_1.default.promises.symlink(filePath, targetPath);

@@ -1,9 +1,9 @@
+import { error } from 'console';
 import fs from 'fs';
 import path from 'path';
 
 import { InlineModulesMirror } from './inlineModules';
 import { taskAll } from '../concurrency';
-import { error } from 'console';
 
 export async function createSymlinksToKotlinFiles(
   mirrorPath: string,
@@ -11,9 +11,9 @@ export async function createSymlinksToKotlinFiles(
 ) {
   const kotlinFiles = inlineModulesMirror.files.filter(({ filePath }) => filePath.endsWith('.kt'));
 
-  await taskAll(kotlinFiles, async ({ filePath, watchedDirRoot }) => {
-    const filePathRelativeToWatchedDirRoot = path.relative(watchedDirRoot, filePath);
-    const targetPath = path.resolve(mirrorPath, filePathRelativeToWatchedDirRoot);
+  await taskAll(kotlinFiles, async ({ filePath, watchedDir }) => {
+    const filePathRelativeToWatchedDir = path.relative(watchedDir, filePath);
+    const targetPath = path.resolve(mirrorPath, filePathRelativeToWatchedDir);
 
     try {
       await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
@@ -24,7 +24,7 @@ export async function createSymlinksToKotlinFiles(
   });
 }
 
-function getClassName(classNameWithPackage: string): string {
+export function getClassName(classNameWithPackage: string): string {
   const index = classNameWithPackage.lastIndexOf('.');
   if (index < 0) {
     return classNameWithPackage;
