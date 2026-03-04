@@ -124,7 +124,10 @@ describe('inlineModules.ts', () => {
         '/other-project/src/ValidAndroid2.kt': 'package app.valid\nclass ValidAndroid2',
       });
 
-      const result = await getMirrorStateObject(['app', 'src/nested/', '../other-project/src']);
+      const result = await getMirrorStateObject(
+        ['app', 'src/nested/', '../other-project/src'],
+        '/example-project'
+      );
 
       expect(result.swiftModuleClassNames).toEqual(['ValidApple1', 'ValidApple2']);
       expect(result.kotlinClasses).toEqual(['app.valid.ValidAndroid1', 'app.valid.ValidAndroid2']);

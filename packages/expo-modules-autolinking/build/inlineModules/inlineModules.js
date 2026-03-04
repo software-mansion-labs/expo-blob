@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAppRoot = getAppRoot;
 exports.inlineModuleFileNameInformation = inlineModuleFileNameInformation;
 exports.getKotlinFileNameWithItsPackage = getKotlinFileNameWithItsPackage;
 exports.getSwiftModuleClassName = getSwiftModuleClassName;
@@ -13,28 +12,6 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const concurrency_1 = require("../concurrency");
 const utils_1 = require("../utils");
-function findUpProjectRoot(cwd) {
-    const packageJsonPath = path_1.default.resolve(cwd, './package.json');
-    if (fs_1.default.existsSync(packageJsonPath)) {
-        return path_1.default.dirname(packageJsonPath);
-    }
-    const parent = path_1.default.dirname(cwd);
-    if (parent === cwd)
-        return null;
-    return findUpProjectRoot(parent);
-}
-/**
- * Finds the project root - the closest ancestor directory with package.json.
- * @returns path to the project root.
- */
-async function getAppRoot() {
-    const cwd = process.cwd();
-    const result = findUpProjectRoot(cwd);
-    if (!result) {
-        throw new Error(`Couldn't find "package.json" up from path "${cwd}"`);
-    }
-    return result;
-}
 const nativeExtensions = ['.kt', '.swift'];
 /**
  * Checks if the fileName is valid for an inline module.
@@ -85,8 +62,7 @@ function getSwiftModuleClassName(absoluteFilePath) {
 /**
  * Scans the project and returns information about all of the inline modules inside in an InlineModulesMirror object.
  */
-async function getMirrorStateObject(watchedDirectories) {
-    const appRoot = await getAppRoot();
+async function getMirrorStateObject(watchedDirectories, appRoot) {
     const inlineModulesMirror = {
         kotlinClasses: [],
         swiftModuleClassNames: [],

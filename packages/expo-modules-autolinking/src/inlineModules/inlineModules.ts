@@ -17,31 +17,6 @@ export interface InlineModulesMirror {
   kotlinClasses: string[];
 }
 
-function findUpProjectRoot(cwd: string): string | null {
-  const packageJsonPath = path.resolve(cwd, './package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    return path.dirname(packageJsonPath);
-  }
-
-  const parent = path.dirname(cwd);
-  if (parent === cwd) return null;
-
-  return findUpProjectRoot(parent);
-}
-
-/**
- * Finds the project root - the closest ancestor directory with package.json.
- * @returns path to the project root.
- */
-export async function getAppRoot(): Promise<string> {
-  const cwd = process.cwd();
-  const result = findUpProjectRoot(cwd);
-  if (!result) {
-    throw new Error(`Couldn't find "package.json" up from path "${cwd}"`);
-  }
-  return result;
-}
-
 const nativeExtensions = ['.kt', '.swift'];
 
 /**
@@ -100,9 +75,9 @@ export function getSwiftModuleClassName(absoluteFilePath: string): string {
  * Scans the project and returns information about all of the inline modules inside in an InlineModulesMirror object.
  */
 export async function getMirrorStateObject(
-  watchedDirectories: string[]
+  watchedDirectories: string[],
+  appRoot: string
 ): Promise<InlineModulesMirror> {
-  const appRoot = await getAppRoot();
   const inlineModulesMirror: InlineModulesMirror = {
     kotlinClasses: [],
     swiftModuleClassNames: [],

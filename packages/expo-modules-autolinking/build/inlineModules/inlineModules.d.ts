@@ -13,11 +13,6 @@ export interface InlineModulesMirror {
     kotlinClasses: string[];
 }
 /**
- * Finds the project root - the closest ancestor directory with package.json.
- * @returns path to the project root.
- */
-export declare function getAppRoot(): Promise<string>;
-/**
  * Checks if the fileName is valid for an inline module.
  * It needs to have suported extension and no dots in the basename as the basename has to match the module name.
  */
@@ -30,4 +25,4 @@ export declare function getSwiftModuleClassName(absoluteFilePath: string): strin
 /**
  * Scans the project and returns information about all of the inline modules inside in an InlineModulesMirror object.
  */
-export declare function getMirrorStateObject(watchedDirectories: string[]): Promise<InlineModulesMirror>;
+export declare function getMirrorStateObject(watchedDirectories: string[], appRoot: string): Promise<InlineModulesMirror>;
