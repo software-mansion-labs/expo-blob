@@ -170,7 +170,7 @@ function getMockForModule(module, fileTypeInformation) {
         .difference(fileTypeInformation.declaredTypeIdentifiers)
         .difference((0, typescriptGeneration_1.basicTypesIdentifiers)());
     const recordDeclarationMap = (record) => (0, typescriptGeneration_1.getRecordDeclaration)(record, true);
-    const enumDeclarationMap = (e) => (0, typescriptGeneration_1.getEnumDeclaration)(e, true);
+    const enumDeclarationMap = (e) => (0, typescriptGeneration_1.getEnumDeclaration)(e, true, false);
     return []
         .concat(getPrefix(), newlineIdentifier, [...undeclaredTypeIdentifiers].map((identifier) => (0, typescriptGeneration_1.getIdentifierUnknownDeclaration)(identifier, true, fileTypeInformation.inferredTypeParametersCount)), newlineIdentifier, fileTypeInformation.records.flatMap(recordDeclarationMap), newlineIdentifier, fileTypeInformation.enums.flatMap(enumDeclarationMap), newlineIdentifier, module.functions.map((f) => getMockedFunctionDeclaration(f, fileTypeInformation, false, true)), module.asyncFunctions.map((f) => getMockedFunctionDeclaration(f, fileTypeInformation, true, true)), module.classes.map((c) => getMockedClass(c, fileTypeInformation)), module.views.map((v) => getMockedView(v)).flat())
         .flat();

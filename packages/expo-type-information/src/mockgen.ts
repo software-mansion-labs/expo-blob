@@ -242,7 +242,7 @@ function getMockForModule(
     .difference(fileTypeInformation.declaredTypeIdentifiers)
     .difference(basicTypesIdentifiers());
   const recordDeclarationMap = (record: RecordType) => getRecordDeclaration(record, true);
-  const enumDeclarationMap = (e: EnumType) => getEnumDeclaration(e, true);
+  const enumDeclarationMap = (e: EnumType) => getEnumDeclaration(e, true, false);
   return ([] as ts.Node[])
     .concat(
       getPrefix(),

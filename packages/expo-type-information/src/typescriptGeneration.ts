@@ -504,9 +504,24 @@ export function getRecordDeclaration(recordType: RecordType, exported: boolean):
   );
 }
 
-export function getEnumDeclaration(enumType: EnumType, exported: boolean): ts.Node {
+function getModifiersArray(exported: boolean, declared: boolean): ts.ModifierLike[] {
+  const modifiers: ts.ModifierLike[] = [];
+  if (exported) {
+    modifiers.push(ts.factory.createModifier(ts.SyntaxKind.ExportKeyword));
+  }
+  if (declared) {
+    modifiers.push(ts.factory.createModifier(ts.SyntaxKind.DeclareKeyword));
+  }
+  return modifiers;
+}
+
+export function getEnumDeclaration(
+  enumType: EnumType,
+  exported: boolean,
+  declared: boolean
+): ts.Node {
   return ts.factory.createEnumDeclaration(
-    exported ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    getModifiersArray(exported, declared),
     enumType.name,
     enumType.cases.map((enumcase) => ts.factory.createEnumMember(enumcase))
   );
@@ -562,7 +577,7 @@ function getModuleTypesDeclarationsForModule(
   unresolvedTypesNamespace: string
 ): ts.Node[] {
   const recordDeclarationMap = (recordType: RecordType) => getRecordDeclaration(recordType, true);
-  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, true);
+  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, true, false);
   const classDeclarationMap = (classDeclaration: ClassDeclaration) =>
     getTsClassDeclaration(classDeclaration, fileTypeInformation, true, true, null);
   return ([] as ts.Node[]).concat(
@@ -683,7 +698,7 @@ export function getGeneratedJSXIntrinsicsViewDeclarationForModule(
     .difference(fileTypeInformation.declaredTypeIdentifiers)
     .difference(basicTypesIdentifiers());
   const recordDeclarationMap = (recordType: RecordType) => getRecordDeclaration(recordType, false);
-  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, false);
+  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, false, true);
   const classDeclarationMap = (classDeclaration: ClassDeclaration) =>
     getTsClassDeclaration(classDeclaration, fileTypeInformation, false, true, null);
   return ([] as ts.Node[]).concat(

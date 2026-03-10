@@ -10,7 +10,7 @@ export declare function getTsClassDeclaration(classDeclaration: ClassDeclaration
 export declare function getIdentifierUnknownDeclaration(identifier: string, exported: boolean, inferredTypeParametersCount: Map<string, number>): ts.Statement;
 export declare function getTypeAliasDeclaration(alias: string, typeIdentifier: ts.TypeNode, exported: boolean, paramCount: number | undefined): ts.Statement;
 export declare function getRecordDeclaration(recordType: RecordType, exported: boolean): ts.Node;
-export declare function getEnumDeclaration(enumType: EnumType, exported: boolean): ts.Node;
+export declare function getEnumDeclaration(enumType: EnumType, exported: boolean, declared: boolean): ts.Node;
 export declare function getViewPropsTypeName(view: ViewDeclaration): string;
 export declare function getGeneratedJSXIntrinsicsViewDeclarationForModule(moduleClassDeclaration: ModuleClassDeclaration, fileTypeInformation: FileTypeInformation): ts.Node[];
 export declare function prettifyCode(text: string, parser?: 'babel' | 'typescript'): Promise<string>;

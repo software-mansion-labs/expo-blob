@@ -252,8 +252,18 @@ function getRecordDeclaration(recordType, exported) {
         return typescript_1.default.factory.createPropertySignature(undefined, field.name ?? '_' + getNextFreeId(), optional ? typescript_1.default.factory.createToken(typescript_1.default.SyntaxKind.QuestionToken) : undefined, mapTypeToTsTypeNode(argType));
     })));
 }
-function getEnumDeclaration(enumType, exported) {
-    return typescript_1.default.factory.createEnumDeclaration(exported ? [typescript_1.default.factory.createModifier(typescript_1.default.SyntaxKind.ExportKeyword)] : [], enumType.name, enumType.cases.map((enumcase) => typescript_1.default.factory.createEnumMember(enumcase)));
+function getModifiersArray(exported, declared) {
+    const modifiers = [];
+    if (exported) {
+        modifiers.push(typescript_1.default.factory.createModifier(typescript_1.default.SyntaxKind.ExportKeyword));
+    }
+    if (declared) {
+        modifiers.push(typescript_1.default.factory.createModifier(typescript_1.default.SyntaxKind.DeclareKeyword));
+    }
+    return modifiers;
+}
+function getEnumDeclaration(enumType, exported, declared) {
+    return typescript_1.default.factory.createEnumDeclaration(getModifiersArray(exported, declared), enumType.name, enumType.cases.map((enumcase) => typescript_1.default.factory.createEnumMember(enumcase)));
 }
 function getUndeclaredIdentifiersDeclaration(fileTypeInformation, undeclaredTypeIdentifiers, unresolvedTypesNamespace) {
     return [].concat([
@@ -265,7 +275,7 @@ function getUndeclaredIdentifiersDeclaration(fileTypeInformation, undeclaredType
 }
 function getModuleTypesDeclarationsForModule(moduleClassDeclaration, fileTypeInformation, recordTypes, enumTypes, undeclaredTypeIdentifiers, unresolvedTypesNamespace) {
     const recordDeclarationMap = (recordType) => getRecordDeclaration(recordType, true);
-    const enumDeclarationMap = (enumType) => getEnumDeclaration(enumType, true);
+    const enumDeclarationMap = (enumType) => getEnumDeclaration(enumType, true, false);
     const classDeclarationMap = (classDeclaration) => getTsClassDeclaration(classDeclaration, fileTypeInformation, true, true, null);
     return [].concat(getPrefix(), newlineIdentifier, getOneNamedImport('NativeModule', 'expo'), newlineIdentifier, getUndeclaredIdentifiersDeclaration(fileTypeInformation, undeclaredTypeIdentifiers, unresolvedTypesNamespace), newlineIdentifier, recordTypes.flatMap(recordDeclarationMap), newlineIdentifier, enumTypes.flatMap(enumDeclarationMap), newlineIdentifier, moduleClassDeclaration.classes.map(classDeclarationMap), newlineIdentifier, getExportedModuleDeclaration(moduleClassDeclaration), newlineIdentifier, getModuleDefaultValueExport(moduleClassDeclaration.name));
 }
@@ -308,7 +318,7 @@ function getGeneratedJSXIntrinsicsViewDeclarationForModule(moduleClassDeclaratio
         .difference(fileTypeInformation.declaredTypeIdentifiers)
         .difference(basicTypesIdentifiers());
     const recordDeclarationMap = (recordType) => getRecordDeclaration(recordType, false);
-    const enumDeclarationMap = (enumType) => getEnumDeclaration(enumType, false);
+    const enumDeclarationMap = (enumType) => getEnumDeclaration(enumType, false, true);
     const classDeclarationMap = (classDeclaration) => getTsClassDeclaration(classDeclaration, fileTypeInformation, false, true, null);
     return [].concat(getPrefix(), newlineIdentifier, getOneNamedImport('ViewProps', 'react-native'), newlineIdentifier, [...undeclaredTypeIdentifiers].map((identifier) => getIdentifierUnknownDeclaration(identifier, false, fileTypeInformation.inferredTypeParametersCount)), newlineIdentifier, fileTypeInformation.records.flatMap(recordDeclarationMap), newlineIdentifier, fileTypeInformation.enums.flatMap(enumDeclarationMap), newlineIdentifier, moduleClassDeclaration.classes.map(classDeclarationMap), newlineIdentifier, getJsxIntrinsicElementsInterfaceDeclaration([
         typescript_1.default.factory.createPropertySignature(undefined, typescript_1.default.factory.createIdentifier(moduleClassDeclaration.name), undefined, getPropsType(mainView.props, mainView.events)),
