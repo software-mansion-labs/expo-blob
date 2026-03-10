@@ -103,6 +103,18 @@ function getPropTypeElementDeclaration(
   );
 }
 
+function getPropsType(
+  propsDeclaration: PropDeclaration[],
+  events: EventDeclaration[]
+): ts.TypeLiteralNode {
+  return ts.factory.createTypeLiteralNode([
+    ...(propsDeclaration
+      .map(getPropTypeElementDeclaration)
+      .filter((p) => p) as ts.PropertySignature[]),
+    ...events.map(getPropEventElementDeclaration),
+  ]);
+}
+
 export function getPropsTypeDeclaration(
   propsTypeName: string,
   propsDeclaration: PropDeclaration[],
@@ -114,12 +126,7 @@ export function getPropsTypeDeclaration(
       exported ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
       propsTypeName,
       undefined,
-      ts.factory.createTypeLiteralNode([
-        ...(propsDeclaration
-          .map(getPropTypeElementDeclaration)
-          .filter((p) => p) as ts.PropertySignature[]),
-        ...events.map(getPropEventElementDeclaration),
-      ])
+      getPropsType(propsDeclaration, events)
     )
   );
 }
@@ -148,6 +155,10 @@ function getClassDeclarationInModule(classDeclaration: ClassDeclaration): ts.Cla
     ts.factory.createTypeReferenceNode('typeof ' + classDeclaration.name),
     undefined
   );
+}
+
+function getDeclareModifier() {
+  return ts.factory.createModifier(ts.SyntaxKind.DeclareKeyword);
 }
 
 function getExportDeclareModifiers(): ts.ModifierLike[] {
@@ -343,7 +354,7 @@ export function getClassConstructorDeclaration(
 }
 
 // TODO figure out what about inheritance, should or should not inherit SharedObject
-export function getTsClass(
+export function getTsClassDeclaration(
   classDeclaration: ClassDeclaration,
   fileTypeInformation: FileTypeInformation,
   exported: boolean,
@@ -413,13 +424,6 @@ export function getTsClass(
   );
 }
 
-function getExportedClassDeclaration(
-  classDeclaration: ClassDeclaration,
-  fileTypeInformation: FileTypeInformation
-): ts.ClassDeclaration {
-  return getTsClass(classDeclaration, fileTypeInformation, true, true, null);
-}
-
 function getModuleDefaultValueExport(defaultValueTypename: string): ts.Node[] {
   return ([] as ts.Node[]).concat(
     ts.factory.createParameterDeclaration(
@@ -480,9 +484,9 @@ export function getTypeAliasDeclaration(
   );
 }
 
-export function getRecordDeclaration(recordType: RecordType): ts.Node {
+export function getRecordDeclaration(recordType: RecordType, exported: boolean): ts.Node {
   return ts.factory.createTypeAliasDeclaration(
-    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    exported ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
     recordType.name,
     undefined,
     ts.factory.createTypeLiteralNode(
@@ -500,9 +504,9 @@ export function getRecordDeclaration(recordType: RecordType): ts.Node {
   );
 }
 
-export function getEnumDeclaration(enumType: EnumType): ts.Node {
+export function getEnumDeclaration(enumType: EnumType, exported: boolean): ts.Node {
   return ts.factory.createEnumDeclaration(
-    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    exported ? [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
     enumType.name,
     enumType.cases.map((enumcase) => ts.factory.createEnumMember(enumcase))
   );
@@ -557,6 +561,10 @@ function getModuleTypesDeclarationsForModule(
   undeclaredTypeIdentifiers: Set<string>,
   unresolvedTypesNamespace: string
 ): ts.Node[] {
+  const recordDeclarationMap = (recordType: RecordType) => getRecordDeclaration(recordType, true);
+  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, true);
+  const classDeclarationMap = (classDeclaration: ClassDeclaration) =>
+    getTsClassDeclaration(classDeclaration, fileTypeInformation, true, true, null);
   return ([] as ts.Node[]).concat(
     getPrefix(),
     newlineIdentifier,
@@ -568,11 +576,11 @@ function getModuleTypesDeclarationsForModule(
       unresolvedTypesNamespace
     ),
     newlineIdentifier,
-    recordTypes.flatMap(getRecordDeclaration),
+    recordTypes.flatMap(recordDeclarationMap),
     newlineIdentifier,
-    enumTypes.flatMap(getEnumDeclaration),
+    enumTypes.flatMap(enumDeclarationMap),
     newlineIdentifier,
-    moduleClassDeclaration.classes.map((c) => getExportedClassDeclaration(c, fileTypeInformation)),
+    moduleClassDeclaration.classes.map(classDeclarationMap),
     newlineIdentifier,
     getExportedModuleDeclaration(moduleClassDeclaration),
     newlineIdentifier,
@@ -635,6 +643,79 @@ function getViewTypesDeclarationsForModule(
   );
 }
 
+function getJsxIntrinsicElementsInterfaceDeclaration(
+  intrinsicElements: ts.TypeElement[]
+): ts.Node[] {
+  const globalIdentifier = ts.factory.createIdentifier('global');
+  const jsxIdentifier = ts.factory.createIdentifier('JSX');
+  const intrinsicElementsIdentifier = ts.factory.createIdentifier('IntrinsicElements');
+  return [
+    ts.factory.createModuleDeclaration(
+      [getDeclareModifier()],
+      globalIdentifier,
+      ts.factory.createModuleBlock([
+        ts.factory.createModuleDeclaration(
+          undefined,
+          jsxIdentifier,
+          ts.factory.createModuleBlock([
+            ts.factory.createInterfaceDeclaration(
+              undefined,
+              intrinsicElementsIdentifier,
+              undefined,
+              undefined,
+              intrinsicElements
+            ),
+          ]),
+          ts.NodeFlags.Namespace
+        ),
+      ]),
+      ts.NodeFlags.GlobalAugmentation
+    ),
+  ];
+}
+
+export function getGeneratedJSXIntrinsicsViewDeclarationForModule(
+  moduleClassDeclaration: ModuleClassDeclaration,
+  fileTypeInformation: FileTypeInformation
+): ts.Node[] {
+  const mainView = moduleClassDeclaration.views[0];
+  const undeclaredTypeIdentifiers: Set<string> = fileTypeInformation.usedTypeIdentifiers
+    .difference(fileTypeInformation.declaredTypeIdentifiers)
+    .difference(basicTypesIdentifiers());
+  const recordDeclarationMap = (recordType: RecordType) => getRecordDeclaration(recordType, false);
+  const enumDeclarationMap = (enumType: EnumType) => getEnumDeclaration(enumType, false);
+  const classDeclarationMap = (classDeclaration: ClassDeclaration) =>
+    getTsClassDeclaration(classDeclaration, fileTypeInformation, false, true, null);
+  return ([] as ts.Node[]).concat(
+    getPrefix(),
+    newlineIdentifier,
+    getOneNamedImport('ViewProps', 'react-native'),
+    newlineIdentifier,
+    [...undeclaredTypeIdentifiers].map((identifier) =>
+      getIdentifierUnknownDeclaration(
+        identifier,
+        false,
+        fileTypeInformation.inferredTypeParametersCount
+      )
+    ),
+    newlineIdentifier,
+    fileTypeInformation.records.flatMap(recordDeclarationMap),
+    newlineIdentifier,
+    fileTypeInformation.enums.flatMap(enumDeclarationMap),
+    newlineIdentifier,
+    moduleClassDeclaration.classes.map(classDeclarationMap),
+    newlineIdentifier,
+    getJsxIntrinsicElementsInterfaceDeclaration([
+      ts.factory.createPropertySignature(
+        undefined,
+        ts.factory.createIdentifier(moduleClassDeclaration.name),
+        undefined,
+        getPropsType(mainView.props, mainView.events)
+      ),
+    ])
+  );
+}
+
 export async function prettifyCode(text: string, parser: 'babel' | 'typescript' = 'babel') {
   return await prettier.format(text, {
     parser,
@@ -675,6 +756,17 @@ export async function getGeneratedViewTypesFileContent(
   return prettyPrintTSNodesToString(
     file,
     getViewTypesDeclarationsForModule(outputModuleDefinition, fileTypeInformation)
+  );
+}
+
+export async function getGeneratedJSXIntrinsicsViewDeclaration(
+  file: string,
+  fileTypeInformation: FileTypeInformation
+): Promise<string> {
+  const outputModuleDefinition = fileTypeInformation.moduleClasses[0];
+  return prettyPrintTSNodesToString(
+    file,
+    getGeneratedJSXIntrinsicsViewDeclarationForModule(outputModuleDefinition, fileTypeInformation)
   );
 }
 
